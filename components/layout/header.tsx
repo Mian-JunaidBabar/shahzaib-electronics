@@ -48,7 +48,7 @@ export default function Header() {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="hidden lg:flex items-center gap-8">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -107,7 +107,7 @@ export default function Header() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-text-muted hover:text-text-primary"
+            className="lg:hidden p-2 text-text-muted hover:text-text-primary"
           >
             <span className="material-symbols-outlined">
               {mobileMenuOpen ? "close" : "menu"}
@@ -118,7 +118,7 @@ export default function Header() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-background">
+        <div className="lg:hidden border-t border-border bg-background">
           <nav className="flex flex-col px-4 py-4 space-y-4">
             {navLinks.map((link) => (
               <Link

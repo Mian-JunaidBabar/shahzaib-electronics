@@ -95,9 +95,6 @@ export function NewArrivals() {
                 <h4 className="font-bold text-slate-900 dark:text-white mb-1">
                   {product.name}
                 </h4>
-                <p className="text-xs text-slate-500 mb-2">
-                  {product.description}
-                </p>
                 <div className="flex items-center justify-between">
                   <span className="text-primary font-black text-lg">
                     {typeof product.price === "number"
