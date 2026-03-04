@@ -73,21 +73,37 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
 
     // Wrap the remaining writes in a Prisma Transaction
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Upsert Customer
-      const customer = await tx.customer.upsert({
-        where: { phone: customerData.phone },
-        update: {
-          name: customerData.fullName,
-          email: customerData.email || undefined,
-          address: customerData.address || undefined,
-        },
-        create: {
-          name: customerData.fullName,
-          phone: customerData.phone,
-          email: customerData.email || undefined,
-          address: customerData.address || undefined,
+      // 1. Find or Create Customer (handle email uniqueness)
+      let customer = await tx.customer.findFirst({
+        where: {
+          OR: [
+            { phone: customerData.phone },
+            ...(customerData.email ? [{ email: customerData.email }] : []),
+          ],
         },
       });
+
+      if (customer) {
+        // Update existing customer
+        customer = await tx.customer.update({
+          where: { id: customer.id },
+          data: {
+            name: customerData.fullName,
+            email: customerData.email || customer.email,
+            address: customerData.address || customer.address,
+          },
+        });
+      } else {
+        // Create new customer
+        customer = await tx.customer.create({
+          data: {
+            name: customerData.fullName,
+            phone: customerData.phone,
+            email: customerData.email || undefined,
+            address: customerData.address || undefined,
+          },
+        });
+      }
 
       let dbOrder = null;
       let dbBooking = null;
@@ -97,18 +113,26 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
 
       // 2. Create Order & Items if cartItems exist
       if (cartItems.length > 0) {
-        // Look up real prices from variants to be safe
-        const variantIds = cartItems.map((item) => item.id);
-        const variants = await tx.productVariant.findMany({
-          where: { id: { in: variantIds } },
-          include: { product: true },
+        // Look up products by slug and get their default variants
+        const productSlugs = cartItems.map((item) => item.id);
+        const products = await tx.product.findMany({
+          where: { slug: { in: productSlugs } },
+          include: {
+            variants: {
+              take: 1,
+              orderBy: { createdAt: "asc" },
+            },
+          },
         });
 
         const orderItemsToCreate = [];
 
         for (const item of cartItems) {
-          const dbVariant = variants.find((v) => v.id === item.id);
-          if (!dbVariant) throw new Error(`Product variant not found: ${item.id}`);
+          const product = products.find((p) => p.slug === item.id);
+          if (!product || !product.variants[0])
+            throw new Error(`Product not found: ${item.id}`);
+
+          const dbVariant = product.variants[0];
 
           // Determine price directly from DB (salePrice or regular price)
           const actualPriceCents = dbVariant.salePrice || dbVariant.price;

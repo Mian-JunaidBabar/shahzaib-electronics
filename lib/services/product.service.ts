@@ -1,4 +1,10 @@
-import type { Product, Image, ProductVariant, VehicleFitment, Badge, } from "@prisma/client";
+import type {
+  Product,
+  Image,
+  ProductVariant,
+  VehicleFitment,
+  Badge,
+} from "@prisma/client";
 import { deleteImage, extractPublicId } from "@/lib/cloudinary";
 import { ProductStatus, Prisma } from "@prisma/client";
 /**
@@ -13,6 +19,20 @@ import { ProductStatus, Prisma } from "@prisma/client";
  */
 import { prisma } from "@/lib/prisma";
 
+// Cache for store products (5 min TTL)
+let storeProductCache: {
+  products: StoreProduct[];
+  count: number;
+  timestamp: number;
+} | null = null;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function isCacheValid(): boolean {
+  return (
+    storeProductCache !== null &&
+    Date.now() - storeProductCache.timestamp < CACHE_TTL
+  );
+}
 
 // Types
 export type ProductWithRelations = Product & {
@@ -271,6 +291,20 @@ export async function getStoreProducts(filters: StoreFilters = {}) {
 export async function getStoreProductsWithCount(
   filters: StoreFilters = {},
 ): Promise<{ products: StoreProduct[]; count: number }> {
+  // Skip cache for filtered queries or with pagination
+  const hasFilters =
+    filters.q ||
+    filters.categories ||
+    filters.tags ||
+    filters.min ||
+    filters.max ||
+    filters.sort;
+  const hasPagination = filters.offset && filters.offset > 0;
+
+  if (!hasFilters && !hasPagination && isCacheValid()) {
+    return storeProductCache!;
+  }
+
   const { limit, offset, sort } = filters;
   const where = buildStoreWhere(filters);
 
@@ -284,14 +318,26 @@ export async function getStoreProductsWithCount(
       take: limit,
       skip: offset,
       include: {
-        images: { orderBy: { sortOrder: "asc" } },
+        images: {
+          where: { isPrimary: true },
+          take: 1,
+          orderBy: { sortOrder: "asc" },
+        },
         variants: { orderBy: { createdAt: "asc" }, take: 1 },
         badge: true,
       },
     }),
     prisma.product.count({ where }),
   ]);
-  return { products, count };
+
+  const result = { products, count };
+
+  // Cache only initial page load without filters
+  if (!hasFilters && !hasPagination) {
+    storeProductCache = { ...result, timestamp: Date.now() };
+  }
+
+  return result;
 }
 
 /**

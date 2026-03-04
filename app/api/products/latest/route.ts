@@ -8,7 +8,10 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
       take: 4,
       include: {
-        images: true,
+        images: {
+          where: { isPrimary: true },
+          take: 1,
+        },
         variants: { take: 1, orderBy: { price: "asc" } },
       },
     });
