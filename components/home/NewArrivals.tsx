@@ -98,7 +98,7 @@ export function NewArrivals() {
                 <div className="flex items-center justify-between">
                   <span className="text-primary font-black text-lg">
                     {typeof product.price === "number"
-                      ? "$" + product.price
+                      ? "PKR " + product.price
                       : product.price}
                   </span>
                   <div className="flex">

@@ -226,7 +226,9 @@ export default async function ProductsPage({
               <h4 className="font-bold text-slate-900 dark:text-white mb-2">
                 Free Shipping
               </h4>
-              <p className="text-xs text-slate-500">On all orders over $500</p>
+              <p className="text-xs text-slate-500">
+                On all orders over PKR 5000
+              </p>
             </div>
             <div className="flex flex-col items-center text-center group">
               <div className="size-16 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm mb-4 group-hover:-translate-y-2 transition-transform duration-300">

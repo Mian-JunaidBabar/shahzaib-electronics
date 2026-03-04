@@ -86,7 +86,7 @@ export function WeeklyBestSellers() {
                   <div className="flex items-center justify-between">
                     <span className="text-primary font-black text-xl">
                       {typeof item.price === "number"
-                        ? "$" + item.price
+                        ? "PKR " + item.price
                         : item.price}
                     </span>
                     <Link

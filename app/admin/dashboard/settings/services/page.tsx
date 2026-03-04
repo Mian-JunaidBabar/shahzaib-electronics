@@ -37,7 +37,9 @@ export default function ServicesPage() {
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-medium text-foreground">${service.price}</p>
+                <p className="font-medium text-foreground">
+                  PKR {service.price}
+                </p>
               </div>
               <div className="flex gap-2">
                 <button className="text-muted-foreground hover:text-primary">
@@ -73,10 +75,10 @@ export default function ServicesPage() {
               Currency
             </label>
             <select className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
+              <option>PKR (Pakistani Rupee)</option>
               <option>USD ($)</option>
               <option>EUR (€)</option>
               <option>GBP (£)</option>
-              <option>CAD ($)</option>
             </select>
           </div>
         </div>

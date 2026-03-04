@@ -269,7 +269,7 @@ export default async function AdminDashboardPage({ searchParams }: PageProps) {
                 Total Revenue
               </span>
               <span className="text-2xl font-black text-foreground">
-                ${summary.totalRevenue.toLocaleString()}
+                PKR {summary.totalRevenue.toLocaleString()}
               </span>
               <div className="flex items-center gap-1 text-emerald-500 font-bold text-xs mt-1">
                 <TrendingUp className="w-3 h-3" />
@@ -346,7 +346,7 @@ export default async function AdminDashboardPage({ searchParams }: PageProps) {
                     </CardTitle>
                     <div className="flex items-baseline gap-2">
                       <span className="text-2xl md:text-3xl font-black">
-                        $
+                        PKR{" "}
                         {(summary.totalRevenue / 3.65)
                           .toFixed(0)
                           .toLocaleString()}

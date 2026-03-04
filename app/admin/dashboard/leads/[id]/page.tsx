@@ -281,7 +281,7 @@ export default async function LeadDetailsPage({
                     Estimated Value
                   </label>
                   <p className="font-medium text-foreground text-lg">
-                    ${leadData.estimatedValue.toLocaleString()}
+                    PKR {leadData.estimatedValue.toLocaleString()}
                   </p>
                 </div>
                 <div>
