@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useForm, useFieldArray } from "react-hook-form";
 import Link from "next/link";
 import {
   Plus,
@@ -11,6 +12,7 @@ import {
   X,
   CheckCircle,
   AlertCircle,
+  Trash2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { BadgeSelector } from "@/components/ui/badge-selector";
+import { Switch } from "@/components/ui/switch";
 import { uploadImageToCloudinary } from "@/lib/cloudinary-client";
 import { createProductAction } from "@/app/actions/productActions";
 import { getActiveBadgesAction } from "@/app/actions/badgeActions";
@@ -38,6 +41,32 @@ interface ImagePreview {
   preview: string;
 }
 
+type FormData = {
+  name: string;
+  slug?: string;
+  description?: string;
+  category?: string;
+  badgeId?: string;
+  isActive: boolean;
+  isUniversal: boolean;
+  variants: Array<{
+    name: string;
+    sku: string;
+    price: number;
+    salePrice?: number | null;
+    costPrice?: number | null;
+    barcode?: string;
+    inventoryQty: number;
+    lowStockAt: number;
+  }>;
+  fitments: Array<{
+    make: string;
+    model: string;
+    startYear?: number | null;
+    endYear?: number | null;
+  }>;
+};
+
 export default function NewProductPage() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -47,37 +76,68 @@ export default function NewProductPage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    name: "",
-    slug: "",
-    sku: "",
-    description: "",
-    price: "",
-    salePrice: "",
-    costPrice: "",
-    barcode: "",
-    category: "",
-    badgeId: "",
-    stock: "0",
-    lowStockThreshold: "10",
-    isActive: true,
+
+  // React Hook Form setup
+  const { register, control, handleSubmit: handleFormSubmit, watch, setValue, formState: { errors } } = useForm<FormData>({
+    defaultValues: {
+      name: "",
+      slug: "",
+      description: "",
+      category: "",
+      badgeId: "",
+      isActive: true,
+      isUniversal: true,
+      variants: [
+        {
+          name: "Default",
+          sku: "",
+          price: 0,
+          salePrice: null,
+          costPrice: null,
+          barcode: "",
+          inventoryQty: 0,
+          lowStockAt: 5,
+        },
+      ],
+      fitments: [],
+    },
   });
 
-  const margin = (() => {
-    const selling = parseFloat(form.salePrice || form.price) || 0;
-    const cost = parseFloat(form.costPrice) || 0;
-    if (selling <= 0 || cost <= 0) return null;
-    return (((selling - cost) / selling) * 100).toFixed(1);
-  })();
+  // Field arrays for variants and fitments
+  const {
+    fields: variantFields,
+    append: appendVariant,
+    remove: removeVariant,
+  } = useFieldArray({
+    control,
+    name: "variants",
+  });
 
-  // Cleanup blob URLs on unmount
+  const {
+    fields: fitmentFields,
+    append: appendFitment,
+    remove: removeFitment,
+  } = useFieldArray({
+    control,
+    name: "fitments",
+  });
+
+  const isUniversal = watch("isUniversal");
+  const name = watch("name");
+
+  // Auto-generate slug from name
   useEffect(() => {
-    return () => {
-      imageFiles.forEach((img) => {
-        URL.revokeObjectURL(img.preview);
-      });
-    };
-  }, [imageFiles]);
+    if (name) {
+      const normalized = name
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+      setValue("slug", normalized);
+    }
+  }, [name, setValue]);
 
   // Cleanup blob URLs on unmount
   useEffect(() => {
@@ -99,65 +159,31 @@ export default function NewProductPage() {
     loadBadges();
   }, []);
 
-  const normalizeSlug = (value: string) =>
-    value
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "");
-
-  const handleChange = (field: keyof typeof form, value: string | boolean) => {
-    setForm((prev) => {
-      // Auto-generate slug when name changes
-      if (field === "name" && typeof value === "string") {
-        return { ...prev, name: value, slug: normalizeSlug(value) };
-      }
-
-      // Allow manual slug editing
-      if (field === "slug" && typeof value === "string") {
-        return { ...prev, slug: normalizeSlug(value) };
-      }
-
-      return { ...prev, [field]: value };
-    });
-  };
-
-  const handleSubmit = () => {
+  const onSubmit = (data: FormData) => {
     setSubmitError(null);
     startTransition(async () => {
-      const price = Math.round(Number(form.price || 0) * 100);
-      const salePrice = form.salePrice
-        ? Math.round(Number(form.salePrice || 0) * 100)
-        : undefined;
-      const costPrice = form.costPrice
-        ? Math.round(Number(form.costPrice || 0) * 100)
-        : undefined;
-      const stock = Number(form.stock || 0);
-      const lowStockThreshold = Number(form.lowStockThreshold || 0);
+      // Convert prices from PKR to cents
+      const variantsData = data.variants.map((v) => ({
+        name: v.name,
+        sku: v.sku,
+        price: Math.round(Number(v.price) * 100),
+        salePrice: v.salePrice ? Math.round(Number(v.salePrice) * 100) : null,
+        costPrice: v.costPrice ? Math.round(Number(v.costPrice) * 100) : null,
+        barcode: v.barcode || null,
+        inventoryQty: Number(v.inventoryQty),
+        lowStockAt: Number(v.lowStockAt),
+      }));
 
       const result = await createProductAction({
-        name: form.name,
-        slug: form.slug || undefined,
-        description: form.description || undefined,
-        category: form.category || undefined,
-        badgeId: form.badgeId || undefined,
-        isActive: form.isActive,
-        isUniversal: true,
-        variants: [
-          {
-            name: "Default",
-            sku: form.sku,
-            price,
-            salePrice,
-            costPrice,
-            barcode: form.barcode || undefined,
-            inventoryQty: stock,
-            lowStockAt: lowStockThreshold,
-          },
-        ],
-        fitments: [],
+        name: data.name,
+        slug: data.slug || undefined,
+        description: data.description || undefined,
+        category: data.category || undefined,
+        badgeId: data.badgeId || undefined,
+        isActive: data.isActive,
+        isUniversal: data.isUniversal,
+        variants: variantsData,
+        fitments: data.isUniversal ? [] : data.fitments,
       });
 
       if (result.success && result.data) {
@@ -235,7 +261,6 @@ export default function NewProductPage() {
 
     setUploadError(null);
 
-    // Create local previews only - no upload yet
     const newPreviews = validFiles.map((file) => ({
       file,
       preview: URL.createObjectURL(file),
@@ -273,30 +298,31 @@ export default function NewProductPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <form onSubmit={handleFormSubmit(onSubmit)} className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Add Product</h1>
           <p className="text-muted-foreground">
-            Create a new product and set initial stock levels.
+            Create a new product with variants and fitments.
           </p>
           {submitError && (
             <p className="text-sm text-destructive mt-2">{submitError}</p>
           )}
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild type="button">
             <Link href="/admin/dashboard/inventory">
               <ArrowLeft className="h-4 w-4 mr-2" /> Back
             </Link>
           </Button>
-          <Button onClick={handleSubmit} disabled={isPending}>
+          <Button type="submit" disabled={isPending}>
             <Plus className="h-4 w-4 mr-2" />
             {isPending ? "Saving..." : "Create"}
           </Button>
         </div>
       </div>
 
+      {/* Product Details */}
       <Card>
         <CardHeader>
           <CardTitle>Product Details</CardTitle>
@@ -304,162 +330,282 @@ export default function NewProductPage() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Name</Label>
+              <Label>Name *</Label>
               <Input
-                value={form.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                placeholder="e.g., Toyota Corolla"
+                {...register("name", { required: "Name is required" })}
+                placeholder="e.g., Premium Air Filter"
               />
+              {errors.name && (
+                <p className="text-sm text-destructive">{errors.name.message}</p>
+              )}
             </div>
             <div className="space-y-2">
-              <Label>Slug (optional)</Label>
+              <Label>Slug (auto-generated)</Label>
               <Input
-                value={form.slug}
-                onChange={(e) => handleChange("slug", e.target.value)}
-                placeholder="toyota-corolla"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>SKU</Label>
-              <Input
-                value={form.sku}
-                onChange={(e) =>
-                  handleChange("sku", e.target.value.toUpperCase())
-                }
-                placeholder="ABC-1234"
+                {...register("slug")}
+                placeholder="premium-air-filter"
+                disabled
               />
             </div>
             <div className="space-y-2">
               <Label>Category</Label>
               <Input
-                value={form.category}
-                onChange={(e) => handleChange("category", e.target.value)}
-                placeholder="SUV, Sedan, etc"
+                {...register("category")}
+                placeholder="Engine Parts, Body Parts, etc"
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Selling Price (PKR)</Label>
-              <Input
-                type="number"
-                min="0"
-                value={form.price}
-                onChange={(e) => handleChange("price", e.target.value)}
-                placeholder="1200000"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Sale Price (optional)</Label>
-              <Input
-                type="number"
-                min="0"
-                value={form.salePrice}
-                onChange={(e) => handleChange("salePrice", e.target.value)}
-                placeholder="1000000"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>
-                Cost Price (internal)
-                {margin && (
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    Margin: {margin}%
-                  </span>
-                )}
-              </Label>
-              <Input
-                type="number"
-                min="0"
-                value={form.costPrice}
-                onChange={(e) => handleChange("costPrice", e.target.value)}
-                placeholder="800000"
-              />
-            </div>
+            {!isLoadingBadges && (
+              <div className="space-y-2">
+                <BadgeSelector
+                  badges={badges}
+                  value={watch("badgeId") || ""}
+                  onChange={(badgeId) => setValue("badgeId", badgeId || "")}
+                  label="Badge (optional)"
+                />
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
             <Label>Description</Label>
-            <Tabs defaultValue="edit">
-              <TabsList className="grid grid-cols-2 w-full">
-                <TabsTrigger value="edit">Edit</TabsTrigger>
-                <TabsTrigger value="preview">Preview</TabsTrigger>
-              </TabsList>
-              <TabsContent value="edit">
-                <Textarea
-                  value={form.description}
-                  onChange={(e) => handleChange("description", e.target.value)}
-                  placeholder="Short description of the product"
-                  rows={4}
-                />
-              </TabsContent>
-              <TabsContent value="preview">
-                <div className="min-h-30 rounded-md border bg-muted/40 p-3 text-sm whitespace-pre-wrap">
-                  {form.description || "No description"}
-                </div>
-              </TabsContent>
-            </Tabs>
+            <Textarea
+              {...register("description")}
+              placeholder="Product description"
+              rows={4}
+            />
           </div>
 
-          {!isLoadingBadges && (
-            <BadgeSelector
-              badges={badges}
-              value={form.badgeId}
-              onChange={(badgeId) => handleChange("badgeId", badgeId || "")}
-              label="Badge (optional)"
+          <div className="flex items-center space-x-2">
+            <Switch
+              checked={watch("isActive")}
+              onCheckedChange={(checked) => setValue("isActive", checked)}
             />
-          )}
+            <Label>Active (visible in storefront)</Label>
+          </div>
         </CardContent>
       </Card>
 
+      {/* Product Variants */}
       <Card>
         <CardHeader>
-          <CardTitle>Inventory</CardTitle>
+          <CardTitle>Product Variants (Pricing & Stock)</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label>Initial Stock</Label>
-            <Input
-              type="number"
-              min="0"
-              value={form.stock}
-              onChange={(e) => handleChange("stock", e.target.value)}
+        <CardContent className="space-y-4">
+          {variantFields.map((field, index) => (
+            <Card key={field.id} className="p-4">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-semibold">Variant #{index + 1}</h4>
+                  {variantFields.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeVariant(index)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Variant Name *</Label>
+                    <Input
+                      {...register(`variants.${index}.name` as const, {
+                        required: "Variant name is required",
+                      })}
+                      placeholder="e.g., Default, Red, Large"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>SKU *</Label>
+                    <Input
+                      {...register(`variants.${index}.sku` as const, {
+                        required: "SKU is required",
+                      })}
+                      placeholder="ABC-123"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Barcode</Label>
+                    <Input
+                      {...register(`variants.${index}.barcode` as const)}
+                      placeholder="Optional"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Price (PKR) *</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      {...register(`variants.${index}.price` as const, {
+                        required: "Price is required",
+                        min: 0,
+                      })}
+                      placeholder="1000"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Sale Price (PKR)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      {...register(`variants.${index}.salePrice` as const)}
+                      placeholder="Optional"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Cost Price (PKR)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      {...register(`variants.${index}.costPrice` as const)}
+                      placeholder="Internal use"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Stock Quantity *</Label>
+                    <Input
+                      type="number"
+                      {...register(`variants.${index}.inventoryQty` as const, {
+                        required: "Stock is required",
+                        min: 0,
+                      })}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Low Stock Alert</Label>
+                    <Input
+                      type="number"
+                      {...register(`variants.${index}.lowStockAt` as const, {
+                        min: 1,
+                      })}
+                      placeholder="5"
+                    />
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() =>
+              appendVariant({
+                name: "",
+                sku: "",
+                price: 0,
+                salePrice: null,
+                costPrice: null,
+                barcode: "",
+                inventoryQty: 0,
+                lowStockAt: 5,
+              })
+            }
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Variant
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Vehicle Fitments */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Vehicle Compatibility</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              checked={isUniversal}
+              onCheckedChange={(checked) => setValue("isUniversal", checked)}
             />
+            <Label>Universal Fit (fits all vehicles)</Label>
           </div>
-          <div className="space-y-2">
-            <Label>Low Stock Threshold</Label>
-            <Input
-              type="number"
-              min="0"
-              value={form.lowStockThreshold}
-              onChange={(e) =>
-                handleChange("lowStockThreshold", e.target.value)
-              }
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Barcode (optional)</Label>
-            <Input
-              value={form.barcode}
-              onChange={(e) => handleChange("barcode", e.target.value)}
-              placeholder="Scan or type barcode"
-            />
-          </div>
-          <div className="space-y-2 flex items-center justify-between border rounded-md px-3 py-2">
-            <div>
-              <Label className="block">Active</Label>
-              <p className="text-sm text-muted-foreground">
-                Product visible in storefront
-              </p>
-            </div>
-            <input
-              type="checkbox"
-              className="h-4 w-4 accent-primary"
-              checked={form.isActive}
-              onChange={(e) => handleChange("isActive", e.target.checked)}
-            />
-          </div>
+
+          {!isUniversal && (
+            <>
+              {fitmentFields.map((field, index) => (
+                <Card key={field.id} className="p-4">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-semibold">Fitment #{index + 1}</h4>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFitment(index)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label>Make *</Label>
+                        <Input
+                          {...register(`fitments.${index}.make` as const, {
+                            required: "Make is required",
+                          })}
+                          placeholder="Toyota"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Model *</Label>
+                        <Input
+                          {...register(`fitments.${index}.model` as const, {
+                            required: "Model is required",
+                          })}
+                          placeholder="Corolla"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Start Year</Label>
+                        <Input
+                          type="number"
+                          {...register(`fitments.${index}.startYear` as const)}
+                          placeholder="2014"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>End Year</Label>
+                        <Input
+                          type="number"
+                          {...register(`fitments.${index}.endYear` as const)}
+                          placeholder="2026"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  appendFitment({
+                    make: "",
+                    model: "",
+                    startYear: null,
+                    endYear: null,
+                  })
+                }
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Vehicle
+              </Button>
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -472,7 +618,6 @@ export default function NewProductPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Upload Area */}
           <div
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -499,7 +644,6 @@ export default function NewProductPage() {
             </div>
           </div>
 
-          {/* Messages */}
           {uploadError && (
             <div className="flex items-center space-x-2 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-900 dark:bg-red-950">
               <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
@@ -507,6 +651,7 @@ export default function NewProductPage() {
                 {uploadError}
               </span>
               <button
+                type="button"
                 onClick={() => setUploadError(null)}
                 className="ml-auto text-red-600 hover:text-red-800"
               >
@@ -524,7 +669,6 @@ export default function NewProductPage() {
             </div>
           )}
 
-          {/* Image Grid */}
           {imageFiles.length > 0 && (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
               {imageFiles.map((image, index) => (
@@ -532,22 +676,20 @@ export default function NewProductPage() {
                   key={index}
                   className="group relative aspect-square overflow-hidden rounded-lg border-2 border-transparent bg-gray-100 transition-all hover:border-gray-300 dark:bg-gray-800"
                 >
-                  {/* Image */}
                   <img
                     src={image.preview}
                     alt={`Upload ${index + 1}`}
                     className="h-full w-full object-cover"
                   />
 
-                  {/* Primary Badge */}
                   {index === 0 && (
                     <Badge className="absolute left-1 top-1 bg-blue-500 text-white hover:bg-blue-600">
                       Primary
                     </Badge>
                   )}
 
-                  {/* Delete Button */}
                   <button
+                    type="button"
                     onClick={() => handleRemoveImage(index)}
                     className="absolute right-2 top-2 hidden rounded-full bg-red-500 p-1.5 text-white transition-all hover:bg-red-600 group-hover:block"
                     aria-label="Delete image"
@@ -566,6 +708,6 @@ export default function NewProductPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </form>
   );
 }

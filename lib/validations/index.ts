@@ -11,6 +11,7 @@
  */
 import { z } from "zod";
 
+
 // ============ Common Schemas ============
 
 export const phoneSchema = z
@@ -104,6 +105,7 @@ export const skuSchema = z
 
 // Variant schema
 const variantSchema = z.object({
+  id: z.string().uuid().optional(), // For updates
   name: z.string().min(1, "Variant name is required").max(100),
   sku: skuSchema,
   price: z.coerce
@@ -119,6 +121,7 @@ const variantSchema = z.object({
 
 // Vehicle fitment schema
 const fitmentSchema = z.object({
+  id: z.string().uuid().optional(), // For updates
   make: z.string().min(1, "Make is required"),
   model: z.string().min(1, "Model is required"),
   startYear: z.coerce.number().int().min(1900).max(2100).optional().nullable(),

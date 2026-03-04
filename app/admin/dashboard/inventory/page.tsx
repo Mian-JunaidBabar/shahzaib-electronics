@@ -61,24 +61,24 @@ type Product = {
   id: string;
   name: string;
   slug: string;
-  sku: string;
   description: string | null;
-  price: number;
-  salePrice: number | null;
-  costPrice: number | null;
-  barcode: string | null;
   category: string | null;
   badgeId: string | null;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
   images: { id: string; secureUrl: string; isPrimary: boolean }[];
-  inventory: {
+  variants: {
     id: string;
-    quantity: number;
+    name: string;
+    sku: string;
+    price: number;
+    salePrice: number | null;
+    costPrice: number | null;
+    barcode: string | null;
+    inventoryQty: number;
     lowStockAt: number;
-    reorderPoint: number;
-  } | null;
+  }[];
   badge: {
     id: string;
     name: string;
@@ -339,14 +339,20 @@ export default function InventoryPage() {
   };
 
   const getStockStatus = (product: Product) => {
-    if (!product.inventory || product.inventory.quantity === 0) {
+    // Calculate total stock across all variants
+    const totalStock =
+      product.variants?.reduce((sum, v) => sum + v.inventoryQty, 0) || 0;
+    const defaultVariant = product.variants?.[0];
+    const lowStockAt = defaultVariant?.lowStockAt || 5;
+
+    if (totalStock === 0) {
       return {
         label: "Out of Stock",
         color: "bg-red-100 text-red-700",
         icon: XCircle,
       };
     }
-    if (product.inventory.quantity <= product.inventory.lowStockAt) {
+    if (totalStock <= lowStockAt) {
       return {
         label: "Low Stock",
         color: "bg-orange-100 text-orange-700",
@@ -612,10 +618,25 @@ export default function InventoryPage() {
                       {/* Price column removed per request */}
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Badge className={stockStatus.color}>
-                            <StockIcon className="h-3 w-3 mr-1" />
-                            {product.inventory?.quantity ?? 0} units
-                          </Badge>
+                          {(() => {
+                            const totalStock =
+                              product.variants?.reduce(
+                                (sum, v) => sum + v.inventoryQty,
+                                0,
+                              ) || 0;
+                            return (
+                              <Badge className={stockStatus.color}>
+                                <StockIcon className="h-3 w-3 mr-1" />
+                                {totalStock} units
+                                {product.variants &&
+                                  product.variants.length > 1 && (
+                                    <span className="ml-1 text-xs opacity-70">
+                                      ({product.variants.length} variants)
+                                    </span>
+                                  )}
+                              </Badge>
+                            );
+                          })()}
                         </div>
                       </TableCell>
                       <TableCell>
