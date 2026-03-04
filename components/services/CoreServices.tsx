@@ -19,7 +19,10 @@ export function CoreServices({
   }
 
   return (
-    <section className="px-4 py-16 max-w-7xl mx-auto w-full space-y-12">
+    <section
+      id="pricing"
+      className="px-4 py-16 max-w-7xl mx-auto w-full space-y-12"
+    >
       <div className="flex flex-col gap-2 items-center text-center">
         <h2 className="text-slate-900 dark:text-white text-3xl font-black">
           Our Core Services

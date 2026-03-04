@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function ServicesCta() {
   return (
     <section className="p-4 py-24 max-w-5xl mx-auto w-full">
@@ -14,12 +16,18 @@ export function ServicesCta() {
         </p>
 
         <div className="mt-4 relative z-10 flex flex-col sm:flex-row gap-4 w-full max-w-md">
-          <button className="flex-1 bg-white dark:bg-slate-900 text-primary dark:text-primary hover:bg-slate-50 px-8 py-4 rounded-xl font-bold text-lg shadow-xl hover:-translate-y-1 transition-all duration-300">
+          <Link
+            href="/checkout"
+            className="flex-1 bg-white dark:bg-slate-900 text-primary dark:text-primary hover:bg-slate-50 px-8 py-4 rounded-xl font-bold text-lg shadow-xl hover:-translate-y-1 transition-all duration-300 text-center"
+          >
             Book Appointment
-          </button>
-          <button className="flex-1 bg-primary dark:bg-primary-foreground border-2 border-white/30 dark:border-primary/30 hover:bg-white/10 dark:hover:bg-primary/20 text-white dark:text-primary px-8 py-4 rounded-xl font-bold text-lg transition-colors duration-300">
+          </Link>
+          <Link
+            href="#pricing"
+            className="flex-1 bg-primary dark:bg-primary-foreground border-2 border-white/30 dark:border-primary/30 hover:bg-white/10 dark:hover:bg-primary/20 text-white dark:text-primary px-8 py-4 rounded-xl font-bold text-lg transition-colors duration-300 text-center"
+          >
             View Pricing
-          </button>
+          </Link>
         </div>
       </div>
     </section>
