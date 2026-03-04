@@ -78,36 +78,49 @@ async function ProductsGrid({ searchParams }: { searchParams: SearchParams }) {
   });
 
   // Map to ProductCardProps structure
-  const mappedProducts = products.map((product) => {
-    // Prisma price is in cents. Converting to dollars.
-    const currentPrice = (product.salePrice || product.price) / 100;
-    const originalPrice = product.salePrice ? product.price / 100 : undefined;
+  const mappedProducts = products
+    .map((product) => {
+      // Get the default variant (first one)
+      const defaultVariant = product.variants[0];
 
-    let badgeType: "NEW" | "SALE" | undefined = undefined;
-    let badgeText = "";
+      if (!defaultVariant) {
+        // Skip products without variants
+        return null;
+      }
 
-    if (product.badge) {
-      badgeText = product.badge.name;
-      if (badgeText.toUpperCase().includes("NEW")) badgeType = "NEW";
-      else if (badgeText.toUpperCase().includes("SALE")) badgeType = "SALE";
-    } else if (product.salePrice) {
-      badgeType = "SALE";
-      badgeText = `-${Math.round((1 - product.salePrice / product.price) * 100)}%`;
-    }
+      // Prisma price is in cents. Converting to dollars.
+      const currentPrice =
+        (defaultVariant.salePrice || defaultVariant.price) / 100;
+      const originalPrice = defaultVariant.salePrice
+        ? defaultVariant.price / 100
+        : undefined;
 
-    return {
-      id: product.slug,
-      title: product.name,
-      price: currentPrice,
-      originalPrice,
-      image: product.images[0]?.secureUrl || "/placeholder-image.jpg",
-      rating: 5,
-      reviews: 0,
-      badge: badgeType,
-      badgeText: badgeText || undefined,
-      category: product.category || undefined,
-    };
-  });
+      let badgeType: "NEW" | "SALE" | undefined = undefined;
+      let badgeText = "";
+
+      if (product.badge) {
+        badgeText = product.badge.name;
+        if (badgeText.toUpperCase().includes("NEW")) badgeType = "NEW";
+        else if (badgeText.toUpperCase().includes("SALE")) badgeType = "SALE";
+      } else if (defaultVariant.salePrice) {
+        badgeType = "SALE";
+        badgeText = `-${Math.round((1 - defaultVariant.salePrice / defaultVariant.price) * 100)}%`;
+      }
+
+      return {
+        id: product.slug,
+        title: product.name,
+        price: currentPrice,
+        originalPrice,
+        image: product.images[0]?.secureUrl || "/placeholder-image.jpg",
+        rating: 5,
+        reviews: 0,
+        badge: badgeType,
+        badgeText: badgeText || undefined,
+        category: product.category || undefined,
+      };
+    })
+    .filter(Boolean); // Filter out null entries (products without variants)
 
   return (
     <>

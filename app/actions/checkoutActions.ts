@@ -97,38 +97,35 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
 
       // 2. Create Order & Items if cartItems exist
       if (cartItems.length > 0) {
-        // Look up real prices to be safe
-        const productSlugs = cartItems.map((item) => item.id);
-        const products = await tx.product.findMany({
-          where: { slug: { in: productSlugs } },
+        // Look up real prices from variants to be safe
+        const variantIds = cartItems.map((item) => item.id);
+        const variants = await tx.productVariant.findMany({
+          where: { id: { in: variantIds } },
+          include: { product: true },
         });
 
         const orderItemsToCreate = [];
 
         for (const item of cartItems) {
-          const dbProduct = products.find((p) => p.slug === item.id);
-          if (!dbProduct) throw new Error(`Product not found: ${item.id}`);
+          const dbVariant = variants.find((v) => v.id === item.id);
+          if (!dbVariant) throw new Error(`Product variant not found: ${item.id}`);
 
           // Determine price directly from DB (salePrice or regular price)
-          const actualPriceCents = dbProduct.salePrice || dbProduct.price;
+          const actualPriceCents = dbVariant.salePrice || dbVariant.price;
           totalCents += actualPriceCents * item.quantity;
 
           orderItemsToCreate.push({
-            productId: dbProduct.id,
-            name: dbProduct.name,
+            variantId: dbVariant.id,
+            name: dbVariant.name,
             price: actualPriceCents,
             quantity: item.quantity,
           });
 
           // Decrement Inventory safely
-          const inventory = await tx.inventory.findUnique({
-            where: { productId: dbProduct.id },
-          });
-
-          if (inventory && inventory.quantity >= item.quantity) {
-            await tx.inventory.update({
-              where: { productId: dbProduct.id },
-              data: { quantity: { decrement: item.quantity } },
+          if (dbVariant.inventoryQty >= item.quantity) {
+            await tx.productVariant.update({
+              where: { id: dbVariant.id },
+              data: { inventoryQty: { decrement: item.quantity } },
             });
           }
         }

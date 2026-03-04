@@ -105,24 +105,20 @@ model Product {
   id          String        @id @default(uuid())
   name        String
   slug        String        @unique
-  sku         String        @unique // Stock Keeping Unit - critical for auto parts
   description String?       @db.Text
-  price       Int           // Selling price in cents
-  salePrice   Int?          @map("sale_price") // Discounted price in cents (optional)
-  costPrice   Int?          @map("cost_price") // Cost price for margin tracking (optional)
-  barcode     String?       // Optional barcode for scanning
   category    String?
   badgeId     String?       @map("badge_id")
   status      ProductStatus @default(ACTIVE)
   isActive    Boolean       @default(true) @map("is_active")
   isArchived  Boolean       @default(false) @map("is_archived") // Soft delete flag
+  isUniversal Boolean       @default(true) @map("is_universal") // True if fits all vehicles
   createdAt   DateTime      @default(now()) @map("created_at")
   updatedAt   DateTime      @updatedAt @map("updated_at")
 
-  badge       Badge?   @relation(fields: [badgeId], references: [id])
-  images      Image[]       // Unified Image relation
-  inventory   Inventory?
-  orderItems  OrderItem[]
+  badge       Badge?              @relation(fields: [badgeId], references: [id])
+  images      Image[]             // Unified Image relation
+  variants    ProductVariant[]    // Product specifications/variations
+  fitments    VehicleFitment[]    // Vehicle compatibility
 
   @@map("products")
 }
@@ -151,17 +147,49 @@ model Image {
   @@map("images")
 }
 
-model Inventory {
+// ============================================
+// PRODUCT VARIANTS (Specifications & Inventory)
+// ============================================
+// Each product has one or more variants (e.g., "Default", "2GB/32GB", "Black").
+// Pricing, SKU, and inventory are now managed at the variant level.
+
+model ProductVariant {
   id           String   @id @default(uuid())
-  productId    String   @unique @map("product_id")
-  quantity     Int      @default(0)
-  lowStockAt   Int      @default(10) @map("low_stock_at") // Alert threshold
-  reorderPoint Int      @default(5) @map("reorder_point")
+  productId    String   @map("product_id")
+  name         String   // e.g., "Default", "2GB/32GB", "Black"
+  sku          String   @unique
+  price        Int      // In cents
+  salePrice    Int?     @map("sale_price")
+  costPrice    Int?     @map("cost_price")
+  barcode      String?
+  inventoryQty Int      @default(0) @map("inventory_qty")
+  lowStockAt   Int      @default(5) @map("low_stock_at")
+  createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
+
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+
+  @@map("product_variants")
+}
+
+// ============================================
+// VEHICLE FITMENT (Auto Parts Compatibility)
+// ============================================
+// Defines which vehicles a product is compatible with.
+
+model VehicleFitment {
+  id        String @id @default(uuid())
+  productId String @map("product_id")
+  make      String // e.g., "Toyota"
+  model     String // e.g., "Corolla"
+  startYear Int?   @map("start_year") // e.g., 2014
+  endYear   Int?   @map("end_year") // e.g., 2026
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@map("inventory")
+  @@index([make, model])
+  @@map("vehicle_fitments")
 }
 
 // ============================================
@@ -205,13 +233,13 @@ model Order {
 model OrderItem {
   id        String @id @default(uuid())
   orderId   String @map("order_id")
-  productId String @map("product_id")
+  variantId String @map("variant_id") // Links to specific ProductVariant
   name      String // Snapshot of product name at order time
   price     Int    // Snapshot of price at order time (cents)
   quantity  Int
 
-  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id])
+  order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id])
 
   @@map("order_items")
 }

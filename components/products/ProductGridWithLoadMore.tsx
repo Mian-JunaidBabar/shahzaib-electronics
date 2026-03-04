@@ -68,7 +68,9 @@ export function ProductGridWithLoadMore({
       });
 
       if (result.success && result.data) {
-        const newItems = result.data.map(mapProductToCard);
+        const newItems = result.data
+          .map(mapProductToCard)
+          .filter((p): p is ProductCardProps => p !== null);
         const newList = [...products, ...newItems];
         setProducts(newList);
 
@@ -97,14 +99,25 @@ export function ProductGridWithLoadMore({
   const mapProductToCard = (product: {
     slug: string;
     name: string;
-    price: number;
-    salePrice: number | null;
     images: { secureUrl: string }[];
     badge?: { name: string } | null;
     category?: string | null;
-  }): ProductCardProps => {
-    const currentPrice = (product.salePrice || product.price) / 100;
-    const originalPrice = product.salePrice ? product.price / 100 : undefined;
+    variants: Array<{
+      price: number;
+      salePrice: number | null;
+    }>;
+  }): ProductCardProps | null => {
+    const defaultVariant = product.variants[0];
+
+    if (!defaultVariant) {
+      return null;
+    }
+
+    const currentPrice =
+      (defaultVariant.salePrice || defaultVariant.price) / 100;
+    const originalPrice = defaultVariant.salePrice
+      ? defaultVariant.price / 100
+      : undefined;
     let badgeType: "NEW" | "SALE" | undefined = undefined;
     let badgeText = "";
 
@@ -112,9 +125,9 @@ export function ProductGridWithLoadMore({
       badgeText = product.badge.name;
       if (badgeText.toUpperCase().includes("NEW")) badgeType = "NEW";
       else if (badgeText.toUpperCase().includes("SALE")) badgeType = "SALE";
-    } else if (product.salePrice) {
+    } else if (defaultVariant.salePrice) {
       badgeType = "SALE";
-      badgeText = `-${Math.round((1 - product.salePrice / product.price) * 100)}%`;
+      badgeText = `-${Math.round((1 - defaultVariant.salePrice / defaultVariant.price) * 100)}%`;
     }
 
     return {

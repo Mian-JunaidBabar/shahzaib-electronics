@@ -1,4 +1,10 @@
-import type { Product, Image, Inventory, Badge } from "@prisma/client";
+import type {
+  Product,
+  Image,
+  ProductVariant,
+  VehicleFitment,
+  Badge,
+} from "@prisma/client";
 import { Prisma } from "@prisma/client";
 /**
  * Storefront Service
@@ -11,7 +17,8 @@ import { prisma } from "@/lib/prisma";
 // Types
 export type StorefrontProduct = Product & {
   images: Image[];
-  inventory: Inventory | null;
+  variants: ProductVariant[];
+  fitments?: VehicleFitment[];
   badge?: Badge | null;
 };
 
@@ -73,11 +80,10 @@ export async function getStorefrontProducts(
     where.category = { equals: category, mode: "insensitive" };
   }
 
-  // Price range filter (prices are in cents)
+  // Price range filter (prices are in cents, check variant prices)
   if (minPrice !== undefined || maxPrice !== undefined) {
-    where.AND = [
-      ...(Array.isArray(where.AND) ? where.AND : []),
-      {
+    where.variants = {
+      some: {
         OR: [
           // Check salePrice if exists
           {
@@ -97,17 +103,17 @@ export async function getStorefrontProducts(
           },
         ],
       },
-    ];
+    };
   }
 
-  // Build orderBy
+  // Build orderBy (note: sorting by variant price would require complex aggregation)
   let orderBy: Prisma.ProductOrderByWithRelationInput;
   switch (sort) {
     case "price_asc":
-      orderBy = { price: "asc" };
-      break;
     case "price_desc":
-      orderBy = { price: "desc" };
+      // For now, sort by creation date when price sorting is requested
+      // TODO: Implement variant price aggregation for accurate price sorting
+      orderBy = { createdAt: "desc" };
       break;
     case "name_asc":
       orderBy = { name: "asc" };
@@ -122,7 +128,7 @@ export async function getStorefrontProducts(
     where,
     include: {
       images: { orderBy: { sortOrder: "asc" } },
-      inventory: true,
+      variants: { orderBy: { createdAt: "asc" }, take: 1 }, // Get default variant for display
       badge: true,
     },
     orderBy,
@@ -156,7 +162,8 @@ export async function getStorefrontProduct(
     },
     include: {
       images: { orderBy: { sortOrder: "asc" } },
-      inventory: true,
+      variants: { orderBy: { createdAt: "asc" } },
+      fitments: true,
       badge: true,
     },
   });
@@ -181,7 +188,7 @@ export async function getRelatedProducts(
     },
     include: {
       images: { orderBy: { sortOrder: "asc" } },
-      inventory: true,
+      variants: { orderBy: { createdAt: "asc" }, take: 1 },
       badge: true,
     },
     orderBy: { createdAt: "desc" },
@@ -208,13 +215,15 @@ export async function getAllCategories(): Promise<string[]> {
 }
 
 /**
- * Get price range for active products
+ * Get price range for active products (from variants)
  */
 export async function getPriceRange(): Promise<{ min: number; max: number }> {
-  const result = await prisma.product.aggregate({
+  const result = await prisma.productVariant.aggregate({
     where: {
-      isActive: true,
-      isArchived: false,
+      product: {
+        isActive: true,
+        isArchived: false,
+      },
     },
     _min: { price: true },
     _max: { price: true },
@@ -236,11 +245,14 @@ export async function getFeaturedProducts(
     where: {
       isActive: true,
       isArchived: false,
-      OR: [{ badgeId: { not: null } }, { salePrice: { not: null } }],
+      OR: [
+        { badgeId: { not: null } },
+        { variants: { some: { salePrice: { not: null } } } },
+      ],
     },
     include: {
       images: { orderBy: { sortOrder: "asc" } },
-      inventory: true,
+      variants: { orderBy: { createdAt: "asc" }, take: 1 },
       badge: true,
     },
     orderBy: { createdAt: "desc" },

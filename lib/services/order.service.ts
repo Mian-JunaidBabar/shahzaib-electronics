@@ -1,4 +1,9 @@
-import type { Order, OrderItem, Product, Customer } from "@prisma/client";
+import type {
+  Order,
+  OrderItem,
+  ProductVariant,
+  Customer,
+} from "@prisma/client";
 import { OrderStatus, Prisma } from "@prisma/client";
 /**
  * Order Service
@@ -12,7 +17,7 @@ import { prisma } from "@/lib/prisma";
 
 // Types
 export type OrderWithItems = Order & {
-  items: (OrderItem & { product: Product })[];
+  items: (OrderItem & { variant: ProductVariant })[];
   customer: Customer | null;
 };
 
@@ -23,7 +28,7 @@ export type CreateOrderInput = {
   address?: string;
   notes?: string;
   items: {
-    productId: string;
+    variantId: string;
     name: string;
     price: number;
     quantity: number;
@@ -95,7 +100,7 @@ export async function getOrders(
   const orders = await prisma.order.findMany({
     where,
     include: {
-      items: { include: { product: true } },
+      items: { include: { variant: true } },
       customer: true,
     },
     orderBy: { createdAt: "desc" },
@@ -126,7 +131,7 @@ export async function getOrder(
       OR: [{ id: idOrNumber }, { orderNumber: idOrNumber }],
     },
     include: {
-      items: { include: { product: true } },
+      items: { include: { variant: true } },
       customer: true,
       booking: true, // Include linked booking if exists
     },
@@ -181,7 +186,7 @@ export async function createOrder(
       total,
       items: {
         create: items.map((item) => ({
-          productId: item.productId,
+          variantId: item.variantId,
           name: item.name,
           price: item.price,
           quantity: item.quantity,
@@ -189,7 +194,7 @@ export async function createOrder(
       },
     },
     include: {
-      items: { include: { product: true } },
+      items: { include: { variant: true } },
       customer: true,
     },
   });
@@ -206,7 +211,7 @@ export async function updateOrder(
     where: { id },
     data: input,
     include: {
-      items: { include: { product: true } },
+      items: { include: { variant: true } },
       customer: true,
     },
   });
@@ -251,7 +256,7 @@ export async function getOrderStats() {
 export async function getRecentOrders(limit = 5): Promise<OrderWithItems[]> {
   return prisma.order.findMany({
     include: {
-      items: { include: { product: true } },
+      items: { include: { variant: true } },
       customer: true,
     },
     orderBy: { createdAt: "desc" },

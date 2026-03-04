@@ -7,12 +7,18 @@ export async function GET() {
 
   const items = await prisma.orderItem.findMany({
     where: { order: { createdAt: { gte: cutoff } } },
-    include: { product: true },
+    include: {
+      variant: {
+        include: {
+          product: { select: { category: true } },
+        },
+      },
+    },
   });
 
   const counts: Record<string, number> = {};
   for (const it of items) {
-    const cat = it.product?.category || "Uncategorized";
+    const cat = it.variant?.product?.category || "Uncategorized";
     counts[cat] = (counts[cat] || 0) + it.quantity;
   }
 

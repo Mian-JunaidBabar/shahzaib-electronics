@@ -20,20 +20,32 @@ function formatPrice(cents: number): string {
 export function ProductCard({ product }: Props) {
   const { addToCart, items } = useCart();
 
+  // Get default variant (first variant)
+  const defaultVariant = product.variants[0];
+  if (!defaultVariant) {
+    return null; // No variant available
+  }
+
   const primaryImage = product.images[0]?.secureUrl ?? "/placeholder.jpg";
   const hasDiscount =
-    product.salePrice !== null && product.salePrice < product.price;
-  const displayPrice = product.salePrice ?? product.price;
+    defaultVariant.salePrice !== null &&
+    defaultVariant.salePrice < defaultVariant.price;
+  const displayPrice = defaultVariant.salePrice ?? defaultVariant.price;
   const discountPercent = hasDiscount
-    ? Math.round(((product.price - product.salePrice!) / product.price) * 100)
+    ? Math.round(
+        ((defaultVariant.price - defaultVariant.salePrice!) /
+          defaultVariant.price) *
+          100,
+      )
     : 0;
 
-  const isInStock = product.inventory && product.inventory.quantity > 0;
-  const isInCart = items?.some((item) => item.id === product.id) ?? false;
+  const isInStock = defaultVariant.inventoryQty > 0;
+  const isInCart =
+    items?.some((item) => item.id === defaultVariant.id) ?? false;
 
   const handleAddToCart = () => {
     addToCart({
-      id: product.id,
+      id: defaultVariant.id, // Use variant ID
       name: product.name,
       price: displayPrice / 100, // Convert cents to rupees for cart
       image: primaryImage,
@@ -110,7 +122,7 @@ export function ProductCard({ product }: Props) {
           <span className="font-bold text-lg">{formatPrice(displayPrice)}</span>
           {hasDiscount && (
             <span className="text-sm text-muted-foreground line-through">
-              {formatPrice(product.price)}
+              {formatPrice(defaultVariant.price)}
             </span>
           )}
         </div>

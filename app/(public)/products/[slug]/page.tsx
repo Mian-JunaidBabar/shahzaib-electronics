@@ -40,7 +40,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const displayPrice = (product.salePrice ?? product.price) / 100;
+  // Use default variant for pricing
+  const defaultVariant = product.variants[0];
+  const displayPrice =
+    (defaultVariant?.salePrice ?? defaultVariant?.price ?? 0) / 100;
   const primaryImage = product.images[0]?.secureUrl ?? "/placeholder.jpg";
 
   const rawDescription =
@@ -86,18 +89,30 @@ export default async function ProductDetailPage({ params }: Props) {
     4,
   );
 
+  // Use default variant (first variant)
+  const defaultVariant = product.variants[0];
+  if (!defaultVariant) {
+    notFound(); // Product has no variants
+  }
+
   const primaryImage = product.images[0]?.secureUrl ?? "/placeholder.jpg";
   const hasDiscount =
-    product.salePrice !== null && product.salePrice < product.price;
-  const displayPrice = product.salePrice ?? product.price;
+    defaultVariant.salePrice !== null &&
+    defaultVariant.salePrice < defaultVariant.price;
+  const displayPrice = defaultVariant.salePrice ?? defaultVariant.price;
   const discountPercent = hasDiscount
-    ? Math.round(((product.price - product.salePrice!) / product.price) * 100)
+    ? Math.round(
+        ((defaultVariant.price - defaultVariant.salePrice!) /
+          defaultVariant.price) *
+          100,
+      )
     : 0;
 
-  const isInStock = product.inventory && product.inventory.quantity > 0;
-  const stockQuantity = product.inventory?.quantity ?? 0;
+  const isInStock = defaultVariant.inventoryQty > 0;
+  const stockQuantity = defaultVariant.inventoryQty;
+  const hasMultipleVariants = product.variants.length > 1;
 
-  const whatsappMessage = `Hi! I'm interested in: ${product.name} (${formatPrice(displayPrice)})`;
+  const whatsappMessage = `Hi! I'm interested in: ${product.name}${hasMultipleVariants ? ` (${defaultVariant.name})` : ""} (${formatPrice(displayPrice)})`;
   const whatsappUrl = generateWhatsAppUrl(whatsappMessage);
 
   return (
@@ -167,10 +182,27 @@ export default async function ProductDetailPage({ params }: Props) {
             </div>
 
             {/* SKU */}
-            {product.sku && (
+            {defaultVariant.sku && (
               <p className="text-sm text-muted-foreground">
-                SKU: {product.sku}
+                SKU: {defaultVariant.sku}
               </p>
+            )}
+
+            {/* Variant Selector (if multiple variants exist) */}
+            {hasMultipleVariants && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Select Variant:</p>
+                <p className="text-sm text-muted-foreground">
+                  Currently showing:{" "}
+                  <span className="font-medium text-foreground">
+                    {defaultVariant.name}
+                  </span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Note: Full variant selection will be available in the next
+                  update
+                </p>
+              </div>
             )}
 
             <Separator />
@@ -183,7 +215,7 @@ export default async function ProductDetailPage({ params }: Props) {
               {hasDiscount && (
                 <>
                   <span className="text-xl text-muted-foreground line-through">
-                    {formatPrice(product.price)}
+                    {formatPrice(defaultVariant.price)}
                   </span>
                   <Badge variant="destructive">-{discountPercent}% OFF</Badge>
                 </>
@@ -210,7 +242,7 @@ export default async function ProductDetailPage({ params }: Props) {
             <div className="flex flex-col sm:flex-row gap-4">
               <AddToCartButton
                 product={{
-                  id: product.id,
+                  id: defaultVariant.id, // Use variant ID
                   name: product.name,
                   price: displayPrice / 100,
                   image: primaryImage,

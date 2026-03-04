@@ -15,7 +15,7 @@ import {
 type ProductData = {
   name: string;
   quantity: number;
-  productId: string;
+  variantId: string;
 };
 
 type TooltipPayload = {

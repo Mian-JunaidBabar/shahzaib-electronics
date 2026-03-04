@@ -120,19 +120,19 @@ export async function createPublicOrderAction(
         },
       });
 
-      // 2. Check stock availability and get product details
+      // 2. Check stock availability and get variant details
       for (const item of items) {
-        const inventory = await tx.inventory.findFirst({
-          where: { product: { id: item.id } },
+        const variant = await tx.productVariant.findUnique({
+          where: { id: item.id },
         });
 
-        if (!inventory) {
+        if (!variant) {
           throw new Error(`Product "${item.name}" is not available`);
         }
 
-        if (inventory.quantity < item.quantity) {
+        if (variant.inventoryQty < item.quantity) {
           throw new Error(
-            `Insufficient stock for "${item.name}". Only ${inventory.quantity} available.`,
+            `Insufficient stock for "${item.name}". Only ${variant.inventoryQty} available.`,
           );
         }
       }
@@ -150,7 +150,7 @@ export async function createPublicOrderAction(
           status: "NEW",
           items: {
             create: items.map((item) => ({
-              productId: item.id,
+              variantId: item.id,
               name: item.name,
               price: item.price,
               quantity: item.quantity,
@@ -162,29 +162,38 @@ export async function createPublicOrderAction(
         },
       });
 
-      // 4. Decrement inventory for each item
+      // 4. Decrement inventory for each variant
       for (const item of items) {
-        await tx.inventory.update({
+        await tx.productVariant.update({
           where: {
-            productId: item.id,
+            id: item.id,
           },
           data: {
-            quantity: {
+            inventoryQty: {
               decrement: item.quantity,
             },
           },
         });
 
-        // Update product status if out of stock
-        const updatedInventory = await tx.inventory.findUnique({
-          where: { productId: item.id },
+        // Update product status if all variants out of stock
+        const variant = await tx.productVariant.findUnique({
+          where: { id: item.id },
+          include: { product: { include: { variants: true } } },
         });
 
-        if (updatedInventory && updatedInventory.quantity <= 0) {
-          await tx.product.update({
-            where: { id: item.id },
-            data: { status: "OUT_OF_STOCK" },
-          });
+        if (variant) {
+          const allOutOfStock = variant.product.variants.every((v) =>
+            v.id === item.id
+              ? v.inventoryQty - item.quantity <= 0
+              : v.inventoryQty <= 0,
+          );
+
+          if (allOutOfStock) {
+            await tx.product.update({
+              where: { id: variant.productId },
+              data: { status: "OUT_OF_STOCK" },
+            });
+          }
         }
       }
 

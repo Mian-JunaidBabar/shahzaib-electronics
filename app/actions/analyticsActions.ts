@@ -71,7 +71,7 @@ export async function getTopSellingProducts(range?: DateRange) {
 
   // Find order items from orders within the date range
   const topItems = await prisma.orderItem.groupBy({
-    by: ["productId", "name"],
+    by: ["variantId", "name"],
     where: {
       order: {
         createdAt: { gte: start, lte: end },
@@ -91,7 +91,7 @@ export async function getTopSellingProducts(range?: DateRange) {
   return topItems.map((item) => ({
     name: item.name,
     quantity: item._sum.quantity || 0,
-    productId: item.productId,
+    variantId: item.variantId,
   }));
 }
 
@@ -146,11 +146,16 @@ export async function getDashboardSummary(range?: DateRange) {
     },
   });
 
-  const lowStockItems = await prisma.inventory.count({
+  // Count low stock variants (where inventoryQty <= lowStockAt)
+  const lowStockVariants = await prisma.productVariant.findMany({
     where: {
-      quantity: { lte: 10 },
+      product: { isActive: true },
     },
+    select: { inventoryQty: true, lowStockAt: true },
   });
+  const lowStockItems = lowStockVariants.filter(
+    (v) => v.inventoryQty <= v.lowStockAt,
+  ).length;
 
   return {
     totalRevenue: (totalRevenueResult._sum.total || 0) / 100, // Cents to main unit
@@ -205,14 +210,18 @@ export async function getRevenueByCategory(range?: DateRange) {
       },
     },
     include: {
-      product: { select: { category: true, price: true } },
+      variant: {
+        include: {
+          product: { select: { category: true } },
+        },
+      },
     },
   });
 
   const categoryTotals: Record<string, number> = {};
 
   orderItems.forEach((item) => {
-    const cat = item.product?.category || "Uncategorized";
+    const cat = item.variant?.product?.category || "Uncategorized";
     if (!categoryTotals[cat]) categoryTotals[cat] = 0;
     categoryTotals[cat] += (item.price * item.quantity) / 100;
   });
@@ -247,24 +256,28 @@ export async function getTopBookedServices() {
 }
 
 export async function getLowStockAlerts() {
-  const alerts = await prisma.inventory.findMany({
+  // Find variants where inventoryQty <= lowStockAt
+  const allVariants = await prisma.productVariant.findMany({
     where: {
-      quantity: { lte: 10 },
+      product: { isActive: true },
     },
     include: {
-      product: { select: { name: true, sku: true } },
+      product: { select: { name: true } },
     },
-    take: 5,
     orderBy: {
-      quantity: "asc",
+      inventoryQty: "asc",
     },
   });
 
-  return alerts.map((a) => ({
-    id: a.id,
-    name: a.product.name,
-    sku: a.product.sku,
-    quantity: a.quantity,
-    threshold: a.lowStockAt,
+  const lowStockVariants = allVariants
+    .filter((v) => v.inventoryQty <= v.lowStockAt)
+    .slice(0, 5);
+
+  return lowStockVariants.map((v) => ({
+    id: v.id,
+    name: `${v.product.name} - ${v.name}`,
+    sku: v.sku,
+    quantity: v.inventoryQty,
+    threshold: v.lowStockAt,
   }));
 }

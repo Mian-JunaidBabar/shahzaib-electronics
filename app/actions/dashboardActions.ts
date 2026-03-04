@@ -279,11 +279,13 @@ export async function generateLowStockAlertAction(): Promise<
     }
 
     const message = NotificationService.generateLowStockAlert(
-      products.map((p) => ({
-        name: p.name,
-        stock: p.inventory?.quantity || 0,
-        sku: p.slug, // Using slug as product identifier since sku doesn't exist
-      })),
+      products.flatMap((p) =>
+        p.variants.map((v) => ({
+          name: `${p.name} - ${v.name}`,
+          stock: v.inventoryQty,
+          sku: v.sku,
+        })),
+      ),
     );
 
     const notification = NotificationService.generateCustomMessage(

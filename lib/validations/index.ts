@@ -102,6 +102,29 @@ export const skuSchema = z
   .max(50, "SKU must not exceed 50 characters")
   .regex(/^[A-Z0-9\-]+$/i, "SKU must be alphanumeric (dashes allowed)");
 
+// Variant schema
+const variantSchema = z.object({
+  name: z.string().min(1, "Variant name is required").max(100),
+  sku: skuSchema,
+  price: z.coerce
+    .number()
+    .int()
+    .min(0, "Price must be non-negative (in cents)"),
+  salePrice: z.coerce.number().int().min(0).optional().nullable(),
+  costPrice: z.coerce.number().int().min(0).optional().nullable(),
+  barcode: z.string().max(100).optional().nullable(),
+  inventoryQty: z.coerce.number().int().min(0).default(0),
+  lowStockAt: z.coerce.number().int().min(1).default(5),
+});
+
+// Vehicle fitment schema
+const fitmentSchema = z.object({
+  make: z.string().min(1, "Make is required"),
+  model: z.string().min(1, "Model is required"),
+  startYear: z.coerce.number().int().min(1900).max(2100).optional().nullable(),
+  endYear: z.coerce.number().int().min(1900).max(2100).optional().nullable(),
+});
+
 // Base product schema
 const productBaseSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(200),
@@ -117,21 +140,17 @@ const productBaseSchema = z.object({
       .optional()
       .nullable(),
   ),
-  sku: skuSchema, // Required for auto parts identification
   description: z.string().optional().nullable(),
-  price: z.coerce
-    .number()
-    .int()
-    .min(0, "Price must be non-negative (in cents)"),
-  salePrice: z.coerce.number().int().min(0).optional().nullable(),
-  costPrice: z.coerce.number().int().min(0).optional().nullable(),
-  barcode: z.string().max(100).optional().nullable(),
   category: z.string().optional().nullable(),
   badgeId: z.string().uuid().optional().nullable(),
   isActive: z.boolean().default(true),
-  // Inventory fields (created separately)
-  stock: z.coerce.number().int().min(0).default(0),
-  lowStockThreshold: z.coerce.number().int().min(0).default(10),
+  isUniversal: z.boolean().default(true),
+
+  // Variants (at least one required)
+  variants: z.array(variantSchema).min(1, "At least one variant is required"),
+
+  // Fitments (optional)
+  fitments: z.array(fitmentSchema).default([]),
 });
 
 // Create schema with slug auto-generation
@@ -160,22 +179,17 @@ export const productUpdateSchema = z.object({
       .optional()
       .nullable(),
   ),
-  sku: skuSchema.optional(), // Optional on update
   description: z.string().optional().nullable(),
-  price: z.coerce
-    .number()
-    .int()
-    .min(0, "Price must be non-negative (in cents)")
-    .optional(),
-  salePrice: z.coerce.number().int().min(0).optional().nullable(),
-  costPrice: z.coerce.number().int().min(0).optional().nullable(),
-  barcode: z.string().max(100).optional().nullable(),
   category: z.string().optional().nullable(),
   badgeId: z.string().uuid().optional().nullable(),
   isActive: z.boolean().optional(),
   isArchived: z.boolean().optional(),
-  stock: z.coerce.number().int().min(0).optional(),
-  lowStockThreshold: z.coerce.number().int().min(0).optional(),
+  isUniversal: z.boolean().optional(),
+
+  // Optional variant and fitment updates
+  variants: z.array(variantSchema).optional(),
+  fitments: z.array(fitmentSchema).optional(),
+
   keepImagePublicIds: z.array(z.string()).optional(),
 });
 
@@ -232,7 +246,7 @@ export type ProductImageUpdateInput = z.infer<typeof productImageUpdateSchema>;
 
 // Matches Prisma OrderItem model
 export const orderItemSchema = z.object({
-  productId: z.string().uuid(),
+  variantId: z.string().uuid(),
   name: z.string().min(1, "Product name is required"),
   quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
   price: z.coerce

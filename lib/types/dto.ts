@@ -10,7 +10,7 @@
  * NOTE: Authentication is handled EXCLUSIVELY by Supabase Auth.
  * User/Role types are defined locally, not from Prisma.
  */
-import type { Product, Image, Inventory, Order, OrderItem, Booking, Lead, Customer, OrderStatus, BookingStatus, LeadStatus, LeadSource, Admin, } from "@prisma/client";
+import type { Product, Image, ProductVariant, VehicleFitment, Order, OrderItem, Booking, Lead, Customer, OrderStatus, BookingStatus, LeadStatus, LeadSource, Admin, } from "@prisma/client";
 
 
 // ============================================
@@ -79,18 +79,43 @@ export interface SessionDTO {
 export type ProductStatus = "ACTIVE" | "OUT_OF_STOCK" | "DRAFT" | "ARCHIVED";
 
 /**
+ * Product Variant DTO
+ */
+export interface ProductVariantDTO {
+  id: string;
+  name: string;
+  sku: string;
+  price: number;
+  salePrice?: number | null;
+  costPrice?: number | null;
+  barcode?: string | null;
+  inventoryQty: number;
+  lowStockAt: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Vehicle Fitment DTO
+ */
+export interface VehicleFitmentDTO {
+  id: string;
+  make: string;
+  model: string;
+  startYear: number;
+  endYear: number;
+  notes?: string | null;
+  createdAt: string;
+}
+
+/**
  * Product with relations for display
  */
 export interface ProductDTO {
   id: string;
   name: string;
   slug: string;
-  sku: string;
   description?: string | null;
-  price: number;
-  salePrice?: number | null;
-  costPrice?: number | null;
-  barcode?: string | null;
   category?: string | null;
   badgeId?: string | null;
   badge?: {
@@ -102,10 +127,12 @@ export interface ProductDTO {
   status: ProductStatus;
   isActive: boolean;
   isArchived: boolean;
+  isUniversal: boolean;
   createdAt: string;
   updatedAt: string;
   images: ImageDTO[];
-  inventory?: InventoryDTO | null;
+  variants: ProductVariantDTO[];
+  fitments: VehicleFitmentDTO[];
 }
 
 /**
@@ -129,41 +156,65 @@ export interface ImageDTO {
 export type ProductImageDTO = ImageDTO;
 
 /**
- * Inventory information
- */
-export interface InventoryDTO {
-  id: string;
-  quantity: number;
-  lowStockAt: number;
-  reorderPoint: number;
-  updatedAt: string;
-}
-
-/**
  * Product creation input (from form/API)
  */
 export interface CreateProductInput {
   name: string;
   slug?: string;
-  sku: string; // Required - unique identifier for the product
   description?: string | null;
-  price: number;
-  salePrice?: number | null;
-  costPrice?: number | null;
-  barcode?: string | null;
   category?: string | null;
   badgeId?: string | null;
   isActive?: boolean;
-  stock?: number;
-  lowStockThreshold?: number;
+  isUniversal?: boolean;
+  variants: {
+    name: string;
+    sku: string;
+    price: number;
+    salePrice?: number | null;
+    costPrice?: number | null;
+    barcode?: string | null;
+    inventoryQty: number;
+    lowStockAt?: number;
+  }[];
+  fitments?: {
+    make: string;
+    model: string;
+    startYear: number;
+    endYear: number;
+    notes?: string | null;
+  }[];
 }
 
 /**
  * Product update input
  */
-export interface UpdateProductInput extends Partial<CreateProductInput> {
+export interface UpdateProductInput {
   id: string;
+  name?: string;
+  slug?: string;
+  description?: string | null;
+  category?: string | null;
+  badgeId?: string | null;
+  isActive?: boolean;
   isArchived?: boolean;
+  isUniversal?: boolean;
+  variants?: {
+    name: string;
+    sku: string;
+    price: number;
+    salePrice?: number | null;
+    costPrice?: number | null;
+    barcode?: string | null;
+    inventoryQty: number;
+    lowStockAt?: number;
+  }[];
+  fitments?: {
+    make: string;
+    model: string;
+    startYear: number;
+    endYear: number;
+    notes?: string | null;
+  }[];
   keepImagePublicIds?: string[];
 }
 
@@ -202,10 +253,12 @@ export interface ProductRebalanceDTO {
   name: string;
   slug: string;
   status: ProductStatus;
-  inventory: {
-    quantity: number;
+  variants: {
+    id: string;
+    name: string;
+    inventoryQty: number;
     lowStockAt: number;
-  } | null;
+  }[];
 }
 
 /**
@@ -311,10 +364,11 @@ export interface OrderDTO {
  */
 export interface OrderItemDTO {
   id: string;
-  productId: string;
+  variantId: string;
   name: string;
   price: number;
   quantity: number;
+  productId?: string; // Optional for backward compatibility
 }
 
 /**
@@ -335,10 +389,10 @@ export interface CreateOrderInput {
  * Order item creation input
  */
 export interface CreateOrderItemInput {
-  productId: string;
+  variantId: string;
   name: string;
   quantity: number;
-  unitPrice: number;
+  price: number;
 }
 
 /**

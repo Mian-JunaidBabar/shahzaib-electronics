@@ -1,10 +1,13 @@
-import { getRevenueOverTime, getTopSellingProducts, type DateRange, } from "@/app/actions/analyticsActions";
+import {
+  getRevenueOverTime,
+  getTopSellingProducts,
+  type DateRange,
+} from "@/app/actions/analyticsActions";
 import { format, startOfDay, endOfDay, subDays } from "date-fns";
 import { requireAdmin } from "@/lib/services/auth.service";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import * as XLSX from "xlsx";
-
 
 export async function GET(request: Request) {
   try {
@@ -58,7 +61,7 @@ export async function GET(request: Request) {
     const topRows = topProducts.map((p) => ({
       Name: p.name,
       Quantity: p.quantity,
-      ProductId: p.productId,
+      VariantId: p.variantId,
     }));
     const ws2 = XLSX.utils.json_to_sheet(topRows);
     XLSX.utils.book_append_sheet(wb, ws2, "Top Products");
