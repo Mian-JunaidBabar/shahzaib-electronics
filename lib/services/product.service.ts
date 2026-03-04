@@ -1,10 +1,4 @@
-import type {
-  Product,
-  Image,
-  ProductVariant,
-  VehicleFitment,
-  Badge,
-} from "@prisma/client";
+import type { Product, Image, ProductVariant, VehicleFitment, Badge, } from "@prisma/client";
 import { deleteImage, extractPublicId } from "@/lib/cloudinary";
 import { ProductStatus, Prisma } from "@prisma/client";
 /**
@@ -19,11 +13,19 @@ import { ProductStatus, Prisma } from "@prisma/client";
  */
 import { prisma } from "@/lib/prisma";
 
+
 // Types
 export type ProductWithRelations = Product & {
   images: Image[];
   variants: ProductVariant[];
   fitments: VehicleFitment[];
+  badge: Badge | null;
+};
+
+// Store product with limited relations (for listing pages)
+export type StoreProduct = Product & {
+  images: Image[];
+  variants: ProductVariant[];
   badge: Badge | null;
 };
 
@@ -266,7 +268,9 @@ export async function getStoreProducts(filters: StoreFilters = {}) {
 }
 
 // returns both list and total count according to filters (ignores limit/offset for count)
-export async function getStoreProductsWithCount(filters: StoreFilters = {}) {
+export async function getStoreProductsWithCount(
+  filters: StoreFilters = {},
+): Promise<{ products: StoreProduct[]; count: number }> {
   const { limit, offset, sort } = filters;
   const where = buildStoreWhere(filters);
 

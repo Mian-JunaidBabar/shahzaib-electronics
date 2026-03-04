@@ -16,6 +16,7 @@ type ProductData = {
   name: string;
   quantity: number;
   variantId: string;
+  productId?: string;
 };
 
 type TooltipPayload = {

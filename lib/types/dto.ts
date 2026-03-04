@@ -10,8 +10,22 @@
  * NOTE: Authentication is handled EXCLUSIVELY by Supabase Auth.
  * User/Role types are defined locally, not from Prisma.
  */
-import type { Product, Image, ProductVariant, VehicleFitment, Order, OrderItem, Booking, Lead, Customer, OrderStatus, BookingStatus, LeadStatus, LeadSource, Admin, } from "@prisma/client";
-
+import type {
+  Product,
+  Image,
+  ProductVariant,
+  VehicleFitment,
+  Order,
+  OrderItem,
+  Booking,
+  Lead,
+  Customer,
+  OrderStatus,
+  BookingStatus,
+  LeadStatus,
+  LeadSource,
+  Admin,
+} from "@prisma/client";
 
 // ============================================
 // COMMON TYPES
@@ -771,7 +785,6 @@ export type { OrderStatus, BookingStatus, LeadStatus, LeadSource };
 export type {
   Product,
   Image,
-  Inventory,
   Order,
   OrderItem,
   Booking,

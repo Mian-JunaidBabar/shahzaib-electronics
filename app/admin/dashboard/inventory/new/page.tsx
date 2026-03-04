@@ -140,17 +140,24 @@ export default function NewProductPage() {
       const result = await createProductAction({
         name: form.name,
         slug: form.slug || undefined,
-        sku: form.sku,
         description: form.description || undefined,
-        price,
-        salePrice,
-        costPrice,
-        barcode: form.barcode || undefined,
         category: form.category || undefined,
         badgeId: form.badgeId || undefined,
-        stock,
-        lowStockThreshold,
         isActive: form.isActive,
+        isUniversal: true,
+        variants: [
+          {
+            name: "Default",
+            sku: form.sku,
+            price,
+            salePrice,
+            costPrice,
+            barcode: form.barcode || undefined,
+            inventoryQty: stock,
+            lowStockAt: lowStockThreshold,
+          },
+        ],
+        fitments: [],
       });
 
       if (result.success && result.data) {

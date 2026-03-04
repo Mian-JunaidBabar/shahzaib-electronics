@@ -80,8 +80,8 @@ async function ProductsGrid({ searchParams }: { searchParams: SearchParams }) {
   // Map to ProductCardProps structure
   const mappedProducts = products
     .map((product) => {
-      // Get the default variant (first one)
-      const defaultVariant = product.variants[0];
+      // Get the default variant (first one) - guard if relations are missing
+      const defaultVariant = product.variants?.[0];
 
       if (!defaultVariant) {
         // Skip products without variants

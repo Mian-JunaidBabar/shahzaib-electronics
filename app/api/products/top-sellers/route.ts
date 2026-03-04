@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-
 export async function GET() {
   try {
     const since = new Date();
@@ -22,17 +21,17 @@ export async function GET() {
       where: { id: { in: variantIds } },
       include: {
         product: {
-          where: { isArchived: false, isActive: true },
           include: { images: true },
         },
       },
     });
 
-    // preserve order based on grouped results
+    // Filter out archived/inactive products and preserve order based on grouped results
     const payload = grouped
       .map((g) => {
         const v = variants.find((x) => x.id === g.variantId);
-        if (!v || !v.product) return null;
+        if (!v || !v.product || v.product.isArchived || !v.product.isActive)
+          return null;
 
         const p = v.product;
         return {

@@ -98,19 +98,26 @@ export default function EditProductPage() {
         return;
       }
       const p = result.data;
+      // Get the first variant (default variant) for pricing and inventory
+      const defaultVariant = p.variants?.[0];
+
       setForm({
         name: p.name || "",
         slug: p.slug || "",
-        sku: p.sku || "",
+        sku: defaultVariant?.sku || "",
         description: p.description || "",
-        price: ((p.price || 0) / 100).toString(),
-        salePrice: p.salePrice ? (p.salePrice / 100).toString() : "",
-        costPrice: p.costPrice ? (p.costPrice / 100).toString() : "",
-        barcode: p.barcode || "",
+        price: ((defaultVariant?.price || 0) / 100).toString(),
+        salePrice: defaultVariant?.salePrice
+          ? (defaultVariant.salePrice / 100).toString()
+          : "",
+        costPrice: defaultVariant?.costPrice
+          ? (defaultVariant.costPrice / 100).toString()
+          : "",
+        barcode: defaultVariant?.barcode || "",
         category: p.category || "",
         badgeId: p.badgeId || "",
-        stock: (p.inventory?.quantity ?? 0).toString(),
-        lowStockThreshold: (p.inventory?.lowStockAt ?? 10).toString(),
+        stock: (defaultVariant?.inventoryQty ?? 0).toString(),
+        lowStockThreshold: (defaultVariant?.lowStockAt ?? 10).toString(),
         isActive: p.isActive,
       });
 
@@ -178,17 +185,22 @@ export default function EditProductPage() {
           id: params.id,
           name: form.name,
           slug: form.slug || undefined,
-          sku: form.sku,
           description: form.description || undefined,
-          price,
-          salePrice,
-          costPrice,
-          barcode: form.barcode || undefined,
           category: form.category || undefined,
           badgeId: form.badgeId || undefined,
-          stock,
-          lowStockThreshold,
           isActive: form.isActive,
+          variants: [
+            {
+              name: "Default",
+              sku: form.sku,
+              price,
+              salePrice,
+              costPrice,
+              barcode: form.barcode || undefined,
+              inventoryQty: stock,
+              lowStockAt: lowStockThreshold,
+            },
+          ],
           keepImagePublicIds: existingImages.map((img) => img.publicId),
         });
 

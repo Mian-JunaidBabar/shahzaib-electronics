@@ -49,8 +49,10 @@ export default async function ProductDetailPage({
   }
 
   const product = result.data;
-  const stock = product.inventory?.quantity ?? 0;
-  const lowStockAt = product.inventory?.lowStockAt ?? 0;
+  // Get stock from the first variant
+  const defaultVariant = product.variants?.[0];
+  const stock = defaultVariant?.inventoryQty ?? 0;
+  const lowStockAt = defaultVariant?.lowStockAt ?? 0;
 
   // Fetch stock details
   const stockDetailsResult = await getProductStockDetailsAction(id);
@@ -59,7 +61,7 @@ export default async function ProductDetailPage({
     : null;
 
   const stockBadge = (() => {
-    if (!product.inventory || stock === 0) {
+    if (!defaultVariant || stock === 0) {
       return {
         label: "Out of Stock",
         variant: "destructive" as const,
@@ -138,14 +140,14 @@ export default async function ProductDetailPage({
               <div className="flex items-center gap-1.5 text-sm">
                 <Hash className="h-4 w-4 text-muted-foreground" />
                 <code className="bg-muted px-2 py-0.5 rounded font-mono text-xs">
-                  {product.sku}
+                  {defaultVariant?.sku || "N/A"}
                 </code>
               </div>
-              {product.barcode && (
+              {defaultVariant?.barcode && (
                 <div className="flex items-center gap-1.5 text-sm">
                   <Barcode className="h-4 w-4 text-muted-foreground" />
                   <span className="text-muted-foreground">
-                    {product.barcode}
+                    {defaultVariant.barcode}
                   </span>
                 </div>
               )}
@@ -156,17 +158,19 @@ export default async function ProductDetailPage({
           </div>
           <div className="text-right space-y-2 min-w-45">
             <p className="text-sm text-muted-foreground">Selling Price</p>
-            {product.salePrice ? (
+            {defaultVariant?.salePrice ? (
               <>
                 <p className="text-3xl font-bold text-green-600">
-                  {formatPrice(product.salePrice)}
+                  {formatPrice(defaultVariant.salePrice)}
                 </p>
                 <p className="text-sm text-muted-foreground line-through">
-                  {formatPrice(product.price)}
+                  {formatPrice(defaultVariant.price)}
                 </p>
               </>
             ) : (
-              <p className="text-3xl font-bold">{formatPrice(product.price)}</p>
+              <p className="text-3xl font-bold">
+                {formatPrice(defaultVariant?.price || 0)}
+              </p>
             )}
             <p className="text-sm text-muted-foreground">
               Category: {product.category || "-"}
@@ -190,11 +194,13 @@ export default async function ProductDetailPage({
                 <DollarSign className="h-4 w-4" /> Selling Price
               </div>
               <p className="text-xl font-semibold">
-                {formatPrice(product.salePrice || product.price)}
+                {formatPrice(
+                  defaultVariant?.salePrice || defaultVariant?.price || 0,
+                )}
               </p>
-              {product.salePrice && (
+              {defaultVariant?.salePrice && (
                 <p className="text-sm text-muted-foreground line-through">
-                  Original: {formatPrice(product.price)}
+                  Original: {formatPrice(defaultVariant.price)}
                 </p>
               )}
             </div>
@@ -203,7 +209,9 @@ export default async function ProductDetailPage({
                 <DollarSign className="h-4 w-4" /> Cost Price
               </div>
               <p className="text-xl font-semibold text-muted-foreground">
-                {product.costPrice ? formatPrice(product.costPrice) : "—"}
+                {defaultVariant?.costPrice
+                  ? formatPrice(defaultVariant.costPrice)
+                  : "—"}
               </p>
               <p className="text-xs text-muted-foreground">Internal only</p>
             </div>
@@ -211,19 +219,20 @@ export default async function ProductDetailPage({
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <TrendingUp className="h-4 w-4" /> Profit
               </div>
-              {product.costPrice ? (
+              {defaultVariant?.costPrice ? (
                 <>
                   <p className="text-xl font-semibold text-green-600">
                     {formatPrice(
-                      (product.salePrice || product.price) - product.costPrice,
+                      (defaultVariant.salePrice || defaultVariant.price) -
+                        defaultVariant.costPrice,
                     )}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Margin:{" "}
                     {Math.round(
-                      (((product.salePrice || product.price) -
-                        product.costPrice) /
-                        (product.salePrice || product.price)) *
+                      (((defaultVariant.salePrice || defaultVariant.price) -
+                        defaultVariant.costPrice) /
+                        (defaultVariant.salePrice || defaultVariant.price)) *
                         100,
                     )}
                     %
@@ -238,11 +247,11 @@ export default async function ProductDetailPage({
                 <Package className="h-4 w-4" /> Stock
               </div>
               <p className="text-xl font-semibold">
-                {product.inventory ? `${stock} units` : "No inventory record"}
+                {defaultVariant ? `${stock} units` : "No inventory record"}
               </p>
-              {product.inventory && (
+              {defaultVariant && (
                 <p className="text-sm text-muted-foreground">
-                  Low stock at {product.inventory.lowStockAt}
+                  Low stock at {lowStockAt}
                 </p>
               )}
             </div>

@@ -156,17 +156,20 @@ export default function InventoryPage() {
       setTotalPages(result.data.pagination.totalPages);
       setTotalCount(result.data.pagination.total);
 
-      // Calculate stats
+      // Calculate stats - use variants for stock calculations
       const activeCount = result.data.products.filter((p) => p.isActive).length;
-      const lowStockCount = result.data.products.filter(
-        (p) =>
-          p.inventory &&
-          p.inventory.quantity > 0 &&
-          p.inventory.quantity <= p.inventory.lowStockAt,
-      ).length;
-      const outOfStockCount = result.data.products.filter(
-        (p) => p.inventory && p.inventory.quantity === 0,
-      ).length;
+      const lowStockCount = result.data.products.filter((p) => {
+        const defaultVariant = p.variants?.[0];
+        return (
+          defaultVariant &&
+          defaultVariant.inventoryQty > 0 &&
+          defaultVariant.inventoryQty <= defaultVariant.lowStockAt
+        );
+      }).length;
+      const outOfStockCount = result.data.products.filter((p) => {
+        const defaultVariant = p.variants?.[0];
+        return defaultVariant && defaultVariant.inventoryQty === 0;
+      }).length;
 
       setStats({
         total: result.data.pagination.total,
