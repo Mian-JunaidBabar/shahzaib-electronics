@@ -70,6 +70,8 @@ export type StoreFilters = {
   min?: number; // Min price in dollars
   max?: number; // Max price in dollars
   sort?: string; // Sorting option
+  limit?: number; // Number of items to take
+  offset?: number; // Number of items to skip
 };
 
 /**
@@ -118,7 +120,7 @@ export async function getTopTags(limit: number = 3) {
  * Supports: search, multi-category, multi-tag, price range, sorting
  */
 export async function getStoreProducts(filters: StoreFilters = {}) {
-  const { q, categories, tags, min, max, sort } = filters;
+  const { q, categories, tags, min, max, sort, limit, offset } = filters;
 
   const where: Prisma.ProductWhereInput = {
     isActive: true,
@@ -197,6 +199,8 @@ export async function getStoreProducts(filters: StoreFilters = {}) {
   const products = await prisma.product.findMany({
     where,
     orderBy,
+    take: limit,
+    skip: offset,
     include: {
       images: {
         orderBy: { sortOrder: "asc" },

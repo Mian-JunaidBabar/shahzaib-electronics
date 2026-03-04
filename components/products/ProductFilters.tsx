@@ -3,6 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebounce } from "@/lib/hooks/useDebounce";
+import { SlidersHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge as UIBadge } from "@/components/ui/badge";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 type Badge = { id: string; name: string; usageCount?: number };
 
@@ -23,6 +33,7 @@ export function ProductFilters() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [favoritesOnly, setFavoritesOnly] = useState<boolean>(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -178,6 +189,7 @@ export function ProductFilters() {
       : [...selectedCategories, cat];
     setSelectedCategories(next);
     updateArrayParam("categories", next);
+    setMobileOpen(false);
   };
 
   const toggleTag = (tagId: string) => {
@@ -186,6 +198,7 @@ export function ProductFilters() {
       : [...selectedTags, tagId];
     setSelectedTags(next);
     updateArrayParam("tags", next);
+    setMobileOpen(false);
   };
 
   // Get regular tags (excluding top 3)
@@ -193,171 +206,209 @@ export function ProductFilters() {
     (badge) => !topTags.some((topTag) => topTag.id === badge.id),
   );
 
-  return (
-    <div className="hidden lg:block w-72 shrink-0 pe-8">
-      <div className="sticky top-28 space-y-8">
-        {/* All Categories */}
-        <div>
-          <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
-            All Categories
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {categories.length > 0 ? (
-              <>
-                <button
-                  key="favorites-chip"
-                  onClick={() => toggleFavorites()}
-                  className={`px-3 py-1.5 text-sm rounded-full border transition-all duration-200 cursor-pointer hover:shadow-md ${
-                    favoritesOnly
-                      ? "bg-primary text-white border-primary shadow-sm"
-                      : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-primary/50"
-                  }`}
-                >
-                  ❤️ Favorites
-                </button>
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => toggleCategory(cat)}
-                    className={`px-3 py-1.5 text-sm rounded-full border transition-all duration-200 cursor-pointer hover:shadow-md ${
-                      selectedCategories.includes(cat)
-                        ? "bg-primary text-white border-primary shadow-sm"
-                        : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-primary/50"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </>
-            ) : (
-              <div className="text-sm text-slate-500">No categories</div>
-            )}
-          </div>
-        </div>
+  const hasActiveFilters =
+    selectedCategories.length > 0 ||
+    selectedTags.length > 0 ||
+    minPriceInput ||
+    maxPriceInput ||
+    favoritesOnly;
 
-        {/* Top Selling Categories */}
-        {topCategories.length > 0 && (
-          <div>
-            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
-              🔥 Top Categories
-            </h3>
-            <div className="space-y-2">
-              {topCategories.map((cat) => (
+  // Filter content (JSX element) to reuse in desktop and mobile render
+  const filterContent = (
+    <div className="space-y-8">
+      {/* All Categories */}
+      <div>
+        <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
+          All Categories
+        </h3>
+        <div className="flex flex-wrap gap-2">
+          {categories.length > 0 ? (
+            <>
+              <button
+                key="favorites-chip"
+                onClick={() => toggleFavorites()}
+                className={`px-3 py-1.5 text-sm rounded-full border transition-all duration-200 cursor-pointer hover:shadow-md ${
+                  favoritesOnly
+                    ? "bg-primary text-white border-primary shadow-sm"
+                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-primary/50"
+                }`}
+              >
+                ❤️ Favorites
+              </button>
+              {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => toggleCategory(cat)}
-                  className={`w-full text-left px-3 py-2 text-sm rounded-md transition-all duration-200 cursor-pointer ${
+                  className={`px-3 py-1.5 text-sm rounded-full border transition-all duration-200 cursor-pointer hover:shadow-md ${
                     selectedCategories.includes(cat)
-                      ? "bg-primary/10 text-primary dark:text-primary font-semibold border border-primary/30"
-                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      ? "bg-primary text-white border-primary shadow-sm"
+                      : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-primary/50"
                   }`}
                 >
                   {cat}
                 </button>
               ))}
-            </div>
-          </div>
-        )}
+            </>
+          ) : (
+            <div className="text-sm text-slate-500">No categories</div>
+          )}
+        </div>
+      </div>
 
-        {/* Price Range (Debounced) */}
+      {/* Top Selling Categories */}
+      {topCategories.length > 0 && (
         <div>
           <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
-            Price Range
+            🔥 Top Categories
           </h3>
-          <div className="flex gap-2">
-            <input
-              inputMode="decimal"
-              pattern="[0-9]*"
-              aria-label="Minimum price"
-              min={0}
-              step="0.01"
-              type="text"
-              placeholder="Min"
-              value={minPriceInput}
-              onChange={(e) => setMinPriceInput(e.target.value)}
-              className="w-1/2 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-            />
-            <input
-              inputMode="decimal"
-              pattern="[0-9]*"
-              aria-label="Maximum price"
-              min={0}
-              step="0.01"
-              type="text"
-              placeholder="Max"
-              value={maxPriceInput}
-              onChange={(e) => setMaxPriceInput(e.target.value)}
-              className="w-1/2 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-            />
-          </div>
-          <div className="flex items-center gap-2 mt-3">
-            <button
-              onClick={resetFilters}
-              className="ml-auto text-sm px-3 py-1.5 border rounded-md text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
-            >
-              Reset filters
-            </button>
+          <div className="space-y-2">
+            {topCategories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => toggleCategory(cat)}
+                className={`w-full text-left px-3 py-2 text-sm rounded-md transition-all duration-200 cursor-pointer ${
+                  selectedCategories.includes(cat)
+                    ? "bg-primary/10 text-primary dark:text-primary font-semibold border border-primary/30"
+                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
         </div>
+      )}
 
-        {/* Top 3 Tags */}
-        {topTags.length > 0 && (
-          <div>
-            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
-              ⭐ Top 3 Tags
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {topTags.map((tag) => (
-                <button
-                  key={tag.id}
-                  onClick={() => toggleTag(tag.id)}
-                  className={`px-3 py-1.5 text-sm rounded-full border transition-all duration-200 flex items-center gap-2 cursor-pointer hover:shadow-md ${
-                    selectedTags.includes(tag.id)
-                      ? "bg-primary text-white border-primary shadow-sm"
-                      : "bg-linear-to-r from-yellow-50 to-orange-50 dark:from-slate-800 dark:to-slate-800 border-yellow-300 dark:border-yellow-700 text-slate-700 dark:text-slate-300 hover:border-primary/50"
-                  }`}
-                >
-                  <span className="font-semibold">{tag.name}</span>
-                  <span className="text-xs opacity-80 bg-white/30 dark:bg-black/30 px-1.5 py-0.5 rounded">
-                    {tag.usageCount}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+      {/* Price Range (Debounced) */}
+      <div>
+        <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
+          Price Range
+        </h3>
+        <div className="flex gap-2">
+          <input
+            inputMode="decimal"
+            pattern="[0-9]*"
+            aria-label="Minimum price"
+            min={0}
+            step="0.01"
+            type="text"
+            placeholder="Min"
+            value={minPriceInput}
+            onChange={(e) => setMinPriceInput(e.target.value)}
+            className="w-1/2 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+          />
+          <input
+            inputMode="decimal"
+            pattern="[0-9]*"
+            aria-label="Maximum price"
+            min={0}
+            step="0.01"
+            type="text"
+            placeholder="Max"
+            value={maxPriceInput}
+            onChange={(e) => setMaxPriceInput(e.target.value)}
+            className="w-1/2 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+          />
+        </div>
+        <div className="flex items-center gap-2 mt-3">
+          <button
+            onClick={resetFilters}
+            className="ml-auto text-sm px-3 py-1.5 border rounded-md text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+          >
+            Reset filters
+          </button>
+        </div>
+      </div>
 
-        {/* All Tags */}
+      {/* Top 3 Tags */}
+      {topTags.length > 0 && (
         <div>
           <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
-            All Tags
+            ⭐ Top 3 Tags
           </h3>
           <div className="flex flex-wrap gap-2">
-            {regularTags.length > 0 ? (
-              regularTags.map((badge) => (
-                <button
-                  key={badge.id}
-                  onClick={() => toggleTag(badge.id)}
-                  className={`px-3 py-1.5 text-sm rounded-full border transition-all duration-200 flex items-center gap-2 cursor-pointer hover:shadow-md ${
-                    selectedTags.includes(badge.id)
-                      ? "bg-primary text-white border-primary shadow-sm"
-                      : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-primary/50"
-                  }`}
-                >
-                  <span>{badge.name}</span>
-                  {badge.usageCount !== undefined && (
-                    <span className="text-xs opacity-70">
-                      {badge.usageCount}
-                    </span>
-                  )}
-                </button>
-              ))
-            ) : (
-              <div className="text-sm text-slate-500">No tags available</div>
-            )}
+            {topTags.map((tag) => (
+              <button
+                key={tag.id}
+                onClick={() => toggleTag(tag.id)}
+                className={`px-3 py-1.5 text-sm rounded-full border transition-all duration-200 flex items-center gap-2 cursor-pointer hover:shadow-md ${
+                  selectedTags.includes(tag.id)
+                    ? "bg-primary text-white border-primary shadow-sm"
+                    : "bg-linear-to-r from-yellow-50 to-orange-50 dark:from-slate-800 dark:to-slate-800 border-yellow-300 dark:border-yellow-700 text-slate-700 dark:text-slate-300 hover:border-primary/50"
+                }`}
+              >
+                <span className="font-semibold">{tag.name}</span>
+                <span className="text-xs opacity-80 bg-white/30 dark:bg-black/30 px-1.5 py-0.5 rounded">
+                  {tag.usageCount}
+                </span>
+              </button>
+            ))}
           </div>
+        </div>
+      )}
+
+      {/* All Tags */}
+      <div>
+        <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
+          All Tags
+        </h3>
+        <div className="flex flex-wrap gap-2">
+          {regularTags.length > 0 ? (
+            regularTags.map((badge) => (
+              <button
+                key={badge.id}
+                onClick={() => toggleTag(badge.id)}
+                className={`px-3 py-1.5 text-sm rounded-full border transition-all duration-200 flex items-center gap-2 cursor-pointer hover:shadow-md ${
+                  selectedTags.includes(badge.id)
+                    ? "bg-primary text-white border-primary shadow-sm"
+                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-primary/50"
+                }`}
+              >
+                <span>{badge.name}</span>
+                {badge.usageCount !== undefined && (
+                  <span className="text-xs opacity-70">{badge.usageCount}</span>
+                )}
+              </button>
+            ))
+          ) : (
+            <div className="text-sm text-slate-500">No tags available</div>
+          )}
         </div>
       </div>
     </div>
+  );
+
+  return (
+    <>
+      {/* Desktop Filters */}
+      <div className="hidden lg:block">
+        <div className="sticky top-28 h-[calc(100vh-100px)] overflow-y-auto pr-2 custom-scrollbar">
+          {filterContent}
+        </div>
+      </div>
+
+      {/* Mobile Filter Button & Sheet */}
+      <div className="lg:hidden mb-4">
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" className="gap-2 w-full sm:w-auto">
+              <SlidersHorizontal className="h-4 w-4" />
+              Filters
+              {hasActiveFilters && (
+                <UIBadge variant="secondary" className="ml-1">
+                  Active
+                </UIBadge>
+              )}
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-80 overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Product Filters</SheetTitle>
+            </SheetHeader>
+            <div className="mt-6">{filterContent}</div>
+          </SheetContent>
+        </Sheet>
+      </div>
+    </>
   );
 }

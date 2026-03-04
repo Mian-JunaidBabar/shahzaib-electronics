@@ -1,9 +1,9 @@
+import { ProductGridWithLoadMore } from "@/components/products/ProductGridWithLoadMore";
 import ProductGridClient from "@/components/products/ProductGridClient";
 import { ProductFilters } from "@/components/products/ProductFilters";
 import { SortDropdown } from "@/components/products/SortDropdown";
 import { getStoreProducts } from "@/lib/services/product.service";
 import ProductSearch from "@/components/products/ProductSearch";
-import { ProductCard } from "@/components/products/ProductCard";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
@@ -71,7 +71,11 @@ async function ProductsGrid({ searchParams }: { searchParams: SearchParams }) {
   };
 
   // Fetch products using the optimized service
-  const products = await getStoreProducts(parsedFilters);
+  const products = await getStoreProducts({
+    ...parsedFilters,
+    limit: 12,
+    offset: 0,
+  });
 
   // Map to ProductCardProps structure
   const mappedProducts = products.map((product) => {
@@ -129,25 +133,11 @@ async function ProductsGrid({ searchParams }: { searchParams: SearchParams }) {
       {favoritesFlag ? (
         <ProductGridClient products={mappedProducts} favoritesOnly={true} />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mappedProducts.length > 0 ? (
-            mappedProducts.map((product) => (
-              <ProductCard key={product.id} {...product} />
-            ))
-          ) : (
-            <div className="col-span-full text-center py-20">
-              <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-600 mb-4 block">
-                search_off
-              </span>
-              <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                No products found
-              </h3>
-              <p className="text-slate-500 dark:text-slate-400">
-                Try adjusting your filters or search query
-              </p>
-            </div>
-          )}
-        </div>
+        <ProductGridWithLoadMore
+          initialProducts={mappedProducts}
+          initialLimit={12}
+          filters={parsedFilters}
+        />
       )}
     </>
   );
@@ -182,12 +172,14 @@ export default async function ProductsPage({
         </div>
       </div>
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-12 flex flex-col lg:flex-row gap-8">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Left Sidebar - Filters */}
-        <ProductFilters />
+        <div className="lg:col-span-1">
+          <ProductFilters />
+        </div>
 
         {/* Main Content */}
-        <div className="flex-1">
+        <div className="lg:col-span-3">
           {/* Top Bar - Search & Sorting */}
           <div className="flex flex-col sm:flex-row items-center justify-between mb-8 pb-4 border-b border-slate-200 dark:border-slate-800">
             <div className="flex items-center gap-4 mb-4 sm:mb-0">

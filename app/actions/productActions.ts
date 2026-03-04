@@ -512,3 +512,30 @@ export async function getProductStockDetailsAction(
     };
   }
 }
+
+/**
+ * Fetch more products for public store pagination
+ * Note: this is a public action and does not require admin authentication.
+ */
+export async function fetchMoreProductsAction(
+  offset: number,
+  filters: ProductService.StoreFilters = {},
+): Promise<ActionResult<Awaited<ReturnType<typeof ProductService.getStoreProducts>>>> {
+  try {
+    const products = await ProductService.getStoreProducts({
+      ...filters,
+      offset,
+      limit: filters.limit || 12, // default take to 12
+    });
+    return { success: true, data: products };
+  } catch (error) {
+    console.error("fetchMoreProductsAction error:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch more products",
+    };
+  }
+}

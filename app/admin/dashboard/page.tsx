@@ -262,7 +262,7 @@ export default async function AdminDashboardPage({ searchParams }: PageProps) {
 
       <div className="max-w-5xl mx-auto space-y-6 mt-6 md:mt-8">
         {/* 4 Metrics Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="rounded-3xl border-0 shadow-sm">
             <CardContent className="p-5 flex flex-col gap-2">
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
