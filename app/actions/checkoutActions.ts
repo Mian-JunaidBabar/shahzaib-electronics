@@ -73,6 +73,53 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
       }
     }
 
+    // Pre-fetch variants to avoid long-running iterations inside the transaction
+    const preFetchedVariants = new Map<
+      string,
+      {
+        id: string;
+        name: string;
+        inventoryQty: number | null;
+        salePrice: number | null;
+        price: number;
+      }
+    >();
+    if (cartItems.length > 0) {
+      const variantIds = cartItems
+        .map((item) => item.variantId)
+        .filter(Boolean) as string[];
+
+      if (variantIds.length > 0) {
+        const dbVariants = await prisma.productVariant.findMany({
+          where: { id: { in: variantIds } },
+        });
+        dbVariants.forEach((v) => preFetchedVariants.set(v.id, v));
+      }
+
+      const itemsFallingBack = cartItems.filter(
+        (item) => !item.variantId || !preFetchedVariants.has(item.variantId)
+      );
+
+      if (itemsFallingBack.length > 0) {
+        const productNames = itemsFallingBack.map((item) => item.name);
+        const dbProducts = await prisma.product.findMany({
+          where: { name: { in: productNames } },
+          include: { variants: true },
+        });
+
+        itemsFallingBack.forEach((item) => {
+          const product = dbProducts.find((p) => p.name === item.name);
+          if (product && product.variants && product.variants.length > 0) {
+            const variant =
+              product.variants.find((v) => v.name === item.variantName) ||
+              product.variants[0];
+            // Store fallback by constructed key
+            preFetchedVariants.set(`fallback_${item.name}`, variant);
+          }
+        });
+      }
+    }
+
     // Wrap the remaining writes in a Prisma Transaction
     const result = await prisma.$transaction(async (tx) => {
       // 1. Find or Create Customer (handle email uniqueness)
@@ -124,27 +171,18 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
         const orderItemsToCreate = [];
 
         for (const item of cartItems) {
-          // Try lookup by variantId first (preferred)
-          let dbVariant = null as any;
-          if (item.variantId) {
-            dbVariant = await tx.productVariant.findUnique({
-              where: { id: item.variantId },
-            });
-          }
-
-          // Fallback: find product by name and select a variant matching the variantName,
-          // otherwise pick the first variant (default). This makes the checkout action
-          // more robust when variantId is missing or stale.
-          if (!dbVariant) {
-            const product = await tx.product.findFirst({
-              where: { name: item.name },
-              include: { variants: true },
-            });
-            if (product && product.variants && product.variants.length > 0) {
-              dbVariant =
-                product.variants.find((v) => v.name === item.variantName) ||
-                product.variants[0];
-            }
+          // Resolve pre-fetched variant
+          let dbVariant: {
+            id: string;
+            name: string;
+            inventoryQty: number | null;
+            salePrice: number | null;
+            price: number;
+          } | null = null;
+          if (item.variantId && preFetchedVariants.has(item.variantId)) {
+            dbVariant = preFetchedVariants.get(item.variantId);
+          } else if (preFetchedVariants.has(`fallback_${item.name}`)) {
+            dbVariant = preFetchedVariants.get(`fallback_${item.name}`);
           }
 
           if (!dbVariant)

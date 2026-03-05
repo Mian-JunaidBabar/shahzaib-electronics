@@ -514,6 +514,76 @@ export async function getProducts(
   };
 }
 
+export type AdminProductFilters = {
+  page?: number;
+  limit?: number;
+  query?: string;
+  status?: string;
+};
+
+/**
+ * Get paginated list of products for the admin panel
+ */
+export async function getAdminProducts(filters: AdminProductFilters = {}) {
+  const page = Math.max(1, filters.page || 1);
+  const limit = filters.limit || 10;
+  const skip = (page - 1) * limit;
+
+  const where: Prisma.ProductWhereInput = {
+    isArchived: false,
+  };
+
+  if (filters.query?.trim()) {
+    const q = filters.query.trim();
+    where.OR = [
+      { name: { contains: q, mode: Prisma.QueryMode.insensitive } },
+      { description: { contains: q, mode: Prisma.QueryMode.insensitive } },
+      { slug: { contains: q, mode: Prisma.QueryMode.insensitive } },
+      { variants: { some: { sku: { contains: q, mode: Prisma.QueryMode.insensitive } } } },
+      { variants: { some: { barcode: { contains: q, mode: Prisma.QueryMode.insensitive } } } },
+    ];
+  }
+
+  if (filters.status && filters.status !== "ALL") {
+    where.isActive = filters.status === "ACTIVE";
+  }
+
+  const [products, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      include: {
+        images: { orderBy: { sortOrder: "asc" } },
+        variants: true,
+        fitments: true,
+        badge: true,
+        tags: { orderBy: { name: "asc" } },
+        productBadges: { include: { badge: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.product.count({ where }),
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    products: products.map((p: any) => ({
+      ...p,
+      badges: p.productBadges?.map((pb: any) => pb.badge) ?? [],
+    })),
+    metadata: {
+      total,
+      totalPages,
+      currentPage: page,
+      limit,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    },
+  };
+}
+
 /**
  * Get a single product by ID or slug
  */

@@ -1,4 +1,7 @@
-import { getStoreProductsPaginated } from "@/lib/services/product.service";
+import {
+  getStoreProductsPaginated,
+  StoreProduct,
+} from "@/lib/services/product.service";
 import ProductGridClient from "@/components/products/ProductGridClient";
 import { ProductFilters } from "@/components/products/ProductFilters";
 import { SortDropdown } from "@/components/products/SortDropdown";
@@ -45,9 +48,9 @@ function ProductsGridSkeleton() {
 }
 
 // Map a raw product to ProductCard props
-function mapProductToCard(product: any) {
+function mapProductToCard(product: StoreProduct) {
   const defaultVariant =
-    product.variants?.find((v: any) => v.isDefault) || product.variants?.[0];
+    product.variants?.find((v) => v.isDefault) || product.variants?.[0];
 
   if (!defaultVariant) return null;
 
@@ -121,7 +124,7 @@ async function ProductsGrid({ searchParams }: { searchParams: SearchParams }) {
   // Map to ProductCardProps
   const mappedProducts = products
     .map(mapProductToCard)
-    .filter(Boolean) as any[];
+    .filter(Boolean) as React.ComponentProps<typeof ProductCard>[];
 
   // Calculate range for display
   const rangeStart = (metadata.page - 1) * metadata.limit + 1;
@@ -155,7 +158,7 @@ async function ProductsGrid({ searchParams }: { searchParams: SearchParams }) {
         <ProductGridClient products={mappedProducts} favoritesOnly={true} />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mappedProducts.map((product: any) => (
+          {mappedProducts.map((product) => (
             <ProductCard key={product.id} {...product} />
           ))}
         </div>

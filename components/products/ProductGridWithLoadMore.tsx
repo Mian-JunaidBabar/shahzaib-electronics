@@ -114,7 +114,7 @@ export function ProductGridWithLoadMore({
     }>;
   }): ProductCardProps | null => {
     const defaultVariant =
-      product.variants?.find((v: any) => v.isDefault) || product.variants?.[0];
+      product.variants?.find((v) => v.isDefault) || product.variants?.[0];
 
     if (!defaultVariant) {
       return null;

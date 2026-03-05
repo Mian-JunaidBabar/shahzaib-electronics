@@ -257,7 +257,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
         }
         if (tagsResult.success && tagsResult.data) {
           setTags(
-            tagsResult.data.map((tag: any) => ({
+            tagsResult.data.map((tag: { id: string; name: string }) => ({
               id: tag.id,
               name: tag.name,
             })),
@@ -287,26 +287,31 @@ export function ProductForm({ initialData }: ProductFormProps) {
       if (!Array.isArray(parsed)) return false;
 
       let firstField: string | null = null;
-      parsed.forEach((issue: any) => {
-        const path = issue.path || [];
-        if (!Array.isArray(path) || path.length === 0) return;
+      parsed.forEach(
+        (issue: { path: (string | number)[]; message?: string }) => {
+          const path = issue.path || [];
+          if (!Array.isArray(path) || path.length === 0) return;
 
-        // Convert Zod path to RHF field name. Example: ["variants", 0, "sku"] => "variants.0.sku"
-        const mapped = path.map((p: any) => {
-          // For variant id field, our form uses `_id` instead of `id`
-          if (p === "id" && path[0] === "variants") return "_id";
-          return String(p);
-        });
-        const fieldName = mapped.join(".");
-        setError(fieldName as any, { type: "server", message: issue.message });
-        if (!firstField) firstField = fieldName;
-      });
+          // Convert Zod path to RHF field name. Example: ["variants", 0, "sku"] => "variants.0.sku"
+          const mapped = path.map((p) => {
+            // For variant id field, our form uses `_id` instead of `id`
+            if (p === "id" && path[0] === "variants") return "_id";
+            return String(p);
+          });
+          const fieldName = mapped.join(".");
+          setError(fieldName as Parameters<typeof setError>[0], {
+            type: "server",
+            message: issue.message,
+          });
+          if (!firstField) firstField = fieldName;
+        },
+      );
 
       // Set a generic top-level error if fields were handled
       if (firstField) {
         setSubmitError("Please correct the errors highlighted in the form.");
         try {
-          setFocus(firstField as any);
+          setFocus(firstField as Parameters<typeof setFocus>[0]);
         } catch {
           // ignore focus errors
         }
