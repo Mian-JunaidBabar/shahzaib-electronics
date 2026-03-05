@@ -112,6 +112,12 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
       let totalCents = 0;
       const bookingServiceString = "";
       let servicesSubtotal = 0;
+      const normalizedCartItems: {
+        name: string;
+        variantName: string;
+        quantity: number;
+        price: number;
+      }[] = [];
 
       // 2. Create Order & Items if cartItems exist
       if (cartItems.length > 0) {
@@ -166,6 +172,13 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
             quantity: item.quantity,
           });
 
+          normalizedCartItems.push({
+            name: item.name,
+            variantName: dbVariant.name,
+            quantity: item.quantity,
+            price: actualPriceCents / 100,
+          });
+
           // Decrement Inventory
           await tx.productVariant.update({
             where: { id: dbVariant.id },
@@ -217,7 +230,14 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
         totalCents += servicesSubtotal * 100;
       }
 
-      return { customer, dbOrder, dbBooking, totalCents, bookingServiceString };
+      return {
+        customer,
+        dbOrder,
+        dbBooking,
+        totalCents,
+        bookingServiceString,
+        normalizedCartItems,
+      };
     });
 
     // 4. Generate WhatsApp Message
@@ -226,18 +246,18 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
       : result.dbBooking?.bookingNumber;
 
     // Build cart items string (include variant name if not "Default")
+    // Prefer normalized items from DB-resolved variants to guarantee correct spec labels.
     let parsedCartItems = "None";
-    if (cartItems.length > 0) {
-      parsedCartItems = cartItems
+    if (result.normalizedCartItems.length > 0) {
+      parsedCartItems = result.normalizedCartItems
         .map((item) => {
-          const variantSuffix =
+          const variantText =
             item.variantName && item.variantName.toLowerCase() !== "default"
               ? ` (${item.variantName})`
               : "";
-          return `${item.quantity}x ${item.name}${variantSuffix} - Rs. ${(item.price * item.quantity).toLocaleString()}`;
+          return `• ${item.quantity}x ${item.name}${variantText} - Rs. ${item.price.toLocaleString()}`;
         })
-        .join("\n• ");
-      parsedCartItems = "• " + parsedCartItems;
+        .join("\n");
     }
 
     const totalRs = result.totalCents / 100;

@@ -62,9 +62,9 @@ export function OrderSummary({
                   </p>
                   {item.variantName &&
                     item.variantName.toLowerCase() !== "default" && (
-                      <div className="text-xs text-slate-400 mb-1">
-                        Spec: {item.variantName}
-                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Variant: {item.variantName}
+                      </p>
                     )}
                   <p className="text-slate-400 text-xs font-medium">
                     Qty: {item.quantity} × Rs. {item.price.toLocaleString()}

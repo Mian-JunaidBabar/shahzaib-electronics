@@ -442,7 +442,9 @@ function determineStatusFromStock(
  * Rule 1: If none selected, the first variant becomes default.
  * Rule 2: If multiple selected, only the first one found remains default.
  */
-function enforceDefaultVariant<T extends { isDefault?: boolean }>(variants: T[]): T[] {
+function enforceDefaultVariant<T extends { isDefault?: boolean }>(
+  variants: T[],
+): T[] {
   if (!variants || variants.length === 0) return variants;
 
   const defaultIndex = variants.findIndex((v) => v.isDefault === true);
