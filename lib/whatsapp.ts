@@ -1,5 +1,7 @@
 export interface CartItem {
   id: string | number;
+  variantId: string; // Specific variant UUID (for DB linking & uniqueness)
+  variantName: string; // Display name, e.g. "2GB/32GB" or "Default"
   name: string;
   price: number;
   quantity: number;

@@ -57,6 +57,8 @@ export function ProductCard({
   const handleAddToCart = () => {
     addItem({
       id,
+      variantId: id, // Legacy: product/slug id used as variant id
+      variantName: "Default",
       name: title,
       price: price,
       image,

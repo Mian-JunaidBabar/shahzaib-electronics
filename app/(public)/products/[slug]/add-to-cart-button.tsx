@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/cart-context";
 
 type Product = {
-  id: string;
+  id: string; // variant ID
+  variantId: string;
+  variantName: string;
   name: string;
   price: number;
   image: string;
@@ -21,11 +23,14 @@ export function AddToCartButton({ product, disabled = false }: Props) {
   const { addToCart, items } = useCart();
   const [justAdded, setJustAdded] = useState(false);
 
-  const isInCart = items?.some((item) => item.id === product.id) ?? false;
+  const isInCart =
+    items?.some((item) => item.variantId === product.variantId) ?? false;
 
   const handleAddToCart = () => {
     addToCart({
       id: product.id,
+      variantId: product.variantId,
+      variantName: product.variantName,
       name: product.name,
       price: product.price,
       image: product.image,

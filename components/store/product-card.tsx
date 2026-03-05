@@ -41,11 +41,13 @@ export function ProductCard({ product }: Props) {
 
   const isInStock = defaultVariant.inventoryQty > 0;
   const isInCart =
-    items?.some((item) => item.id === defaultVariant.id) ?? false;
+    items?.some((item) => item.variantId === defaultVariant.id) ?? false;
 
   const handleAddToCart = () => {
     addToCart({
-      id: defaultVariant.id, // Use variant ID
+      id: defaultVariant.id,
+      variantId: defaultVariant.id,
+      variantName: defaultVariant.name,
       name: product.name,
       price: displayPrice / 100, // Convert cents to rupees for cart
       image: primaryImage,

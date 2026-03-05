@@ -95,8 +95,12 @@ export type UpdateProductInput = {
   status?: ProductStatus;
   isUniversal?: boolean;
 
-  // Variants array - will replace existing variants
+  // Variants array — safe upsert strategy:
+  //   • If a variant has an `id`  → UPDATE it in place (preserves FK to OrderItems).
+  //   • If a variant has no `id`  → CREATE it as a new variant.
+  //   • Variants in DB but NOT in this list → DELETE only if not referenced by orders.
   variants?: {
+    id?: string; // Present = existing variant, absent = new variant
     name: string;
     sku: string;
     price: number;
@@ -638,21 +642,66 @@ export async function updateProduct(
     };
   }
 
-  // Sync variants (delete all and recreate)
+  // Sync variants — safe upsert/selective-delete strategy
   if (variants !== undefined) {
-    updateData.variants = {
-      deleteMany: {}, // Delete all existing variants
-      create: variants.map((variant) => ({
-        name: variant.name,
-        sku: variant.sku,
-        price: variant.price,
-        salePrice: variant.salePrice ?? null,
-        costPrice: variant.costPrice ?? null,
-        barcode: variant.barcode ?? null,
-        inventoryQty: variant.inventoryQty ?? 0,
-        lowStockAt: variant.lowStockAt ?? 5,
-      })),
-    };
+    // IDs of incoming variants that already exist in the DB
+    const incomingIds = variants
+      .map((v) => v.id)
+      .filter((id): id is string => Boolean(id));
+
+    // Step 1: Delete variants that were removed from the form
+    // ONLY delete variants NOT referenced by any OrderItem (FK safety).
+    // We try to delete; if a FK violation occurs we skip silently so that
+    // historical order records are never broken.
+    const variantsToMaybeDelete = existingProduct.variants.filter(
+      (ev) => !incomingIds.includes(ev.id),
+    );
+
+    for (const variant of variantsToMaybeDelete) {
+      try {
+        await prisma.productVariant.delete({ where: { id: variant.id } });
+      } catch {
+        // FK constraint — variant is referenced by an OrderItem; keep it.
+        console.warn(
+          `Skipped deleting variant ${variant.id} — referenced by existing orders.`,
+        );
+      }
+    }
+
+    // Step 2: Upsert each incoming variant
+    for (const variant of variants) {
+      if (variant.id) {
+        // EXISTING variant — update in place
+        await prisma.productVariant.update({
+          where: { id: variant.id },
+          data: {
+            name: variant.name,
+            sku: variant.sku,
+            price: variant.price,
+            salePrice: variant.salePrice ?? null,
+            costPrice: variant.costPrice ?? null,
+            barcode: variant.barcode ?? null,
+            inventoryQty: variant.inventoryQty ?? 0,
+            lowStockAt: variant.lowStockAt ?? 5,
+          },
+        });
+      } else {
+        // NEW variant — create it
+        await prisma.productVariant.create({
+          data: {
+            productId: id,
+            name: variant.name,
+            sku: variant.sku,
+            price: variant.price,
+            salePrice: variant.salePrice ?? null,
+            costPrice: variant.costPrice ?? null,
+            barcode: variant.barcode ?? null,
+            inventoryQty: variant.inventoryQty ?? 0,
+            lowStockAt: variant.lowStockAt ?? 5,
+          },
+        });
+      }
+    }
   }
 
   // Sync fitments (delete all and recreate)

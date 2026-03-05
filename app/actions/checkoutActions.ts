@@ -12,8 +12,10 @@ export type CheckoutData = {
     vehicleInfo?: string;
   };
   cartItems: {
-    id: string; // product ID (Actually slug from our frontend mapping, but we should look up by slug)
-    name: string;
+    id: string; // Cart-unique ID (equals variantId)
+    variantId: string; // ProductVariant.id for direct DB lookup
+    variantName: string; // Display name, e.g. "2GB/32GB" or "Default"
+    name: string; // Product name snapshot
     price: number;
     quantity: number;
   }[];
@@ -113,45 +115,47 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
 
       // 2. Create Order & Items if cartItems exist
       if (cartItems.length > 0) {
-        // Look up products by slug and get their default variants
-        const productSlugs = cartItems.map((item) => item.id);
-        const products = await tx.product.findMany({
-          where: { slug: { in: productSlugs } },
-          include: {
-            variants: {
-              take: 1,
-              orderBy: { createdAt: "asc" },
-            },
-          },
+        // Look up variants directly by variantId (correct and efficient)
+        const variantIds = cartItems.map((item) => item.variantId);
+        const dbVariants = await tx.productVariant.findMany({
+          where: { id: { in: variantIds } },
+          include: { product: { select: { name: true } } },
         });
 
         const orderItemsToCreate = [];
 
         for (const item of cartItems) {
-          const product = products.find((p) => p.slug === item.id);
-          if (!product || !product.variants[0])
-            throw new Error(`Product not found: ${item.id}`);
+          const dbVariant = dbVariants.find((v) => v.id === item.variantId);
+          if (!dbVariant)
+            throw new Error(`Variant not found for: ${item.name}`);
 
-          const dbVariant = product.variants[0];
+          if (dbVariant.inventoryQty < item.quantity)
+            throw new Error(
+              `Insufficient stock for "${item.name}". Only ${dbVariant.inventoryQty} available.`,
+            );
 
           // Determine price directly from DB (salePrice or regular price)
-          const actualPriceCents = dbVariant.salePrice || dbVariant.price;
+          const actualPriceCents = dbVariant.salePrice ?? dbVariant.price;
           totalCents += actualPriceCents * item.quantity;
+
+          // Append variant name to snapshot (omit if it is "Default")
+          const nameSnapshot =
+            item.variantName && item.variantName !== "Default"
+              ? `${item.name} (${item.variantName})`
+              : item.name;
 
           orderItemsToCreate.push({
             variantId: dbVariant.id,
-            name: dbVariant.name,
+            name: nameSnapshot,
             price: actualPriceCents,
             quantity: item.quantity,
           });
 
-          // Decrement Inventory safely
-          if (dbVariant.inventoryQty >= item.quantity) {
-            await tx.productVariant.update({
-              where: { id: dbVariant.id },
-              data: { inventoryQty: { decrement: item.quantity } },
-            });
-          }
+          // Decrement Inventory
+          await tx.productVariant.update({
+            where: { id: dbVariant.id },
+            data: { inventoryQty: { decrement: item.quantity } },
+          });
         }
 
         // Create the Order
@@ -206,15 +210,19 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
       ? result.dbOrder.orderNumber
       : result.dbBooking?.bookingNumber;
 
-    // Build cart items string
+    // Build cart items string (include variant name if not "Default")
     let parsedCartItems = "None";
     if (cartItems.length > 0) {
       parsedCartItems = cartItems
-        .map(
-          (item) =>
-            `${item.quantity}x ${item.name} (Rs. ${item.price.toLocaleString()})`,
-        )
-        .join(", ");
+        .map((item) => {
+          const variantSuffix =
+            item.variantName && item.variantName !== "Default"
+              ? ` (${item.variantName})`
+              : "";
+          return `${item.quantity}x ${item.name}${variantSuffix} - Rs. ${(item.price * item.quantity).toLocaleString()}`;
+        })
+        .join("\n• ");
+      parsedCartItems = "• " + parsedCartItems;
     }
 
     const totalRs = result.totalCents / 100;

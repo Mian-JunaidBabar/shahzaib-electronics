@@ -33,11 +33,13 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { addItem, items } = useCart();
   const [justAdded, setJustAdded] = useState(false);
 
-  const isInCart = items.some((item) => item.id === product.id);
+  const isInCart = items.some((item) => item.variantId === String(product.id));
 
   const handleAddToCart = () => {
     addItem({
       id: product.id,
+      variantId: String(product.id), // Legacy: product id used as variant id
+      variantName: "Default",
       name: product.name,
       price: product.price,
       image: product.image,

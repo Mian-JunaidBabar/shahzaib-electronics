@@ -75,10 +75,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addItem = useCallback(
     (item: Omit<CartItem, "quantity">) => {
       setItems((prev) => {
-        const existing = prev.find((i) => i.id === item.id);
+        // Match by variantId so different variants of the same product are separate items
+        const existing = prev.find((i) => i.variantId === item.variantId);
         if (existing) {
           const updated = prev.map((i) =>
-            i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i,
+            i.variantId === item.variantId
+              ? { ...i, quantity: i.quantity + 1 }
+              : i,
           );
           return updated;
         }
@@ -93,10 +96,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addToCart = useCallback(
     (item: CartItem) => {
       setItems((prev) => {
-        const existing = prev.find((i) => i.id === item.id);
+        // Match by variantId — ensures "Android Panel 2GB" and "Android Panel 4GB"
+        // appear as two separate line items, not merged into one.
+        const existing = prev.find((i) => i.variantId === item.variantId);
         if (existing) {
           const updated = prev.map((i) =>
-            i.id === item.id
+            i.variantId === item.variantId
               ? { ...i, quantity: i.quantity + (item.quantity || 1) }
               : i,
           );

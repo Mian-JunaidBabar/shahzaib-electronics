@@ -53,6 +53,9 @@ export default function EditProductPage() {
   const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
   const [newImages, setNewImages] = useState<NewImagePreview[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // Track the existing variant's DB id so we can UPDATE it in place
+  // rather than DELETE + RECREATE (which would break OrderItem FK references).
+  const [variantId, setVariantId] = useState<string | undefined>(undefined);
   const [form, setForm] = useState({
     name: "",
     slug: "",
@@ -100,6 +103,9 @@ export default function EditProductPage() {
       const p = result.data;
       // Get the first variant (default variant) for pricing and inventory
       const defaultVariant = p.variants?.[0];
+
+      // Store the existing variant ID so we can update-in-place on submit
+      setVariantId(defaultVariant?.id);
 
       setForm({
         name: p.name || "",
@@ -191,6 +197,9 @@ export default function EditProductPage() {
           isActive: form.isActive,
           variants: [
             {
+              // Pass the existing variant id so the service UPDATEs in place
+              // instead of DELETE + CREATE (preserves OrderItem FK references).
+              id: variantId,
               name: "Default",
               sku: form.sku,
               price,

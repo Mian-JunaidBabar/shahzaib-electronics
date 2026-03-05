@@ -91,7 +91,9 @@ export function CheckoutFlow({
           vehicleInfo: customerData.vehicleModel,
         },
         cartItems: items.map((i) => ({
-          id: String(i.id), // using ID as slug mapper
+          id: String(i.id),
+          variantId: i.variantId,
+          variantName: i.variantName,
           name: i.name,
           price: i.price,
           quantity: i.quantity,

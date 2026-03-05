@@ -3,17 +3,24 @@ import {
   Edit,
   Package,
   Tag,
-  DollarSign,
   CircleCheck,
   AlertTriangle,
   XCircle,
-  Barcode,
   Hash,
-  TrendingUp,
   Warehouse,
   Clock,
   ShoppingCart,
+  Car,
+  Globe,
 } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   getProductAction,
   getProductStockDetailsAction,
@@ -49,26 +56,24 @@ export default async function ProductDetailPage({
   }
 
   const product = result.data;
-  // Get stock from the first variant
-  const defaultVariant = product.variants?.[0];
-  const stock = defaultVariant?.inventoryQty ?? 0;
-  const lowStockAt = defaultVariant?.lowStockAt ?? 0;
+  const variants = product.variants ?? [];
+  const fitments = product.fitments ?? [];
 
-  // Fetch stock details
-  const stockDetailsResult = await getProductStockDetailsAction(id);
-  const stockDetails = stockDetailsResult.success
-    ? stockDetailsResult.data
-    : null;
+  // Overall stock status based on all variants
+  const totalStock = variants.reduce((sum, v) => sum + v.inventoryQty, 0);
+  const isAnyLowStock = variants.some(
+    (v) => v.inventoryQty > 0 && v.inventoryQty <= v.lowStockAt,
+  );
 
   const stockBadge = (() => {
-    if (!defaultVariant || stock === 0) {
+    if (variants.length === 0 || totalStock === 0) {
       return {
         label: "Out of Stock",
         variant: "destructive" as const,
         icon: XCircle,
       };
     }
-    if (stock <= lowStockAt) {
+    if (isAnyLowStock) {
       return {
         label: "Low Stock",
         variant: "secondary" as const,
@@ -84,12 +89,21 @@ export default async function ProductDetailPage({
 
   const StockIcon = stockBadge.icon;
 
+  // Fetch aggregated stock details
+  const stockDetailsResult = await getProductStockDetailsAction(id);
+  const stockDetails = stockDetailsResult.success
+    ? stockDetailsResult.data
+    : null;
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Product Details</h1>
-          <p className="text-muted-foreground">View product info and status.</p>
+          <p className="text-muted-foreground">
+            View product info and inventory.
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
@@ -105,10 +119,11 @@ export default async function ProductDetailPage({
         </div>
       </div>
 
+      {/* ─── Main Product Card ─────────────────────────────────── */}
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Badge variant={product.isActive ? "default" : "secondary"}>
                 {product.isActive ? "Active" : "Inactive"}
               </Badge>
@@ -135,138 +150,29 @@ export default async function ProductDetailPage({
               <Package className="h-5 w-5 text-primary" />
               {product.name}
             </CardTitle>
-            {/* SKU and Barcode prominently displayed */}
-            <div className="flex flex-wrap items-center gap-3 mt-1">
-              <div className="flex items-center gap-1.5 text-sm">
-                <Hash className="h-4 w-4 text-muted-foreground" />
-                <code className="bg-muted px-2 py-0.5 rounded font-mono text-xs">
-                  {defaultVariant?.sku || "N/A"}
-                </code>
-              </div>
-              {defaultVariant?.barcode && (
-                <div className="flex items-center gap-1.5 text-sm">
-                  <Barcode className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">
-                    {defaultVariant.barcode}
-                  </span>
-                </div>
-              )}
-            </div>
             <p className="text-muted-foreground text-sm">
-              Slug: {product.slug}
+              Slug: <code className="font-mono">{product.slug}</code>
             </p>
           </div>
-          <div className="text-right space-y-2 min-w-45">
-            <p className="text-sm text-muted-foreground">Selling Price</p>
-            {defaultVariant?.salePrice ? (
-              <>
-                <p className="text-3xl font-bold text-green-600">
-                  {formatPrice(defaultVariant.salePrice)}
-                </p>
-                <p className="text-sm text-muted-foreground line-through">
-                  {formatPrice(defaultVariant.price)}
-                </p>
-              </>
-            ) : (
-              <p className="text-3xl font-bold">
-                {formatPrice(defaultVariant?.price || 0)}
-              </p>
-            )}
-            <p className="text-sm text-muted-foreground">
-              Category: {product.category || "-"}
+          <div className="text-right space-y-1 min-w-40">
+            <p className="text-sm text-muted-foreground">Category</p>
+            <div className="flex items-center justify-end gap-2">
+              <Tag className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium">{product.category || "—"}</span>
+            </div>
+            <p className="text-sm text-muted-foreground mt-2">
+              {variants.length} variant{variants.length !== 1 ? "s" : ""}
             </p>
           </div>
         </CardHeader>
+
         <CardContent className="space-y-4">
           {product.description && (
             <div>
-              <p className="text-sm text-muted-foreground">Description</p>
-              <p className="mt-1 leading-relaxed">{product.description}</p>
+              <p className="text-sm text-muted-foreground mb-1">Description</p>
+              <p className="leading-relaxed">{product.description}</p>
             </div>
           )}
-
-          <Separator />
-
-          {/* Financial Information */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="border rounded-lg p-4 space-y-1">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <DollarSign className="h-4 w-4" /> Selling Price
-              </div>
-              <p className="text-xl font-semibold">
-                {formatPrice(
-                  defaultVariant?.salePrice || defaultVariant?.price || 0,
-                )}
-              </p>
-              {defaultVariant?.salePrice && (
-                <p className="text-sm text-muted-foreground line-through">
-                  Original: {formatPrice(defaultVariant.price)}
-                </p>
-              )}
-            </div>
-            <div className="border rounded-lg p-4 space-y-1">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <DollarSign className="h-4 w-4" /> Cost Price
-              </div>
-              <p className="text-xl font-semibold text-muted-foreground">
-                {defaultVariant?.costPrice
-                  ? formatPrice(defaultVariant.costPrice)
-                  : "—"}
-              </p>
-              <p className="text-xs text-muted-foreground">Internal only</p>
-            </div>
-            <div className="border rounded-lg p-4 space-y-1">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <TrendingUp className="h-4 w-4" /> Profit
-              </div>
-              {defaultVariant?.costPrice ? (
-                <>
-                  <p className="text-xl font-semibold text-green-600">
-                    {formatPrice(
-                      (defaultVariant.salePrice || defaultVariant.price) -
-                        defaultVariant.costPrice,
-                    )}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Margin:{" "}
-                    {Math.round(
-                      (((defaultVariant.salePrice || defaultVariant.price) -
-                        defaultVariant.costPrice) /
-                        (defaultVariant.salePrice || defaultVariant.price)) *
-                        100,
-                    )}
-                    %
-                  </p>
-                </>
-              ) : (
-                <p className="text-xl font-semibold text-muted-foreground">—</p>
-              )}
-            </div>
-            <div className="border rounded-lg p-4 space-y-1">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Package className="h-4 w-4" /> Stock
-              </div>
-              <p className="text-xl font-semibold">
-                {defaultVariant ? `${stock} units` : "No inventory record"}
-              </p>
-              {defaultVariant && (
-                <p className="text-sm text-muted-foreground">
-                  Low stock at {lowStockAt}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Category */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm">
-              <Tag className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Category:</span>
-              <span className="font-medium">{product.category || "—"}</span>
-            </div>
-          </div>
 
           <Separator />
 
@@ -277,7 +183,142 @@ export default async function ProductDetailPage({
         </CardContent>
       </Card>
 
-      {/* Stock Overview Card */}
+      {/* ─── Variants & Pricing Card ───────────────────────────── */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Hash className="h-5 w-5 text-primary" />
+            Variants &amp; Pricing
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {variants.length === 0 ? (
+            <p className="text-muted-foreground text-sm">No variants found.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Variant Name</TableHead>
+                  <TableHead>SKU</TableHead>
+                  <TableHead className="text-right">Price</TableHead>
+                  <TableHead className="text-right">Sale Price</TableHead>
+                  <TableHead className="text-right">Cost</TableHead>
+                  <TableHead className="text-right">Stock</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {variants.map((variant) => {
+                  const isLow =
+                    variant.inventoryQty > 0 &&
+                    variant.inventoryQty <= variant.lowStockAt;
+                  const isOut = variant.inventoryQty === 0;
+                  return (
+                    <TableRow key={variant.id}>
+                      <TableCell className="font-medium">
+                        {variant.name}
+                      </TableCell>
+                      <TableCell>
+                        <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">
+                          {variant.sku}
+                        </code>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatPrice(variant.price)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {variant.salePrice ? (
+                          <span className="text-green-600 font-medium">
+                            {formatPrice(variant.salePrice)}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground">
+                        {variant.costPrice
+                          ? formatPrice(variant.costPrice)
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span
+                          className={`inline-flex items-center gap-1.5 font-medium ${
+                            isOut
+                              ? "text-red-600"
+                              : isLow
+                                ? "text-yellow-600"
+                                : "text-green-600"
+                          }`}
+                        >
+                          {isOut ? (
+                            <XCircle className="h-3.5 w-3.5" />
+                          ) : isLow ? (
+                            <AlertTriangle className="h-3.5 w-3.5" />
+                          ) : (
+                            <CircleCheck className="h-3.5 w-3.5" />
+                          )}
+                          {variant.inventoryQty} units
+                          {isLow && (
+                            <span className="text-xs font-normal">
+                              (low ≤{variant.lowStockAt})
+                            </span>
+                          )}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ─── Vehicle Fitment Card ──────────────────────────────── */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Car className="h-5 w-5 text-primary" />
+            Vehicle Fitment
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {product.isUniversal ? (
+            <Badge className="gap-1.5 text-sm bg-green-600 hover:bg-green-600 text-white">
+              <Globe className="h-4 w-4" />
+              Universal Fit — Compatible with all vehicles
+            </Badge>
+          ) : fitments.length === 0 ? (
+            <p className="text-muted-foreground text-sm">
+              No fitment data specified.
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Make</TableHead>
+                  <TableHead>Model</TableHead>
+                  <TableHead>Start Year</TableHead>
+                  <TableHead>End Year</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {fitments.map((fitment) => (
+                  <TableRow key={fitment.id}>
+                    <TableCell className="font-medium">
+                      {fitment.make}
+                    </TableCell>
+                    <TableCell>{fitment.model}</TableCell>
+                    <TableCell>{fitment.startYear ?? "—"}</TableCell>
+                    <TableCell>{fitment.endYear ?? "—"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ─── Stock Overview Card ───────────────────────────────── */}
       {stockDetails && (
         <Card>
           <CardHeader>
@@ -331,6 +372,7 @@ export default async function ProductDetailPage({
         </Card>
       )}
 
+      {/* ─── Product Images ────────────────────────────────────── */}
       {product.images && product.images.length > 0 && (
         <Card>
           <CardHeader>
@@ -348,7 +390,9 @@ export default async function ProductDetailPage({
                   }}
                 />
                 <div className="flex items-center justify-between px-3 py-2 text-sm">
-                  <span className="truncate">{img.secureUrl}</span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {img.publicId}
+                  </span>
                   {img.isPrimary && <Badge variant="outline">Primary</Badge>}
                 </div>
               </div>
