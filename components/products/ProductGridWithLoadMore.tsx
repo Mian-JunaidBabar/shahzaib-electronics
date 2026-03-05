@@ -12,6 +12,9 @@ type ProductCardProps = {
   price: number;
   originalPrice?: number;
   image: string;
+  variantId?: string;
+  variantName?: string;
+  variantsCount?: number;
   rating: number;
   reviews: number;
   badge?: "NEW" | "SALE";
@@ -103,11 +106,15 @@ export function ProductGridWithLoadMore({
     badge?: { name: string } | null;
     category?: string | null;
     variants: Array<{
+      id: string;
+      name: string;
       price: number;
       salePrice: number | null;
+      isDefault: boolean;
     }>;
   }): ProductCardProps | null => {
-    const defaultVariant = product.variants[0];
+    const defaultVariant =
+      product.variants?.find((v: any) => v.isDefault) || product.variants?.[0];
 
     if (!defaultVariant) {
       return null;
@@ -136,6 +143,9 @@ export function ProductGridWithLoadMore({
       price: currentPrice,
       originalPrice,
       image: product.images?.[0]?.secureUrl || "/placeholder-image.jpg",
+      variantId: defaultVariant.id,
+      variantName: defaultVariant.name,
+      variantsCount: product.variants.length,
       rating: 5,
       reviews: 0,
       badge: badgeType,

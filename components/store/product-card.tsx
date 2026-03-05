@@ -46,11 +46,11 @@ export function ProductCard({ product }: Props) {
 
   const handleAddToCart = () => {
     addToCart({
-      id: defaultVariant.id,
+      id: product.id,
       variantId: defaultVariant.id,
       variantName: defaultVariant.name,
       name: product.name,
-      price: displayPrice / 100, // Convert cents to rupees for cart
+      price: (defaultVariant.salePrice ?? defaultVariant.price) / 100, // Convert cents to rupees for cart
       image: primaryImage,
       quantity: 1,
     });

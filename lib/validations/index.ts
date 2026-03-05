@@ -99,7 +99,7 @@ export const productStatusSchema = z.enum([
 // SKU validation - alphanumeric with dashes, required and unique
 export const skuSchema = z
   .string()
-  .min(3, "SKU must be at least 3 characters")
+  .min(3, "SKU must be at least 3 characters (alphanumeric)")
   .max(50, "SKU must not exceed 50 characters")
   .regex(/^[A-Z0-9\-]+$/i, "SKU must be alphanumeric (dashes allowed)");
 

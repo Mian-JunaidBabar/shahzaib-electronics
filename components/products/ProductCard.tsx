@@ -12,6 +12,9 @@ type ProductCardProps = {
   price: number;
   originalPrice?: number;
   image: string;
+  variantId?: string;
+  variantName?: string;
+  variantsCount?: number;
   rating: number;
   reviews: number;
   badge?: "NEW" | "SALE" | null;
@@ -25,6 +28,9 @@ export function ProductCard({
   price,
   originalPrice,
   image,
+  variantId,
+  variantName,
+  variantsCount,
   badge,
   badgeText,
   category,
@@ -54,11 +60,13 @@ export function ProductCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     addItem({
       id,
-      variantId: id, // Legacy: product/slug id used as variant id
-      variantName: "Default",
+      variantId: variantId || id,
+      variantName: variantName || "Default",
       name: title,
       price: price,
       image,
@@ -153,20 +161,30 @@ export function ProductCard({
 
       <div className="p-4 flex flex-col flex-1">
         <Link href={`/products/${id}`}>
-          <h3 className="text-sm font-bold line-clamp-2 mb-2 group-hover:text-primary transition-colors text-slate-900 dark:text-white">
+          <h3 className="text-sm font-bold line-clamp-2 mb-1 group-hover:text-primary transition-colors text-slate-900 dark:text-white">
             {title}
           </h3>
         </Link>
+
+        {/* Variant Info */}
+        <div className="flex flex-col gap-1 mb-3">
+          {variantName && variantName.toLowerCase() !== "default" && (
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 w-fit px-2 py-0.5 rounded uppercase tracking-wider">
+              {variantName}
+            </span>
+          )}
+          {variantsCount && variantsCount > 1 && (
+            <span className="text-[10px] text-primary font-bold">
+              + {variantsCount - 1} more options
+            </span>
+          )}
+        </div>
+
         {/* Category and Tag badges */}
         <div className="flex items-center gap-2 mb-3">
           {category && (
             <span className="px-2 py-0.5 text-xs rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
               {category}
-            </span>
-          )}
-          {badgeText && (
-            <span className="px-2 py-0.5 text-xs rounded-full bg-primary/10 text-primary">
-              {badgeText}
             </span>
           )}
         </div>

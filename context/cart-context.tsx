@@ -14,8 +14,12 @@ interface CartContextType {
   items: CartItem[];
   addItem: (item: Omit<CartItem, "quantity">) => void;
   addToCart: (item: CartItem) => void;
-  removeItem: (id: string | number) => void;
-  updateQuantity: (id: string | number, quantity: number) => void;
+  removeItem: (id: string | number, variantId?: string) => void;
+  updateQuantity: (
+    id: string | number,
+    quantity: number,
+    variantId?: string,
+  ) => void;
   clearCart: () => void;
   getItemCount: () => number;
   getTotal: () => number;
@@ -75,11 +79,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addItem = useCallback(
     (item: Omit<CartItem, "quantity">) => {
       setItems((prev) => {
-        // Match by variantId so different variants of the same product are separate items
-        const existing = prev.find((i) => i.variantId === item.variantId);
+        // Match by both product id and variantId so different variants of the same product are separate items
+        const existing = prev.find(
+          (i) => i.id === item.id && i.variantId === item.variantId,
+        );
         if (existing) {
           const updated = prev.map((i) =>
-            i.variantId === item.variantId
+            i.id === item.id && i.variantId === item.variantId
               ? { ...i, quantity: i.quantity + 1 }
               : i,
           );
@@ -96,12 +102,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addToCart = useCallback(
     (item: CartItem) => {
       setItems((prev) => {
-        // Match by variantId — ensures "Android Panel 2GB" and "Android Panel 4GB"
-        // appear as two separate line items, not merged into one.
-        const existing = prev.find((i) => i.variantId === item.variantId);
+        // Match by both product id and variantId
+        const existing = prev.find(
+          (i) => i.id === item.id && i.variantId === item.variantId,
+        );
         if (existing) {
           const updated = prev.map((i) =>
-            i.variantId === item.variantId
+            i.id === item.id && i.variantId === item.variantId
               ? { ...i, quantity: i.quantity + (item.quantity || 1) }
               : i,
           );
@@ -114,21 +121,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [isHydrated],
   );
 
-  const removeItem = useCallback((id: string | number) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
+  const removeItem = useCallback((id: string | number, variantId?: string) => {
+    setItems((prev) =>
+      prev.filter((i) => {
+        if (variantId) {
+          return !(i.id === id && i.variantId === variantId);
+        }
+        return i.id !== id;
+      }),
+    );
   }, []);
 
   const updateQuantity = useCallback(
-    (id: string | number, quantity: number) => {
+    (id: string | number, quantity: number, variantId?: string) => {
       if (quantity <= 0) {
-        setItems((prev) => prev.filter((i) => i.id !== id));
+        removeItem(id, variantId);
       } else {
         setItems((prev) =>
-          prev.map((i) => (i.id === id ? { ...i, quantity } : i)),
+          prev.map((i) => {
+            const isMatch = variantId
+              ? i.id === id && i.variantId === variantId
+              : i.id === id;
+            return isMatch ? { ...i, quantity } : i;
+          }),
         );
       }
     },
-    [],
+    [removeItem],
   );
 
   const clearCart = useCallback(() => {

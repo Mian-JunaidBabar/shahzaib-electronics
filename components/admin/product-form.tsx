@@ -271,7 +271,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
         if (!Array.isArray(path) || path.length === 0) return;
 
         // Convert Zod path to RHF field name. Example: ["variants", 0, "sku"] => "variants.0.sku"
-        const mapped = path.map((p: any, idx: number) => {
+        const mapped = path.map((p: any) => {
           // For variant id field, our form uses `_id` instead of `id`
           if (p === "id" && path[0] === "variants") return "_id";
           return String(p);
@@ -281,8 +281,9 @@ export function ProductForm({ initialData }: ProductFormProps) {
         if (!firstField) firstField = fieldName;
       });
 
-      // Focus the first errored field so the user sees it immediately
+      // Set a generic top-level error if fields were handled
       if (firstField) {
+        setSubmitError("Please correct the errors highlighted in the form.");
         try {
           setFocus(firstField as any);
         } catch {

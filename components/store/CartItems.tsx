@@ -75,7 +75,9 @@ export function CartItems() {
               <div className="flex items-center gap-3 mt-3">
                 <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
                   <button
-                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                    onClick={() =>
+                      updateQuantity(item.id, item.quantity - 1, item.variantId)
+                    }
                     className="size-8 flex items-center justify-center rounded-md hover:bg-white dark:hover:bg-slate-600 transition-colors"
                     aria-label="Decrease quantity"
                   >
@@ -85,7 +87,9 @@ export function CartItems() {
                     {item.quantity}
                   </span>
                   <button
-                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                    onClick={() =>
+                      updateQuantity(item.id, item.quantity + 1, item.variantId)
+                    }
                     className="size-8 flex items-center justify-center rounded-md hover:bg-white dark:hover:bg-slate-600 transition-colors"
                     aria-label="Increase quantity"
                   >
@@ -94,7 +98,7 @@ export function CartItems() {
                 </div>
 
                 <button
-                  onClick={() => removeItem(item.id)}
+                  onClick={() => removeItem(item.id, item.variantId)}
                   className="ml-auto size-9 flex items-center justify-center rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
                   aria-label="Remove item"
                 >

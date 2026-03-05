@@ -9,6 +9,9 @@ export type ClientProduct = {
   price: number;
   originalPrice?: number;
   image: string;
+  variantId?: string;
+  variantName?: string;
+  variantsCount?: number;
   badge?: "NEW" | "SALE" | null;
   badgeText?: string;
   rating?: number;

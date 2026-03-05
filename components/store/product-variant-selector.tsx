@@ -66,7 +66,7 @@ export function ProductVariantSelector({
 
   const handleAddToCart = () => {
     addToCart({
-      id: selectedVariant.id,
+      id: product.id,
       variantId: selectedVariant.id,
       variantName: selectedVariant.name,
       name: product.name,

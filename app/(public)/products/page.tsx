@@ -80,8 +80,9 @@ async function ProductsGrid({ searchParams }: { searchParams: SearchParams }) {
   // Map to ProductCardProps structure
   const mappedProducts = products
     .map((product) => {
-      // Get the default variant (first one) - guard if relations are missing
-      const defaultVariant = product.variants?.[0];
+      // Use the actual default variant if marked, otherwise fallback to the first one
+      const defaultVariant =
+        product.variants?.find((v) => v.isDefault) || product.variants?.[0];
 
       if (!defaultVariant) {
         // Skip products without variants
@@ -113,6 +114,9 @@ async function ProductsGrid({ searchParams }: { searchParams: SearchParams }) {
         price: currentPrice,
         originalPrice,
         image: product.images[0]?.secureUrl || "/placeholder-image.jpg",
+        variantId: defaultVariant.id,
+        variantName: defaultVariant.name,
+        variantsCount: product.variants.length,
         rating: 5,
         reviews: 0,
         badge: badgeType,

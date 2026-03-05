@@ -268,8 +268,7 @@ export async function getStoreProducts(filters: StoreFilters = {}) {
         orderBy: { sortOrder: "asc" },
       },
       variants: {
-        orderBy: { createdAt: "asc" }, // First variant is the default
-        take: 1, // Only need the first/default variant for listing
+        orderBy: { isDefault: "desc" },
       },
       badge: true,
     },
@@ -300,7 +299,7 @@ export async function getStoreProductsWithCount(
           take: 1,
           orderBy: { sortOrder: "asc" },
         },
-        variants: { orderBy: { createdAt: "asc" }, take: 1 },
+        variants: { orderBy: { isDefault: "desc" } },
         badge: true,
       },
     }),
