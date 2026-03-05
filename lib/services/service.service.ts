@@ -11,6 +11,7 @@ import { Prisma } from "@prisma/client";
  * - Public/Active service queries
  */
 import { prisma } from "@/lib/prisma";
+import { unstable_cache } from "next/cache";
 
 // Types
 export type ServiceWithImages = Service & {
@@ -123,7 +124,7 @@ export async function getServices(
 /**
  * Get all active services (for public display)
  */
-export async function getActiveServices() {
+async function _getActiveServices() {
   const services = await prisma.service.findMany({
     where: { isActive: true },
     include: {
@@ -152,7 +153,7 @@ export async function getService(
 /**
  * Get single service by slug
  */
-export async function getServiceBySlug(
+async function _getServiceBySlug(
   slug: string,
 ): Promise<ServiceWithImages | null> {
   return prisma.service.findUnique({
@@ -193,13 +194,13 @@ export async function createService(
       // Create images using nested write
       images: input.images?.length
         ? {
-            create: input.images.map((img, index) => ({
-              publicId: img.publicId,
-              secureUrl: img.secureUrl,
-              isPrimary: index === 0, // First image is primary
-              sortOrder: index,
-            })),
-          }
+          create: input.images.map((img, index) => ({
+            publicId: img.publicId,
+            secureUrl: img.secureUrl,
+            isPrimary: index === 0, // First image is primary
+            sortOrder: index,
+          })),
+        }
         : undefined,
     },
     include: {
@@ -372,3 +373,23 @@ export async function getServiceStats() {
 
   return { total, active, inactive };
 }
+
+// --- Cached Exports ---
+
+export const getActiveServices = unstable_cache(
+  async () => {
+    return await _getActiveServices();
+  },
+  ["public-services-list"],
+  { tags: ["services:all"], revalidate: 3600 }
+);
+
+export const getServiceBySlug = async (slug: string) => {
+  return unstable_cache(
+    async () => {
+      return await _getServiceBySlug(slug);
+    },
+    [`service-detail-${slug}`],
+    { tags: ["services:all", `services:${slug}`], revalidate: 3600 }
+  )();
+};

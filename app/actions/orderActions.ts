@@ -8,7 +8,7 @@
 
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/services/auth.service";
 import * as OrderService from "@/lib/services/order.service";
@@ -317,7 +317,9 @@ Please confirm availability and delivery.`;
       });
     }
 
-    // Revalidate admin orders page
+    // Revalidate admin orders page and flush products cache since stock dropped
+    revalidateTag("products:all", undefined as any);
+    revalidateTag("dashboard:stats", undefined as any);
     revalidatePath("/admin/dashboard/orders");
 
     return {
@@ -410,6 +412,8 @@ export async function createOrderAction(
       "confirmation",
     );
 
+    revalidateTag("products:all", undefined as any);
+    revalidateTag("dashboard:stats", undefined as any);
     revalidatePath("/admin/dashboard/orders");
 
     return {
@@ -447,6 +451,8 @@ export async function updateOrderStatusAction(
       "status_update",
     );
 
+    revalidateTag("products:all", undefined as any);
+    revalidateTag("dashboard:stats", undefined as any);
     revalidatePath("/admin/dashboard/orders");
     revalidatePath(`/admin/dashboard/orders/${validated.id}`);
 
@@ -469,6 +475,8 @@ export async function deleteOrderAction(id: string): Promise<ActionResult> {
 
     await OrderService.deleteOrder(id);
 
+    revalidateTag("products:all", undefined as any);
+    revalidateTag("dashboard:stats", undefined as any);
     revalidatePath("/admin/dashboard/orders");
 
     return { success: true };

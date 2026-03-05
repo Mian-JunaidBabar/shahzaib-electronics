@@ -13,6 +13,7 @@ import { Prisma } from "@prisma/client";
  * Optimized for customer experience with proper filtering and sorting.
  */
 import { prisma } from "@/lib/prisma";
+import { unstable_cache } from "next/cache";
 
 // Types
 export type StorefrontProduct = Product & {
@@ -47,7 +48,7 @@ export type StorefrontResult = {
 /**
  * Get products for storefront with filtering and sorting
  */
-export async function getStorefrontProducts(
+async function _getStorefrontProducts(
   options: StorefrontFilterOptions = {},
 ): Promise<StorefrontResult> {
   const {
@@ -151,7 +152,7 @@ export async function getStorefrontProducts(
 /**
  * Get a single product by slug for the storefront
  */
-export async function getStorefrontProduct(
+async function _getStorefrontProduct(
   slug: string,
 ): Promise<StorefrontProduct | null> {
   return prisma.product.findFirst({
@@ -172,7 +173,7 @@ export async function getStorefrontProduct(
 /**
  * Get related products (same category, excluding current)
  */
-export async function getRelatedProducts(
+async function _getRelatedProducts(
   productId: string,
   category: string | null,
   limit: number = 4,
@@ -199,7 +200,7 @@ export async function getRelatedProducts(
 /**
  * Get all unique categories from active products
  */
-export async function getAllCategories(): Promise<string[]> {
+async function _getAllCategories(): Promise<string[]> {
   const results = await prisma.product.findMany({
     where: {
       isActive: true,
@@ -217,7 +218,7 @@ export async function getAllCategories(): Promise<string[]> {
 /**
  * Get price range for active products (from variants)
  */
-export async function getPriceRange(): Promise<{ min: number; max: number }> {
+async function _getPriceRange(): Promise<{ min: number; max: number }> {
   const result = await prisma.productVariant.aggregate({
     where: {
       product: {
@@ -238,7 +239,7 @@ export async function getPriceRange(): Promise<{ min: number; max: number }> {
 /**
  * Get featured products (products with badges or on sale)
  */
-export async function getFeaturedProducts(
+async function _getFeaturedProducts(
   limit: number = 8,
 ): Promise<StorefrontProduct[]> {
   return prisma.product.findMany({
@@ -259,3 +260,61 @@ export async function getFeaturedProducts(
     take: limit,
   });
 }
+
+// --- Cached Exports ---
+
+export const getStorefrontProducts = unstable_cache(
+  async (options: StorefrontFilterOptions = {}) => {
+    return await _getStorefrontProducts(options);
+  },
+  ["storefront-products-list"],
+  { tags: ["products:all"], revalidate: 3600 }
+);
+
+export const getStorefrontProduct = async (slug: string) => {
+  return unstable_cache(
+    async () => {
+      return await _getStorefrontProduct(slug);
+    },
+    [`storefront-product-${slug}`],
+    { tags: ["products:all", `products:${slug}`], revalidate: 3600 }
+  )();
+};
+
+export const getRelatedProducts = async (
+  productId: string,
+  category: string | null,
+  limit: number = 4
+) => {
+  return unstable_cache(
+    async () => {
+      return await _getRelatedProducts(productId, category, limit);
+    },
+    [`storefront-related-${productId}-${category}-${limit}`],
+    { tags: ["products:all"], revalidate: 3600 }
+  )();
+};
+
+export const getAllCategories = unstable_cache(
+  async () => {
+    return await _getAllCategories();
+  },
+  ["storefront-categories"],
+  { tags: ["products:all"], revalidate: 3600 }
+);
+
+export const getPriceRange = unstable_cache(
+  async () => {
+    return await _getPriceRange();
+  },
+  ["storefront-price-range"],
+  { tags: ["products:all"], revalidate: 3600 }
+);
+
+export const getFeaturedProducts = unstable_cache(
+  async (limit: number = 8) => {
+    return await _getFeaturedProducts(limit);
+  },
+  ["storefront-featured"],
+  { tags: ["products:all"], revalidate: 3600 }
+);

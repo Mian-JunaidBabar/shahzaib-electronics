@@ -7,7 +7,7 @@
 
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdmin } from "@/lib/services/auth.service";
 import * as ServiceService from "@/lib/services/service.service";
 import {
@@ -121,6 +121,7 @@ export async function createServiceAction(
     const validated = serviceCreateSchema.parse(input);
     const service = await ServiceService.createService(validated);
 
+    revalidateTag("services:all", undefined as any);
     revalidatePath("/admin/dashboard/services");
     revalidatePath("/services");
 
@@ -146,6 +147,8 @@ export async function updateServiceAction(
     const validated = serviceUpdateSchema.parse(input);
     const service = await ServiceService.updateService(validated.id, validated);
 
+    revalidateTag("services:all", undefined as any);
+    if (validated.slug) revalidateTag(`services:${validated.slug}`, undefined as any);
     revalidatePath("/admin/dashboard/services");
     revalidatePath("/services");
 
@@ -174,6 +177,7 @@ export async function deleteServiceAction(
       return { success: false, error: result.error };
     }
 
+    revalidateTag("services:all", undefined as any);
     revalidatePath("/admin/dashboard/services");
     revalidatePath("/services");
 
@@ -199,6 +203,7 @@ export async function toggleServiceActiveAction(
 
     const service = await ServiceService.toggleServiceActive(id);
 
+    revalidateTag("services:all", undefined as any);
     revalidatePath("/admin/dashboard/services");
     revalidatePath("/services");
 

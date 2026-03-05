@@ -7,7 +7,7 @@
 
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdmin } from "@/lib/services/auth.service";
 import * as ProductService from "@/lib/services/product.service";
 import {
@@ -123,6 +123,8 @@ export async function createProductAction(
     const validated = productCreateSchema.parse(input);
     const product = await ProductService.createProduct(validated);
 
+    revalidateTag("products:all", undefined as any);
+    revalidateTag("dashboard:stats", undefined as any);
     revalidatePath("/admin/dashboard/products");
     revalidatePath("/products");
 
@@ -148,6 +150,10 @@ export async function updateProductAction(
     const validated = productUpdateSchema.parse(input);
     const { id, ...data } = validated;
     await ProductService.updateProduct(id, data);
+
+    revalidateTag("products:all", undefined as any);
+    revalidateTag("dashboard:stats", undefined as any);
+    if (data.slug) revalidateTag(`products:${data.slug}`, undefined as any);
 
     revalidatePath("/admin/dashboard/products");
     revalidatePath(`/products/${id}`);
@@ -175,6 +181,7 @@ export async function toggleProductActiveAction(
 
     await ProductService.updateProduct(id, { isActive });
 
+    revalidateTag("products:all", undefined as any);
     revalidatePath("/admin/dashboard/products");
     revalidatePath("/admin/dashboard/inventory");
     revalidatePath("/products");
@@ -227,6 +234,8 @@ export async function archiveProductAction(id: string): Promise<ActionResult> {
 
     await ProductService.archiveProduct(id);
 
+    revalidateTag("products:all", undefined as any);
+    revalidateTag("dashboard:stats", undefined as any);
     revalidatePath("/admin/dashboard/products");
     revalidatePath("/admin/dashboard/inventory");
     revalidatePath("/products");
@@ -281,6 +290,8 @@ export async function deleteProductAction(
     const result = await ProductService.deleteProduct(id);
 
     if (result.deleted) {
+      revalidateTag("products:all", undefined as any);
+      revalidateTag("dashboard:stats", undefined as any);
       revalidatePath("/admin/dashboard/products");
       revalidatePath("/admin/dashboard/inventory");
       revalidatePath("/products");
