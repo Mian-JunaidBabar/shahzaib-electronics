@@ -519,6 +519,8 @@ export type AdminProductFilters = {
   limit?: number;
   query?: string;
   status?: string;
+  category?: string;
+  sort?: string;
 };
 
 /**
@@ -548,6 +550,26 @@ export async function getAdminProducts(filters: AdminProductFilters = {}) {
     where.isActive = filters.status === "ACTIVE";
   }
 
+  if (filters.category && filters.category !== "ALL") {
+    where.category = filters.category;
+  }
+
+  let orderBy: Prisma.ProductOrderByWithRelationInput = { createdAt: "desc" };
+  if (filters.sort) {
+    switch (filters.sort) {
+      case "oldest":
+        orderBy = { createdAt: "asc" };
+        break;
+      case "name_asc":
+        orderBy = { name: "asc" };
+        break;
+      case "newest":
+      default:
+        orderBy = { createdAt: "desc" };
+        break;
+    }
+  }
+
   const [products, total] = await Promise.all([
     prisma.product.findMany({
       where,
@@ -559,7 +581,7 @@ export async function getAdminProducts(filters: AdminProductFilters = {}) {
         tags: { orderBy: { name: "asc" } },
         productBadges: { include: { badge: true } },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy,
       skip,
       take: limit,
     }),

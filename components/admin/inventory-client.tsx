@@ -25,6 +25,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { InventoryFilters } from "./inventory-filters";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -118,6 +119,7 @@ export function InventoryClient({
   initialPage = 1,
   initialQuery = "",
   initialStatus = "ALL",
+  categories,
 }: {
   initialProducts: Product[];
   totalPages: number;
@@ -131,6 +133,7 @@ export function InventoryClient({
   initialPage?: number;
   initialQuery?: string;
   initialStatus?: string;
+  categories: string[];
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -416,40 +419,45 @@ export function InventoryClient({
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1 flex gap-2">
-          <Input
-            placeholder="Search by name, SKU, or category..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            className="max-w-md"
-          />
-          <Button variant="secondary" onClick={handleSearch}>
-            <Search className="h-4 w-4" />
-          </Button>
+      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        <div className="flex flex-col sm:flex-row gap-4 flex-1">
+          <div className="flex-1 flex gap-2 max-w-md">
+            <Input
+              placeholder="Search by name, SKU, or category..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              className="w-full"
+            />
+            <Button variant="secondary" onClick={handleSearch}>
+              <Search className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <Select
+            value={statusFilter}
+            onValueChange={(val) => {
+              setStatusFilter(val as "ALL" | "ACTIVE" | "INACTIVE");
+              const params = new URLSearchParams(searchParams.toString());
+              if (val !== "ALL") params.set("status", val);
+              else params.delete("status");
+              params.delete("page");
+              router.push(`${pathname}?${params.toString()}`);
+            }}
+          >
+            <SelectTrigger className="w-[140px]">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Status</SelectItem>
+              <SelectItem value="ACTIVE">Active Only</SelectItem>
+              <SelectItem value="INACTIVE">Inactive Only</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Select
-          value={statusFilter}
-          onValueChange={(val) => {
-            setStatusFilter(val as "ALL" | "ACTIVE" | "INACTIVE");
-            const params = new URLSearchParams(searchParams.toString());
-            if (val !== "ALL") params.set("status", val);
-            else params.delete("status");
-            params.delete("page");
-            router.push(`${pathname}?${params.toString()}`);
-          }}
-        >
-          <SelectTrigger className="w-40">
-            <Filter className="h-4 w-4 mr-2" />
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">All Status</SelectItem>
-            <SelectItem value="ACTIVE">Active Only</SelectItem>
-            <SelectItem value="INACTIVE">Inactive Only</SelectItem>
-          </SelectContent>
-        </Select>
+
+        <InventoryFilters categories={categories} />
       </div>
 
       {/* Products Table */}

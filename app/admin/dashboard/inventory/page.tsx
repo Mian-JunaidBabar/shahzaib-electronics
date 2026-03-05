@@ -1,6 +1,7 @@
 import { getAdminProducts } from "@/lib/services/product.service";
 import { InventoryClient } from "@/components/admin/inventory-client";
 import { Metadata } from "next";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
   title: "Inventory Management | Admin",
@@ -15,13 +16,26 @@ export default async function InventoryPage({
   const page = Number(sp.page) || 1;
   const query = typeof sp.q === "string" ? sp.q : undefined;
   const status = typeof sp.status === "string" ? sp.status : "ALL";
+  const category = typeof sp.category === "string" ? sp.category : "ALL";
+  const sort = typeof sp.sort === "string" ? sp.sort : "newest";
 
   const { products, metadata } = await getAdminProducts({
     page,
     limit: 10,
     query,
     status,
+    category,
+    sort,
   });
+
+  // Fetch all distinct categories
+  const categoriesDb = await prisma.product.findMany({
+    select: { category: true },
+    distinct: ["category"],
+  });
+  const categories = categoriesDb
+    .map((r: { category: string | null }) => r.category)
+    .filter(Boolean) as string[];
 
   // Calculate stats for current page (can be expanded later for global stats if needed)
   const activeCount = products.filter((p) => p.isActive).length;
@@ -54,6 +68,7 @@ export default async function InventoryPage({
       initialPage={page}
       initialQuery={query || ""}
       initialStatus={status}
+      categories={categories}
     />
   );
 }
