@@ -57,6 +57,7 @@ export type CreateProductInput = {
     barcode?: string | null;
     inventoryQty?: number; // Stock quantity for this variant
     lowStockAt?: number; // Low stock threshold
+    isDefault?: boolean;
   }[];
 
   // Vehicle Fitment (optional, for non-universal products)
@@ -94,6 +95,7 @@ export type UpdateProductInput = {
     barcode?: string | null;
     inventoryQty?: number;
     lowStockAt?: number;
+    isDefault?: boolean;
   }[];
 
   // Fitments array - will replace existing fitments
@@ -436,6 +438,25 @@ function determineStatusFromStock(
 }
 
 /**
+ * Enforce that exactly one variant is set as default.
+ * Rule 1: If none selected, the first variant becomes default.
+ * Rule 2: If multiple selected, only the first one found remains default.
+ */
+function enforceDefaultVariant<T extends { isDefault?: boolean }>(variants: T[]): T[] {
+  if (!variants || variants.length === 0) return variants;
+
+  const defaultIndex = variants.findIndex((v) => v.isDefault === true);
+
+  if (defaultIndex === -1) {
+    // None selected -> forcefully set first as default
+    return variants.map((v, i) => ({ ...v, isDefault: i === 0 }));
+  } else {
+    // Multiple might be selected -> only keep the first one found
+    return variants.map((v, i) => ({ ...v, isDefault: i === defaultIndex }));
+  }
+}
+
+/**
  * Create a new product with variants and fitments
  */
 export async function createProduct(
@@ -454,6 +475,8 @@ export async function createProduct(
   if (variants.length === 0) {
     throw new Error("At least one product variant is required");
   }
+
+  const enforcedVariants = enforceDefaultVariant(variants);
 
   // Calculate total stock from all variants
   const totalStock = variants.reduce(
@@ -488,6 +511,7 @@ export async function createProduct(
           barcode: variant.barcode ?? null,
           inventoryQty: variant.inventoryQty ?? 0,
           lowStockAt: variant.lowStockAt ?? 5,
+          isDefault: variant.isDefault ?? false,
         })),
       },
       fitments: {
@@ -608,8 +632,10 @@ export async function updateProduct(
 
   // Sync variants — safe upsert/selective-delete strategy
   if (variants !== undefined) {
+    const enforcedVariants = enforceDefaultVariant(variants);
+
     // IDs of incoming variants that already exist in the DB
-    const incomingIds = variants
+    const incomingIds = enforcedVariants
       .map((v) => v.id)
       .filter((id): id is string => Boolean(id));
 
@@ -633,7 +659,7 @@ export async function updateProduct(
     }
 
     // Step 2: Upsert each incoming variant
-    for (const variant of variants) {
+    for (const variant of enforcedVariants) {
       if (variant.id) {
         // EXISTING variant — update in place
         await prisma.productVariant.update({
@@ -647,6 +673,7 @@ export async function updateProduct(
             barcode: variant.barcode ?? null,
             inventoryQty: variant.inventoryQty ?? 0,
             lowStockAt: variant.lowStockAt ?? 5,
+            isDefault: variant.isDefault ?? false,
           },
         });
       } else {
@@ -662,6 +689,7 @@ export async function updateProduct(
             barcode: variant.barcode ?? null,
             inventoryQty: variant.inventoryQty ?? 0,
             lowStockAt: variant.lowStockAt ?? 5,
+            isDefault: variant.isDefault ?? false,
           },
         });
       }

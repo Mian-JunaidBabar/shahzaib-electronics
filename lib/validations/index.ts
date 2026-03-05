@@ -117,6 +117,7 @@ const variantSchema = z.object({
   barcode: z.string().max(100).optional().nullable(),
   inventoryQty: z.coerce.number().int().min(0).default(0),
   lowStockAt: z.coerce.number().int().min(1).default(5),
+  isDefault: z.boolean().default(false),
 });
 
 // Vehicle fitment schema

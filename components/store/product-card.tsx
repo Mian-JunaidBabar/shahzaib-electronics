@@ -20,8 +20,9 @@ function formatPrice(cents: number): string {
 export function ProductCard({ product }: Props) {
   const { addToCart, items } = useCart();
 
-  // Get default variant (first variant)
-  const defaultVariant = product.variants[0];
+  // Get default variant (or fallback to first variant)
+  const defaultVariant =
+    product.variants.find((v) => v.isDefault) || product.variants[0];
   if (!defaultVariant) {
     return null; // No variant available
   }
@@ -115,13 +116,21 @@ export function ProductCard({ product }: Props) {
           <h3 className="font-medium text-sm line-clamp-2 hover:underline">
             {product.name}
           </h3>
+          {product.variants.length > 1 && (
+            <p className="text-xs text-muted-foreground mt-1 tracking-wide">
+              + {product.variants.length - 1} more options
+            </p>
+          )}
         </Link>
       </CardContent>
 
       {/* Footer */}
       <CardFooter className="p-4 pt-0 flex items-center justify-between gap-2">
         <div className="flex flex-col">
-          <span className="font-bold text-lg">{formatPrice(displayPrice)}</span>
+          <span className="font-bold text-lg">
+            {product.variants.length > 1 ? "From " : ""}
+            {formatPrice(displayPrice)}
+          </span>
           {hasDiscount && (
             <span className="text-sm text-muted-foreground line-through">
               {formatPrice(defaultVariant.price)}

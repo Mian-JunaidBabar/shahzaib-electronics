@@ -14,6 +14,7 @@ interface Variant {
   price: number;
   salePrice: number | null;
   inventoryQty: number;
+  isDefault: boolean;
 }
 
 interface Props {
@@ -35,7 +36,9 @@ export function ProductVariantSelector({
   primaryImage,
 }: Props) {
   const { addToCart, items } = useCart();
-  const [selectedVariant, setSelectedVariant] = useState(variants[0]);
+  const [selectedVariant, setSelectedVariant] = useState(
+    variants.find((v) => v.isDefault) || variants[0],
+  );
   const [justAdded, setJustAdded] = useState(false);
 
   // Hide the picker if there's only one variant named "Default"

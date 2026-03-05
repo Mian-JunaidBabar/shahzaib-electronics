@@ -28,6 +28,7 @@ import {
   X,
   Trash2,
   Save,
+  Star,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -86,6 +87,7 @@ type VariantFormRow = {
   barcode?: string;
   inventoryQty: number;
   lowStockAt: number;
+  isDefault: boolean;
 };
 
 type FitmentFormRow = {
@@ -170,6 +172,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
             barcode: v.barcode ?? "",
             inventoryQty: v.inventoryQty ?? 0,
             lowStockAt: v.lowStockAt ?? 5,
+            isDefault: v.isDefault ?? false,
           })),
           fitments: (initialData.fitments ?? []).map((f) => ({
             make: f.make,
@@ -196,6 +199,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
               barcode: "",
               inventoryQty: 0,
               lowStockAt: 5,
+              isDefault: true,
             },
           ],
           fitments: [],
@@ -266,6 +270,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
           barcode: v.barcode || null,
           inventoryQty: Number(v.inventoryQty),
           lowStockAt: Number(v.lowStockAt),
+          isDefault: v.isDefault,
         }));
 
         let productId: string;
@@ -528,16 +533,41 @@ export function ProductForm({ initialData }: ProductFormProps) {
                   <h4 className="font-semibold text-sm">
                     Variant #{index + 1}
                   </h4>
-                  {variantFields.length > 1 && (
+                  <div className="flex items-center gap-2">
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => removeVariant(index)}
+                      onClick={() => {
+                        // Set this one to true, others to false
+                        variantFields.forEach((_, i) => {
+                          setValue(`variants.${i}.isDefault`, i === index, {
+                            shouldDirty: true,
+                          });
+                        });
+                      }}
+                      className={
+                        watch(`variants.${index}.isDefault`)
+                          ? "text-yellow-500"
+                          : "text-muted-foreground"
+                      }
+                      title="Set as Default Variant"
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                      <Star
+                        className={`h-4 w-4 ${watch(`variants.${index}.isDefault`) ? "fill-current" : ""}`}
+                      />
                     </Button>
-                  )}
+                    {variantFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeVariant(index)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Hidden field to preserve the DB variant id on edit */}
@@ -667,6 +697,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
                 barcode: "",
                 inventoryQty: 0,
                 lowStockAt: 5,
+                isDefault: variantFields.length === 0, // auto default if it's the only one
               })
             }
           >

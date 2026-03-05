@@ -58,6 +58,7 @@ type FormData = {
     barcode?: string;
     inventoryQty: number;
     lowStockAt: number;
+    isDefault: boolean;
   }>;
   fitments: Array<{
     make: string;
@@ -78,7 +79,14 @@ export default function NewProductPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // React Hook Form setup
-  const { register, control, handleSubmit: handleFormSubmit, watch, setValue, formState: { errors } } = useForm<FormData>({
+  const {
+    register,
+    control,
+    handleSubmit: handleFormSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<FormData>({
     defaultValues: {
       name: "",
       slug: "",
@@ -97,6 +105,7 @@ export default function NewProductPage() {
           barcode: "",
           inventoryQty: 0,
           lowStockAt: 5,
+          isDefault: true,
         },
       ],
       fitments: [],
@@ -172,6 +181,7 @@ export default function NewProductPage() {
         barcode: v.barcode || null,
         inventoryQty: Number(v.inventoryQty),
         lowStockAt: Number(v.lowStockAt),
+        isDefault: v.isDefault,
       }));
 
       const result = await createProductAction({
@@ -336,7 +346,9 @@ export default function NewProductPage() {
                 placeholder="e.g., Premium Air Filter"
               />
               {errors.name && (
-                <p className="text-sm text-destructive">{errors.name.message}</p>
+                <p className="text-sm text-destructive">
+                  {errors.name.message}
+                </p>
               )}
             </div>
             <div className="space-y-2">
@@ -509,6 +521,7 @@ export default function NewProductPage() {
                 barcode: "",
                 inventoryQty: 0,
                 lowStockAt: 5,
+                isDefault: variantFields.length === 0,
               })
             }
           >

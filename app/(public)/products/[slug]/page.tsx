@@ -167,6 +167,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 price: v.price,
                 salePrice: v.salePrice,
                 inventoryQty: v.inventoryQty,
+                isDefault: v.isDefault,
               }))}
               primaryImage={primaryImage}
             />
