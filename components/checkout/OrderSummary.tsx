@@ -60,6 +60,12 @@ export function OrderSummary({
                   <p className="text-white font-semibold text-sm mb-1 leading-tight">
                     {item.name}
                   </p>
+                  {item.variantName &&
+                    item.variantName.toLowerCase() !== "default" && (
+                      <div className="text-xs text-slate-400 mb-1">
+                        Spec: {item.variantName}
+                      </div>
+                    )}
                   <p className="text-slate-400 text-xs font-medium">
                     Qty: {item.quantity} × Rs. {item.price.toLocaleString()}
                   </p>

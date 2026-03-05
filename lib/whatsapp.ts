@@ -53,10 +53,13 @@ export function formatPrice(price: number): string {
  */
 export function generateOrderMessage(items: CartItem[]): string {
   const itemsList = items
-    .map(
-      (item) =>
-        `• ${item.name} x${item.quantity} - ${formatPrice(item.price * item.quantity)}`,
-    )
+    .map((item) => {
+      const variantDisplay =
+        item.variantName && item.variantName.toLowerCase() !== "default"
+          ? ` (${item.variantName})`
+          : "";
+      return `• ${item.name}${variantDisplay} x${item.quantity} - ${formatPrice(item.price * item.quantity)}`;
+    })
     .join("\n");
 
   const total = items.reduce(

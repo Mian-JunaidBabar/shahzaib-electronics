@@ -60,6 +60,12 @@ export function CartItems() {
                 <h3 className="font-bold text-slate-900 dark:text-white mb-1">
                   {item.name}
                 </h3>
+                {item.variantName &&
+                  item.variantName.toLowerCase() !== "default" && (
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      Variant: {item.variantName}
+                    </p>
+                  )}
                 <p className="text-lg font-semibold text-primary">
                   Rs. {item.price.toLocaleString()}
                 </p>

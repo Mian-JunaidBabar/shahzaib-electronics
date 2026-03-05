@@ -1,6 +1,4 @@
 import { CheckoutFlow } from "@/components/checkout/CheckoutFlow";
-import Header from "@/components/layout/header";
-import Footer from "@/components/layout/footer";
 import { prisma } from "@/lib/prisma";
 import type { Metadata } from "next";
 
@@ -13,7 +11,8 @@ export const revalidate = 0; // Don't cache checkout
 export default async function CheckoutPage({
   searchParams,
 }: {
-  searchParams: { service?: string };
+  // `searchParams` may be a Promise in some Next.js runtimes — await it before use.
+  searchParams: Promise<{ service?: string }> | { service?: string };
 }) {
   // Fetch active services to show as upsells in the checkout flow
   const services = await prisma.service.findMany({
@@ -21,7 +20,8 @@ export default async function CheckoutPage({
   });
 
   // Find the pre-selected service if provided in URL params
-  const preSelectedServiceSlug = searchParams.service;
+  const resolvedSearchParams = await searchParams;
+  const preSelectedServiceSlug = resolvedSearchParams?.service;
   const preSelectedService = preSelectedServiceSlug
     ? services.find((s) => s.slug === preSelectedServiceSlug)
     : null;

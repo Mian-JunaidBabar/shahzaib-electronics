@@ -115,23 +115,38 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
 
       // 2. Create Order & Items if cartItems exist
       if (cartItems.length > 0) {
-        // Look up variants directly by variantId (correct and efficient)
-        const variantIds = cartItems.map((item) => item.variantId);
-        const dbVariants = await tx.productVariant.findMany({
-          where: { id: { in: variantIds } },
-          include: { product: { select: { name: true } } },
-        });
-
         const orderItemsToCreate = [];
 
         for (const item of cartItems) {
-          const dbVariant = dbVariants.find((v) => v.id === item.variantId);
+          // Try lookup by variantId first (preferred)
+          let dbVariant = null as any;
+          if (item.variantId) {
+            dbVariant = await tx.productVariant.findUnique({
+              where: { id: item.variantId },
+            });
+          }
+
+          // Fallback: find product by name and select a variant matching the variantName,
+          // otherwise pick the first variant (default). This makes the checkout action
+          // more robust when variantId is missing or stale.
+          if (!dbVariant) {
+            const product = await tx.product.findFirst({
+              where: { name: item.name },
+              include: { variants: true },
+            });
+            if (product && product.variants && product.variants.length > 0) {
+              dbVariant =
+                product.variants.find((v) => v.name === item.variantName) ||
+                product.variants[0];
+            }
+          }
+
           if (!dbVariant)
             throw new Error(`Variant not found for: ${item.name}`);
 
-          if (dbVariant.inventoryQty < item.quantity)
+          if ((dbVariant.inventoryQty ?? 0) < item.quantity)
             throw new Error(
-              `Insufficient stock for "${item.name}". Only ${dbVariant.inventoryQty} available.`,
+              `Insufficient stock for "${item.name}". Only ${dbVariant.inventoryQty ?? 0} available.`,
             );
 
           // Determine price directly from DB (salePrice or regular price)
@@ -140,7 +155,7 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
 
           // Append variant name to snapshot (omit if it is "Default")
           const nameSnapshot =
-            item.variantName && item.variantName !== "Default"
+            item.variantName && item.variantName.toLowerCase() !== "default"
               ? `${item.name} (${item.variantName})`
               : item.name;
 
@@ -216,7 +231,7 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
       parsedCartItems = cartItems
         .map((item) => {
           const variantSuffix =
-            item.variantName && item.variantName !== "Default"
+            item.variantName && item.variantName.toLowerCase() !== "default"
               ? ` (${item.variantName})`
               : "";
           return `${item.quantity}x ${item.name}${variantSuffix} - Rs. ${(item.price * item.quantity).toLocaleString()}`;
