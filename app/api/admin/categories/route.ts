@@ -1,16 +1,16 @@
+import { getActiveCategories } from "@/lib/services/category.service";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const categories = await prisma.product.findMany({
-    where: { category: { not: null } },
-    select: { category: true },
-    distinct: ["category"],
-  });
+  const categories = await getActiveCategories();
 
-  const names = categories
-    .map((c) => c.category)
-    .filter((c): c is string => !!c);
-
-  return NextResponse.json(names);
+  return NextResponse.json(
+    categories.map((c) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      imageUrl: c.imageUrl,
+      productCount: c._count.products,
+    })),
+  );
 }

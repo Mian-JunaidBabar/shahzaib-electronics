@@ -5,6 +5,7 @@ import type {
   VehicleFitment,
   Badge,
   Tag,
+  Category,
 } from "@prisma/client";
 import { deleteImage, extractPublicId } from "@/lib/cloudinary";
 import { ProductStatus, Prisma } from "@prisma/client";
@@ -28,6 +29,7 @@ export type ProductWithRelations = Product & {
   badge: Badge | null;
   tags: Tag[];
   badges?: Badge[];
+  categoryRelation?: Category | null;
 };
 
 // Store product with limited relations (for listing pages)
@@ -37,6 +39,7 @@ export type StoreProduct = Product & {
   badge: Badge | null;
   tags: Tag[];
   badges?: Badge[];
+  categoryRelation?: Category | null;
 };
 
 // Legacy type for backward compatibility
@@ -47,6 +50,7 @@ export type CreateProductInput = {
   slug?: string; // Optional - auto-generated from name if not provided
   description?: string | null;
   category?: string | null;
+  categoryId?: string | null;
   badgeId?: string | null;
   badges?: string[]; // Array of badge names to attach to product (will be created if missing)
   tags?: string[]; // Array of tag names (will be created if not exist), defaults to empty
@@ -82,6 +86,7 @@ export type UpdateProductInput = {
   slug?: string;
   description?: string | null;
   category?: string | null;
+  categoryId?: string | null;
   badgeId?: string | null;
   badges?: string[];
   tags?: string[]; // Array of tag names (will connect or create)
@@ -138,7 +143,9 @@ export type PaginationOptions = {
 // New E-commerce filter types
 export type StoreFilters = {
   q?: string; // Search query
-  categories?: string[]; // Array of category names
+  categories?: string[]; // Array of category names (legacy)
+  categoryId?: string; // Single category ID filter
+  categorySlug?: string; // Category slug filter (public pages)
   tags?: string[]; // Array of badge IDs
   min?: number; // Min price in dollars
   max?: number; // Max price in dollars
@@ -195,7 +202,7 @@ export async function getTopTags(limit: number = 3) {
 
 // Helper to build a Prisma where object from StoreFilters
 function buildStoreWhere(filters: StoreFilters = {}): Prisma.ProductWhereInput {
-  const { q, categories, tags, min, max } = filters;
+  const { q, categories, categoryId, categorySlug, tags, min, max } = filters;
   const where: Prisma.ProductWhereInput = {
     isActive: true,
     isArchived: false,
@@ -208,7 +215,13 @@ function buildStoreWhere(filters: StoreFilters = {}): Prisma.ProductWhereInput {
     ];
   }
 
-  if (categories && categories.length > 0) {
+  // Relational category filter (preferred)
+  if (categoryId) {
+    where.categoryId = categoryId;
+  } else if (categorySlug) {
+    where.categoryRelation = { slug: categorySlug };
+  } else if (categories && categories.length > 0) {
+    // Legacy flat-string fallback
     if (categories.length === 1) {
       where.category = {
         contains: categories[0],
@@ -282,6 +295,7 @@ export async function getStoreProducts(filters: StoreFilters = {}) {
       badge: true,
       tags: { orderBy: { name: "asc" } },
       productBadges: { include: { badge: true } },
+      categoryRelation: true,
     },
   });
 
@@ -325,6 +339,7 @@ export async function getStoreProductsWithCount(
         badge: true,
         tags: { orderBy: { name: "asc" } },
         productBadges: { include: { badge: true } },
+        categoryRelation: true,
       },
     }),
     prisma.product.count({ where }),
@@ -506,6 +521,7 @@ export async function getProducts(
       badge: true,
       tags: { orderBy: { name: "asc" } },
       productBadges: { include: { badge: true } },
+      categoryRelation: true,
     },
     orderBy: { [sortBy]: sortOrder },
     skip: (page - 1) * limit,
@@ -538,6 +554,7 @@ export type AdminProductFilters = {
   query?: string;
   status?: string;
   category?: string;
+  categoryId?: string;
   sort?: string;
 };
 
@@ -582,6 +599,10 @@ export async function getAdminProducts(filters: AdminProductFilters = {}) {
     where.category = filters.category;
   }
 
+  if (filters.categoryId && filters.categoryId !== "ALL") {
+    where.categoryId = filters.categoryId;
+  }
+
   let orderBy: Prisma.ProductOrderByWithRelationInput = { createdAt: "desc" };
   if (filters.sort) {
     switch (filters.sort) {
@@ -608,6 +629,7 @@ export async function getAdminProducts(filters: AdminProductFilters = {}) {
         badge: true,
         tags: { orderBy: { name: "asc" } },
         productBadges: { include: { badge: true } },
+        categoryRelation: true,
       },
       orderBy,
       skip,
@@ -656,6 +678,7 @@ export async function getProduct(
       badge: true,
       tags: { orderBy: { name: "asc" } },
       productBadges: { include: { badge: true } },
+      categoryRelation: true,
     },
   });
 
@@ -837,6 +860,7 @@ export async function createProduct(
       badge: true,
       tags: true,
       productBadges: { include: { badge: true } },
+      categoryRelation: true,
     },
   });
 
@@ -881,6 +905,7 @@ export async function updateProduct(
     badgeId,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     badges,
+    categoryId: inputCategoryId,
     ...productDataWithoutBadge
   } = productData;
 
@@ -895,6 +920,7 @@ export async function updateProduct(
       fitments: true,
       tags: true,
       productBadges: { include: { badge: true } },
+      categoryRelation: true,
     },
   });
 
@@ -949,6 +975,11 @@ export async function updateProduct(
     ...(newStatus !== undefined && { status: newStatus }),
     ...(isArchived !== undefined && { isArchived }),
     ...(isUniversal !== undefined && { isUniversal }),
+    ...(inputCategoryId !== undefined && {
+      categoryRelation: inputCategoryId
+        ? { connect: { id: inputCategoryId } }
+        : { disconnect: true },
+    }),
   };
 
   // Add nested image deletions if needed
@@ -1137,6 +1168,7 @@ export async function updateProduct(
       badge: true,
       tags: { orderBy: { name: "asc" } },
       productBadges: { include: { badge: true } },
+      categoryRelation: true,
     },
   });
 
@@ -1164,6 +1196,7 @@ export async function deactivateProduct(
       badge: true,
       tags: { orderBy: { name: "asc" } },
       productBadges: { include: { badge: true } },
+      categoryRelation: true,
     },
   });
 
@@ -1193,6 +1226,7 @@ export async function archiveProduct(
       badge: true,
       tags: { orderBy: { name: "asc" } },
       productBadges: { include: { badge: true } },
+      categoryRelation: true,
     },
   });
 
@@ -1233,6 +1267,7 @@ export async function unarchiveProduct(
         badge: true,
         tags: { orderBy: { name: "asc" } },
         productBadges: { include: { badge: true } },
+        categoryRelation: true,
       },
     })
     .then(

@@ -145,6 +145,7 @@ const productBaseSchema = z.object({
   ),
   description: z.string().optional().nullable(),
   category: z.string().optional().nullable(),
+  categoryId: z.string().uuid().optional().nullable(),
   badgeId: z.string().uuid().optional().nullable(),
   badges: z
     .array(z.string().min(1, "Badge name cannot be empty").max(100))
@@ -190,6 +191,7 @@ export const productUpdateSchema = z.object({
   ),
   description: z.string().optional().nullable(),
   category: z.string().optional().nullable(),
+  categoryId: z.string().uuid().optional().nullable(),
   badgeId: z.string().uuid().optional().nullable(),
   badges: z
     .array(z.string().min(1, "Badge name cannot be empty").max(100))
@@ -237,6 +239,28 @@ export type ProductCreateInput = z.infer<typeof productCreateSchema>;
 export type ProductUpdateInput = z.infer<typeof productUpdateSchema>;
 export type ProductFilterInput = z.infer<typeof productFilterSchema>;
 export type StockRebalanceInput = z.infer<typeof stockRebalanceSchema>;
+
+// ============ Category Schemas ============
+
+export const categoryCreateSchema = z.object({
+  name: z.string().min(1, "Name is required").max(200),
+  slug: z
+    .string()
+    .min(1, "Slug is required")
+    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase with hyphens only"),
+  description: z.string().optional().nullable(),
+  imageUrl: z.string().url().optional().nullable(),
+  imagePublicId: z.string().optional().nullable(),
+  sortOrder: z.coerce.number().int().min(0).default(0),
+  isActive: z.boolean().default(true),
+});
+
+export const categoryUpdateSchema = categoryCreateSchema.partial().extend({
+  id: z.string().uuid(),
+});
+
+export type CategoryCreateInput = z.infer<typeof categoryCreateSchema>;
+export type CategoryUpdateInput = z.infer<typeof categoryUpdateSchema>;
 
 // ============ Product Image Schemas ============
 

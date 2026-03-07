@@ -5,9 +5,10 @@ import {
 import ProductGridClient from "@/components/products/ProductGridClient";
 import { ProductFilters } from "@/components/products/ProductFilters";
 import { SortDropdown } from "@/components/products/SortDropdown";
-import { Pagination } from "@/components/store/pagination";
-import { ProductCard } from "@/components/products/ProductCard";
+import { CategoryGrid } from "@/components/products/CategoryGrid";
 import ProductSearch from "@/components/products/ProductSearch";
+import { ProductCard } from "@/components/products/ProductCard";
+import { Pagination } from "@/components/store/pagination";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
@@ -182,6 +183,14 @@ export default async function ProductsPage({
   searchParams: SearchParams | Promise<SearchParams>;
 }) {
   const sp = await searchParams;
+  const hasFilters = !!(
+    sp.categories ||
+    sp.tags ||
+    sp.q ||
+    sp.min ||
+    sp.max ||
+    sp.favorites
+  );
 
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark font-display flex flex-col">
@@ -203,6 +212,13 @@ export default async function ProductsPage({
           </nav>
         </div>
       </div>
+
+      {/* Category Grid — only when no filters active */}
+      {!hasFilters && (
+        <div className="max-w-7xl mx-auto w-full px-4 pt-12">
+          <CategoryGrid />
+        </div>
+      )}
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Left Sidebar - Filters */}

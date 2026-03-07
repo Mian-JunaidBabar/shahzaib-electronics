@@ -11,6 +11,7 @@ import {
   Plus,
   Eye,
   Edit,
+  Pencil,
   AlertTriangle,
   CheckCircle,
   XCircle,
@@ -50,6 +51,7 @@ import {
   updateProductAction,
 } from "@/app/actions/productActions";
 import { getBadgesAction } from "@/app/actions/badgeActions";
+import { BulkEditModal } from "@/components/admin/bulk-edit-modal";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -168,6 +170,7 @@ export function InventoryClient({
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [showBadgeDialog, setShowBadgeDialog] = useState(false);
+  const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [badges, setBadges] = useState<
     Array<{ id: string; name: string; color: string }>
   >([]);
@@ -471,6 +474,15 @@ export function InventoryClient({
                 {selectedIds.size} product(s) selected
               </span>
               <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowBulkEdit(true)}
+                  disabled={isPending}
+                >
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Bulk Edit
+                </Button>
                 <Button
                   size="sm"
                   variant="outline"
@@ -789,6 +801,17 @@ export function InventoryClient({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Edit Modal */}
+      <BulkEditModal
+        open={showBulkEdit}
+        onOpenChange={setShowBulkEdit}
+        selectedIds={Array.from(selectedIds)}
+        onSuccess={() => {
+          setSelectedIds(new Set());
+          router.refresh();
+        }}
+      />
     </div>
   );
 }

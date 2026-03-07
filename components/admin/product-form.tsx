@@ -39,6 +39,13 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 // BadgeSelector replaced by CreatableMultiSelect for multi-badge support
 import { CreatableMultiSelect } from "@/components/ui/creatable-multi-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { uploadImageToCloudinary } from "@/lib/cloudinary-client";
 import {
   saveProductImage,
@@ -46,6 +53,7 @@ import {
 } from "@/app/actions/imageActions";
 import { getActiveBadgesAction } from "@/app/actions/badgeActions";
 import { getAllTagsAction } from "@/app/actions/tagActions";
+import { getActiveCategoriesAction } from "@/app/actions/categoryActions";
 import {
   createProductAction,
   updateProductAction,
@@ -104,6 +112,7 @@ type ProductFormValues = {
   slug?: string;
   description?: string;
   category?: string;
+  categoryId?: string;
   badgeId?: string;
   badges?: string[];
   tags: string[]; // Array of tag names
@@ -132,6 +141,9 @@ export function ProductForm({ initialData }: ProductFormProps) {
   const [isPending, startTransition] = useTransition();
   const [badges, setBadges] = useState<BadgeOption[]>([]);
   const [tags, setTags] = useState<{ id: string; name: string }[]>([]);
+  const [categories, setCategories] = useState<
+    { id: string; name: string; slug: string }[]
+  >([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Image state
@@ -166,6 +178,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
           slug: initialData.slug ?? "",
           description: initialData.description ?? "",
           category: initialData.category ?? "",
+          categoryId: initialData.categoryId ?? "",
           badgeId: initialData.badgeId ?? "",
           badges: (
             initialData.badges ?? (initialData.badge ? [initialData.badge] : [])
@@ -197,6 +210,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
           slug: "",
           description: "",
           category: "",
+          categoryId: "",
           badgeId: "",
           badges: [],
           tags: [],
@@ -248,23 +262,36 @@ export function ProductForm({ initialData }: ProductFormProps) {
     }
   }, [watchedName, isEdit, setValue]);
 
-  // Load badges and tags
+  // Load badges, tags, and categories
   useEffect(() => {
-    Promise.all([getActiveBadgesAction(), getAllTagsAction()]).then(
-      ([badgesResult, tagsResult]) => {
-        if (badgesResult.success && badgesResult.data) {
-          setBadges(badgesResult.data as BadgeOption[]);
-        }
-        if (tagsResult.success && tagsResult.data) {
-          setTags(
-            tagsResult.data.map((tag: { id: string; name: string }) => ({
-              id: tag.id,
-              name: tag.name,
-            })),
-          );
-        }
-      },
-    );
+    Promise.all([
+      getActiveBadgesAction(),
+      getAllTagsAction(),
+      getActiveCategoriesAction(),
+    ]).then(([badgesResult, tagsResult, categoriesResult]) => {
+      if (badgesResult.success && badgesResult.data) {
+        setBadges(badgesResult.data as BadgeOption[]);
+      }
+      if (tagsResult.success && tagsResult.data) {
+        setTags(
+          tagsResult.data.map((tag: { id: string; name: string }) => ({
+            id: tag.id,
+            name: tag.name,
+          })),
+        );
+      }
+      if (categoriesResult.success && categoriesResult.data) {
+        setCategories(
+          categoriesResult.data.map(
+            (cat: { id: string; name: string; slug: string }) => ({
+              id: cat.id,
+              name: cat.name,
+              slug: cat.slug,
+            }),
+          ),
+        );
+      }
+    });
   }, []);
 
   // Cleanup blob URLs on unmount
@@ -349,6 +376,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
             slug: data.slug || undefined,
             description: data.description || undefined,
             category: data.category || undefined,
+            categoryId: data.categoryId || undefined,
             badgeId: data.badgeId || undefined,
             badges: data.badges,
             tags: data.tags,
@@ -377,6 +405,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
             slug: data.slug || undefined,
             description: data.description || undefined,
             category: data.category || undefined,
+            categoryId: data.categoryId || undefined,
             badgeId: data.badgeId || undefined,
             badges: data.badges,
             tags: data.tags,
@@ -567,10 +596,26 @@ export function ProductForm({ initialData }: ProductFormProps) {
             </div>
             <div className="space-y-2">
               <Label>Category</Label>
-              <Input
-                {...register("category")}
-                placeholder="Engine Parts, Body Parts, etc"
-              />
+              <Select
+                value={watch("categoryId") || ""}
+                onValueChange={(val) =>
+                  setValue("categoryId", val === "__none__" ? "" : val, {
+                    shouldDirty: true,
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">No Category</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <CreatableMultiSelect

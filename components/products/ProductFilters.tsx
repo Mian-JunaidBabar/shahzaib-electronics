@@ -45,7 +45,18 @@ export function ProductFilters() {
     // Fetch categories
     fetch("/api/admin/categories")
       .then((r) => r.json())
-      .then((data) => setCategories(Array.isArray(data) ? data : []))
+      .then((data) => {
+        if (Array.isArray(data)) {
+          // API returns { id, name, slug, ... } objects or plain strings
+          setCategories(
+            data.map((c: string | { name: string }) =>
+              typeof c === "string" ? c : c.name,
+            ),
+          );
+        } else {
+          setCategories([]);
+        }
+      })
       .catch(() => setCategories([]));
 
     // Fetch all badges/tags

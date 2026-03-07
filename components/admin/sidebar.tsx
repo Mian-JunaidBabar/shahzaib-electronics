@@ -29,6 +29,11 @@ const navItems = [
         label: "Inventory",
       },
       {
+        href: "/admin/dashboard/categories",
+        icon: "category",
+        label: "Categories",
+      },
+      {
         href: "/admin/dashboard/services",
         icon: "build",
         label: "Services",

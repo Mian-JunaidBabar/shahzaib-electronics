@@ -12,6 +12,7 @@ import { Prisma } from "@prisma/client";
 import { ZodError } from "zod";
 import { requireAdmin } from "@/lib/services/auth.service";
 import * as ProductService from "@/lib/services/product.service";
+import { prisma } from "@/lib/prisma";
 import {
   productCreateSchema,
   productUpdateSchema,
@@ -611,6 +612,86 @@ export async function fetchMoreProductsAction(
         error instanceof Error
           ? error.message
           : "Failed to fetch more products",
+    };
+  }
+}
+
+/**
+ * Bulk update products — update category, badge, and/or tags for multiple products
+ */
+export async function bulkUpdateProductsAction(input: {
+  productIds: string[];
+  categoryId?: string | null;
+  badgeId?: string | null;
+  tags?: string[];
+}): Promise<ActionResult<{ updatedCount: number }>> {
+  try {
+    await requireAdmin();
+
+    const { productIds, categoryId, badgeId, tags } = input;
+
+    if (!productIds || productIds.length === 0) {
+      return { success: false, error: "No products selected" };
+    }
+
+    let updatedCount = 0;
+
+    // Update category in bulk if provided
+    if (categoryId !== undefined) {
+      const result = await prisma.product.updateMany({
+        where: { id: { in: productIds } },
+        data: { categoryId: categoryId || null },
+      });
+      updatedCount = result.count;
+    }
+
+    // Update badge in bulk if provided
+    if (badgeId !== undefined) {
+      const result = await prisma.product.updateMany({
+        where: { id: { in: productIds } },
+        data: { badgeId: badgeId || null },
+      });
+      updatedCount = Math.max(updatedCount, result.count);
+    }
+
+    // Update tags for each product if provided
+    if (tags !== undefined) {
+      for (const productId of productIds) {
+        await prisma.product.update({
+          where: { id: productId },
+          data: {
+            tags: {
+              set: [],
+              connectOrCreate: tags.map((tagName) => ({
+                where: { name: tagName },
+                create: { name: tagName },
+              })),
+            },
+          },
+        });
+      }
+      updatedCount = Math.max(updatedCount, productIds.length);
+    }
+
+    revalidatePath("/admin/dashboard/inventory");
+    revalidateTag(
+      "products:all",
+      undefined /* eslint-disable-line @typescript-eslint/no-explicit-any */ as any,
+    );
+    revalidateTag(
+      "categories:all",
+      undefined /* eslint-disable-line @typescript-eslint/no-explicit-any */ as any,
+    );
+
+    return { success: true, data: { updatedCount } };
+  } catch (error) {
+    console.error("bulkUpdateProductsAction error:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to bulk update products",
     };
   }
 }
