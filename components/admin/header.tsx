@@ -4,7 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { useTheme } from "@/context/theme-context";
 import { useAuth } from "@/context/auth-context";
 
 function formatLabel(segment: string) {
@@ -49,7 +48,7 @@ export default function AdminHeader() {
         {/* Breadcrumbs */}
         <nav
           aria-label="Breadcrumb"
-          className="flex items-center gap-2 text-muted-foreground"
+          className="flex items-center gap-2 text-slate-600"
         >
           {breadcrumbs.map((crumb, index) => (
             <span key={crumb.href} className="flex items-center gap-2">
@@ -59,13 +58,13 @@ export default function AdminHeader() {
                 </span>
               )}
               {index === breadcrumbs.length - 1 ? (
-                <span className="text-sm font-semibold text-foreground">
+                <span className="text-sm font-semibold text-slate-900">
                   {crumb.label}
                 </span>
               ) : (
                 <Link
                   href={crumb.href}
-                  className="text-sm font-medium hover:text-foreground cursor-pointer"
+                  className="text-sm font-medium text-slate-600 hover:text-slate-900 cursor-pointer"
                 >
                   {crumb.label}
                 </Link>

@@ -84,7 +84,7 @@ export default function AdminSidebar() {
   return (
     <aside
       className={cn(
-        "border-r border-border bg-card hidden md:flex flex-col transition-all duration-300",
+        "border-r border-border bg-white hidden md:flex flex-col transition-all duration-300",
         isCollapsed ? "w-16" : "w-64",
       )}
     >
@@ -105,7 +105,7 @@ export default function AdminSidebar() {
         </Link>
         <button
           onClick={toggleCollapse}
-          className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+          className="p-1.5 rounded-md text-slate-600 hover:text-slate-900 hover:bg-gray-100 transition-colors shrink-0"
           title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {isCollapsed ? (
@@ -121,7 +121,7 @@ export default function AdminSidebar() {
         {navItems.map((section) => (
           <div key={section.section}>
             {!isCollapsed && (
-              <div className="px-3 mb-2 mt-4 first:mt-0 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <div className="px-3 mb-2 mt-4 first:mt-0 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                 {section.section}
               </div>
             )}
@@ -136,7 +136,7 @@ export default function AdminSidebar() {
                   isCollapsed && "justify-center px-2",
                   isActive(item.href)
                     ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                    : "text-slate-600 hover:text-slate-900 hover:bg-gray-100",
                 )}
               >
                 <span className="material-symbols-outlined text-[20px] shrink-0">
@@ -167,10 +167,10 @@ export default function AdminSidebar() {
                 </span>
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="text-sm font-medium text-foreground truncate">
+                <span className="text-sm font-medium text-slate-900 truncate">
                   {user?.name || "Admin User"}
                 </span>
-                <span className="text-xs text-muted-foreground truncate">
+                <span className="text-xs text-slate-500 truncate">
                   {user?.email || "admin@shahzaibautos.com"}
                 </span>
               </div>
