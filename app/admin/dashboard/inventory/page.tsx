@@ -1,7 +1,7 @@
-import { getAdminProducts } from "@/lib/services/product.service";
 import { InventoryClient } from "@/components/admin/inventory-client";
-import { Metadata } from "next";
+import { getAdminProducts } from "@/lib/services/product.service";
 import { prisma } from "@/lib/prisma";
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Inventory Management | Admin",
@@ -19,9 +19,11 @@ export default async function InventoryPage({
   const category = typeof sp.category === "string" ? sp.category : "ALL";
   const sort = typeof sp.sort === "string" ? sp.sort : "newest";
 
+  // Show 30 products per page by default in the admin.
+  // When a search query is provided, return all matching results on a single page.
   const { products, metadata } = await getAdminProducts({
     page,
-    limit: 10,
+    limit: query ? 10000 : 30,
     query,
     status,
     category,

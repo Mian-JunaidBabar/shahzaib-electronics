@@ -497,7 +497,7 @@ export function InventoryClient({
         <CardContent className="p-0">
           {selectedIds.size > 0 && (
             <div className="border-b bg-blue-50 p-4 flex justify-between items-center dark:bg-blue-950">
-              <span className="text-sm font-medium">
+              <span className="text-sm font-medium text-slate-900 dark:text-white">
                 {selectedIds.size} product(s) selected
               </span>
               <div className="flex gap-2">

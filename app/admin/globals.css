@@ -137,3 +137,19 @@ body {
 *:focus:not(:focus-visible) {
   outline: none;
 }
+
+/* Admin: ensure buttons show white text on a dark background on hover */
+/* Targets the shared Button component which renders data-slot="button" */
+[data-slot="button"]:hover,
+button:hover {
+  background-color: var(--card) !important;
+  color: #333 !important;
+}
+
+/* Ensure icon svgs inherit the foreground color on hover */
+[data-slot="button"]:hover svg,
+button:hover svg {
+  color: inherit !important;
+  stroke: currentColor !important;
+  fill: currentColor !important;
+}
