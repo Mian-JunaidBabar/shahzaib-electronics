@@ -395,12 +395,13 @@ async function _getStoreProductsPaginated(
       skip,
       include: {
         images: {
-          where: { isPrimary: true },
-          take: 1,
           orderBy: { sortOrder: "asc" },
         },
-        variants: { orderBy: { isDefault: "desc" } },
+        variants: { orderBy: { createdAt: "asc" } },
         badge: true,
+        tags: { orderBy: { name: "asc" } },
+        productBadges: { include: { badge: true } },
+        categoryRelation: true,
       },
     }),
     prisma.product.count({ where }),

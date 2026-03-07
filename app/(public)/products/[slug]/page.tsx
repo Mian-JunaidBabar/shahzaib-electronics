@@ -30,7 +30,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   // Use default variant for pricing
-  const defaultVariant = product.variants[0];
+  const defaultVariant =
+    product.variants.find((v) => v.isDefault) || product.variants[0];
   const displayPrice =
     (defaultVariant?.salePrice ?? defaultVariant?.price ?? 0) / 100;
   const primaryImage = product.images[0]?.secureUrl ?? "/placeholder.jpg";
@@ -70,15 +71,20 @@ export default async function ProductDetailPage({ params }: Props) {
   // Fetch related products
   const relatedProducts = await getRelatedProducts(
     product.id,
-    product.category,
+    product.categoryId,
     4,
   );
 
-  // Use default variant (first variant)
-  const defaultVariant = product.variants[0];
+  // Use default variant
+  const defaultVariant =
+    product.variants.find((v) => v.isDefault) || product.variants[0];
   if (!defaultVariant) {
     notFound(); // Product has no variants
   }
+
+  const categoryName = product.categoryRelation?.name || "Uncategorized";
+  const productBadges =
+    product.productBadges?.map((pb) => pb.badge).filter(Boolean) || [];
 
   const primaryImage = product.images[0]?.secureUrl ?? "/placeholder.jpg";
 
@@ -106,6 +112,8 @@ export default async function ProductDetailPage({ params }: Props) {
               Products
             </Link>
             <span className="mx-2">/</span>
+            <span className="text-muted-foreground">{categoryName}</span>
+            <span className="mx-2">/</span>
             <span className="text-foreground font-medium">{product.name}</span>
           </nav>
         </div>
@@ -121,19 +129,18 @@ export default async function ProductDetailPage({ params }: Props) {
           <div className="space-y-6">
             {/* Category & Badge */}
             <div className="flex items-center gap-2">
-              {product.category && (
-                <p className="text-sm text-primary font-medium uppercase tracking-wide">
-                  {product.category}
-                </p>
-              )}
-              {product.badge && (
+              <p className="text-sm text-primary font-medium uppercase tracking-wide">
+                {categoryName}
+              </p>
+              {productBadges.map((badge) => (
                 <Badge
-                  style={{ backgroundColor: product.badge.color }}
+                  key={badge.id}
+                  style={{ backgroundColor: badge.color }}
                   className="text-white"
                 >
-                  {product.badge.name}
+                  {badge.name}
                 </Badge>
-              )}
+              ))}
             </div>
 
             {/* Name & Description */}

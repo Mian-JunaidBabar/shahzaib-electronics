@@ -4,7 +4,11 @@ import type {
   ProductVariant,
   VehicleFitment,
   Badge,
+  Category,
+  ProductBadge,
+  Tag,
 } from "@prisma/client";
+import { unstable_cache } from "next/cache";
 import { Prisma } from "@prisma/client";
 /**
  * Storefront Service
@@ -13,7 +17,6 @@ import { Prisma } from "@prisma/client";
  * Optimized for customer experience with proper filtering and sorting.
  */
 import { prisma } from "@/lib/prisma";
-import { unstable_cache } from "next/cache";
 
 // Types
 export type StorefrontProduct = Product & {
@@ -21,6 +24,9 @@ export type StorefrontProduct = Product & {
   variants: ProductVariant[];
   fitments?: VehicleFitment[];
   badge?: Badge | null;
+  categoryRelation?: Category | null;
+  tags?: Tag[];
+  productBadges?: (ProductBadge & { badge: Badge })[];
 };
 
 export type SortOption = "newest" | "price_asc" | "price_desc" | "name_asc";
@@ -73,12 +79,19 @@ async function _getStorefrontProducts(
       { name: { contains: query, mode: "insensitive" } },
       { description: { contains: query, mode: "insensitive" } },
       { category: { contains: query, mode: "insensitive" } },
+      { categoryRelation: { name: { contains: query, mode: "insensitive" } } },
     ];
   }
 
   // Category filter
   if (category) {
-    where.category = { equals: category, mode: "insensitive" };
+    where.OR = [
+      ...(where.OR || []),
+      { categoryId: category },
+      { categoryRelation: { slug: category } },
+      { categoryRelation: { name: { equals: category, mode: "insensitive" } } },
+      { category: { equals: category, mode: "insensitive" } },
+    ];
   }
 
   // Price range filter (prices are in cents, check variant prices)
@@ -129,7 +142,10 @@ async function _getStorefrontProducts(
     where,
     include: {
       images: { orderBy: { sortOrder: "asc" } },
-      variants: { orderBy: { createdAt: "asc" }, take: 1 }, // Get default variant for display
+      variants: { orderBy: { createdAt: "asc" } },
+      categoryRelation: true,
+      productBadges: { include: { badge: true } },
+      tags: true,
       badge: true,
     },
     orderBy,
@@ -165,6 +181,9 @@ async function _getStorefrontProduct(
       images: { orderBy: { sortOrder: "asc" } },
       variants: { orderBy: { createdAt: "asc" } },
       fitments: true,
+      categoryRelation: true,
+      productBadges: { include: { badge: true } },
+      tags: true,
       badge: true,
     },
   });
@@ -175,21 +194,24 @@ async function _getStorefrontProduct(
  */
 async function _getRelatedProducts(
   productId: string,
-  category: string | null,
+  categoryId: string | null,
   limit: number = 4,
 ): Promise<StorefrontProduct[]> {
-  if (!category) return [];
+  if (!categoryId) return [];
 
   return prisma.product.findMany({
     where: {
       id: { not: productId },
-      category: { equals: category, mode: "insensitive" },
+      categoryId,
       isActive: true,
       isArchived: false,
     },
     include: {
       images: { orderBy: { sortOrder: "asc" } },
-      variants: { orderBy: { createdAt: "asc" }, take: 1 },
+      variants: { orderBy: { createdAt: "asc" } },
+      categoryRelation: true,
+      productBadges: { include: { badge: true } },
+      tags: true,
       badge: true,
     },
     orderBy: { createdAt: "desc" },
@@ -201,18 +223,21 @@ async function _getRelatedProducts(
  * Get all unique categories from active products
  */
 async function _getAllCategories(): Promise<string[]> {
-  const results = await prisma.product.findMany({
+  const results = await prisma.category.findMany({
     where: {
       isActive: true,
-      isArchived: false,
-      category: { not: null },
+      products: {
+        some: {
+          isActive: true,
+          isArchived: false,
+        },
+      },
     },
-    select: { category: true },
-    distinct: ["category"],
-    orderBy: { category: "asc" },
+    select: { name: true },
+    orderBy: { name: "asc" },
   });
 
-  return results.map((r) => r.category).filter((c): c is string => c !== null);
+  return results.map((r) => r.name);
 }
 
 /**
@@ -253,7 +278,10 @@ async function _getFeaturedProducts(
     },
     include: {
       images: { orderBy: { sortOrder: "asc" } },
-      variants: { orderBy: { createdAt: "asc" }, take: 1 },
+      variants: { orderBy: { createdAt: "asc" } },
+      categoryRelation: true,
+      productBadges: { include: { badge: true } },
+      tags: true,
       badge: true,
     },
     orderBy: { createdAt: "desc" },
@@ -268,7 +296,7 @@ export const getStorefrontProducts = unstable_cache(
     return await _getStorefrontProducts(options);
   },
   ["storefront-products-list"],
-  { tags: ["products:all"], revalidate: 3600 }
+  { tags: ["products:all"], revalidate: 3600 },
 );
 
 export const getStorefrontProduct = async (slug: string) => {
@@ -277,21 +305,21 @@ export const getStorefrontProduct = async (slug: string) => {
       return await _getStorefrontProduct(slug);
     },
     [`storefront-product-${slug}`],
-    { tags: ["products:all", `products:${slug}`], revalidate: 3600 }
+    { tags: ["products:all", `products:${slug}`], revalidate: 3600 },
   )();
 };
 
 export const getRelatedProducts = async (
   productId: string,
-  category: string | null,
-  limit: number = 4
+  categoryId: string | null,
+  limit: number = 4,
 ) => {
   return unstable_cache(
     async () => {
-      return await _getRelatedProducts(productId, category, limit);
+      return await _getRelatedProducts(productId, categoryId, limit);
     },
-    [`storefront-related-${productId}-${category}-${limit}`],
-    { tags: ["products:all"], revalidate: 3600 }
+    [`storefront-related-${productId}-${categoryId}-${limit}`],
+    { tags: ["products:all"], revalidate: 3600 },
   )();
 };
 
@@ -300,7 +328,7 @@ export const getAllCategories = unstable_cache(
     return await _getAllCategories();
   },
   ["storefront-categories"],
-  { tags: ["products:all"], revalidate: 3600 }
+  { tags: ["products:all"], revalidate: 3600 },
 );
 
 export const getPriceRange = unstable_cache(
@@ -308,7 +336,7 @@ export const getPriceRange = unstable_cache(
     return await _getPriceRange();
   },
   ["storefront-price-range"],
-  { tags: ["products:all"], revalidate: 3600 }
+  { tags: ["products:all"], revalidate: 3600 },
 );
 
 export const getFeaturedProducts = unstable_cache(
@@ -316,5 +344,5 @@ export const getFeaturedProducts = unstable_cache(
     return await _getFeaturedProducts(limit);
   },
   ["storefront-featured"],
-  { tags: ["products:all"], revalidate: 3600 }
+  { tags: ["products:all"], revalidate: 3600 },
 );

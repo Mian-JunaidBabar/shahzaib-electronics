@@ -37,9 +37,21 @@ export function ProductVariantSelector({
 }: Props) {
   const { addToCart, items } = useCart();
   const [selectedVariant, setSelectedVariant] = useState(
-    variants.find((v) => v.isDefault) || variants[0],
+    variants.find((v) => v.isDefault) || variants[0] || null,
   );
   const [justAdded, setJustAdded] = useState(false);
+
+  if (!selectedVariant) {
+    return (
+      <div className="space-y-3">
+        <p className="text-sm text-red-600 font-medium">Out of Stock</p>
+        <Button size="lg" className="w-full sm:w-auto" disabled>
+          <ShoppingCart className="h-5 w-5" />
+          Add to Cart
+        </Button>
+      </div>
+    );
+  }
 
   // Hide the picker if there's only one variant named "Default"
   const showPicker = !(variants.length === 1 && variants[0].name === "Default");

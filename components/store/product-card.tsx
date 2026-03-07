@@ -28,6 +28,10 @@ export function ProductCard({ product }: Props) {
   }
 
   const primaryImage = product.images[0]?.secureUrl ?? "/placeholder.jpg";
+  const categoryName = product.categoryRelation?.name || "Uncategorized";
+  const productBadges =
+    product.productBadges?.map((pb) => pb.badge).filter(Boolean) || [];
+
   const hasDiscount =
     defaultVariant.salePrice !== null &&
     defaultVariant.salePrice < defaultVariant.price;
@@ -57,31 +61,37 @@ export function ProductCard({ product }: Props) {
   };
 
   return (
-    <Card className="group overflow-hidden flex flex-col h-full">
+    <Card className="group overflow-hidden flex flex-col h-full rounded-xl border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
       {/* Image Container */}
-      <div className="relative aspect-square overflow-hidden bg-muted">
+      <div className="relative aspect-4/3 overflow-hidden rounded-t-xl bg-slate-100 dark:bg-slate-800">
         <Link href={`/products/${product.slug}`}>
           <Image
             src={primaryImage}
             alt={product.name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         </Link>
 
         {/* Badges */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1">
-          {product.badge && (
+        <div className="absolute top-3 left-3 z-10 flex flex-wrap gap-1.5 max-w-[85%]">
+          {productBadges.map((badge) => (
             <Badge
-              style={{ backgroundColor: product.badge.color }}
-              className="text-white"
+              key={badge.id}
+              style={{ backgroundColor: badge.color }}
+              className="text-white text-[10px] px-2 py-0.5 h-5 font-semibold"
             >
-              {product.badge.name}
+              {badge.name}
             </Badge>
-          )}
+          ))}
           {hasDiscount && (
-            <Badge variant="destructive">-{discountPercent}%</Badge>
+            <Badge
+              variant="destructive"
+              className="text-[10px] px-2 py-0.5 h-5"
+            >
+              -{discountPercent}%
+            </Badge>
           )}
         </div>
 
@@ -106,59 +116,66 @@ export function ProductCard({ product }: Props) {
       </div>
 
       {/* Content */}
-      <CardContent className="flex-1 p-4">
-        {product.category && (
-          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
-            {product.category}
-          </p>
-        )}
+      <CardContent className="flex-1 p-5">
+        <p className="text-[11px] uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400 mb-2 font-medium">
+          {categoryName}
+        </p>
+
         <Link href={`/products/${product.slug}`}>
-          <h3 className="font-medium text-sm line-clamp-2 hover:underline">
+          <h3 className="font-semibold text-lg line-clamp-2 leading-tight text-slate-900 dark:text-white group-hover:text-primary transition-colors">
             {product.name}
           </h3>
-          {defaultVariant && (
-            <p className="text-xs text-muted-foreground mt-1">
-              {defaultVariant.name}
-            </p>
-          )}
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            {product.variants && product.variants.length > 1 && (
-              <span className="text-[10px] text-muted-foreground">
-                + {product.variants.length - 1} option
-                {product.variants.length !== 2 ? "s" : ""}
-              </span>
-            )}
-          </div>
         </Link>
-      </CardContent>
 
-      {/* Footer */}
-      <CardFooter className="p-4 pt-0 flex items-center justify-between gap-2">
-        <div className="flex flex-col">
-          <span className="font-bold text-lg">
-            {product.variants.length > 1 ? "From " : ""}
+        {defaultVariant.name &&
+          defaultVariant.name.toLowerCase() !== "default" && (
+            <div className="mt-2">
+              <Badge variant="secondary" className="text-[11px] font-medium">
+                {defaultVariant.name}
+              </Badge>
+            </div>
+          )}
+
+        <div className="mt-4 flex items-end gap-2">
+          <span className="text-2xl font-extrabold text-slate-900 dark:text-white">
             {formatPrice(displayPrice)}
           </span>
           {hasDiscount && (
-            <span className="text-sm text-muted-foreground line-through">
+            <span className="text-sm text-slate-500 line-through mb-0.5">
               {formatPrice(defaultVariant.price)}
             </span>
           )}
         </div>
 
+        <p
+          className={`mt-2 text-xs font-medium ${isInStock ? "text-emerald-600" : "text-red-600"}`}
+        >
+          {isInStock ? "In Stock" : "Out of Stock"}
+        </p>
+
+        {product.variants && product.variants.length > 1 && (
+          <p className="text-[11px] text-slate-500 mt-1">
+            +{product.variants.length - 1} more option
+            {product.variants.length !== 2 ? "s" : ""}
+          </p>
+        )}
+      </CardContent>
+
+      {/* Footer */}
+      <CardFooter className="p-5 pt-0">
         <Button
-          size="sm"
+          size="lg"
           variant={isInCart ? "default" : "outline"}
           onClick={handleAddToCart}
           disabled={!isInStock || isInCart}
-          className="shrink-0"
+          className="w-full"
         >
           {isInCart ? (
             <>✓ In Cart</>
           ) : (
             <>
               <ShoppingCart className="h-4 w-4" />
-              <span className="sr-only sm:not-sr-only sm:ml-2">Add</span>
+              <span className="ml-2">Add to Cart</span>
             </>
           )}
         </Button>

@@ -53,7 +53,20 @@ function mapProductToCard(product: StoreProduct) {
   let badgeType: "NEW" | "SALE" | undefined = undefined;
   let badgeText = "";
 
-  if (product.badge) {
+  const relationalBadge =
+    (
+      product as StoreProduct & {
+        productBadges?: { badge: { name: string } }[];
+        badges?: { name: string }[];
+      }
+    ).productBadges?.[0]?.badge ||
+    (product as StoreProduct & { badges?: { name: string }[] }).badges?.[0];
+
+  if (relationalBadge) {
+    badgeText = relationalBadge.name;
+    if (badgeText.toUpperCase().includes("NEW")) badgeType = "NEW";
+    else if (badgeText.toUpperCase().includes("SALE")) badgeType = "SALE";
+  } else if (product.badge) {
     badgeText = product.badge.name;
     if (badgeText.toUpperCase().includes("NEW")) badgeType = "NEW";
     else if (badgeText.toUpperCase().includes("SALE")) badgeType = "SALE";
@@ -75,7 +88,7 @@ function mapProductToCard(product: StoreProduct) {
     reviews: 0,
     badge: badgeType,
     badgeText: badgeText || undefined,
-    category: product.category || undefined,
+    category: product.categoryRelation?.name || product.category || undefined,
   };
 }
 
