@@ -122,12 +122,34 @@ model Tag {
   @@map("tags")
 }
 
+// ============================================
+// CATEGORIES (Product Classification)
+// ============================================
+
+model Category {
+  id            String    @id @default(uuid())
+  name          String    @unique
+  slug          String    @unique
+  description   String?   @db.Text
+  imageUrl      String?   @map("image_url")
+  imagePublicId String?   @map("image_public_id")
+  sortOrder     Int       @default(0) @map("sort_order")
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  products      Product[]
+
+  @@map("categories")
+}
+
 model Product {
   id          String        @id @default(uuid())
   name        String
   slug        String        @unique
   description String?       @db.Text
-  category    String?
+  category    String?                              // Legacy field — kept as backup during migration
+  categoryId  String?       @map("category_id")    // NEW relational FK
   badgeId     String?       @map("badge_id")
   status      ProductStatus @default(ACTIVE)
   isActive    Boolean       @default(true) @map("is_active")
@@ -136,6 +158,7 @@ model Product {
   createdAt   DateTime      @default(now()) @map("created_at")
   updatedAt   DateTime      @updatedAt @map("updated_at")
 
+  categoryRelation Category? @relation(fields: [categoryId], references: [id])
   badge       Badge?              @relation(fields: [badgeId], references: [id])
   tags        Tag[]               // Many-to-many relation to tags
 
