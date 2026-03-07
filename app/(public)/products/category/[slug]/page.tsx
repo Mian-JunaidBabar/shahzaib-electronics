@@ -2,6 +2,7 @@ import {
   getStoreProductsPaginated,
   StoreProduct,
 } from "@/lib/services/product.service";
+import { ProductFilters } from "@/components/products/ProductFilters";
 import { getCategoryBySlug } from "@/lib/services/category.service";
 import { SortDropdown } from "@/components/products/SortDropdown";
 import ProductSearch from "@/components/products/ProductSearch";
@@ -148,75 +149,83 @@ export default async function CategoryPage({
         </div>
       </div>
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-12">
-        {/* Top Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between mb-8 pb-4 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-4 mb-4 sm:mb-0">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-              {category.name}
-            </h2>
-            <span className="text-sm text-slate-500">
-              {metadata.total} {metadata.total === 1 ? "product" : "products"}
-            </span>
-          </div>
-          <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-            <ProductSearch />
-            <SortDropdown currentSort={sp.sort} />
-          </div>
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Left Sidebar - Filters */}
+        <div className="lg:col-span-1">
+          <ProductFilters />
         </div>
 
-        {/* Results */}
-        {mappedProducts.length > 0 ? (
-          <>
-            <div className="mb-4">
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Showing{" "}
-                <span className="font-semibold">
-                  {rangeStart}–{rangeEnd}
-                </span>{" "}
-                of <span className="font-semibold">{metadata.total}</span>{" "}
-                products
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {mappedProducts.map((product) => (
-                <ProductCard key={product.id} {...product} />
-              ))}
-            </div>
-
-            {metadata.totalPages > 1 && (
-              <div className="mt-8">
-                <Pagination
-                  currentPage={metadata.page}
-                  totalPages={metadata.totalPages}
-                  total={metadata.total}
-                />
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="text-center py-16">
-            <span className="material-symbols-outlined text-5xl text-slate-300 mb-4">
-              inventory_2
-            </span>
-            <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300 mb-2">
-              No Products Found
-            </h3>
-            <p className="text-slate-500 mb-6">
-              No products in this category yet. Check back soon!
-            </p>
-            <Link
-              href="/products"
-              className="inline-flex items-center gap-2 text-red-600 hover:text-red-700 font-semibold"
-            >
-              <span className="material-symbols-outlined text-[18px]">
-                arrow_back
+        {/* Main Content */}
+        <div className="lg:col-span-3">
+          {/* Top Bar */}
+          <div className="flex flex-col sm:flex-row items-center justify-between mb-8 pb-4 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex items-center gap-4 mb-4 sm:mb-0">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                {category.name}
+              </h2>
+              <span className="text-sm text-slate-500">
+                {metadata.total} {metadata.total === 1 ? "product" : "products"}
               </span>
-              Browse All Products
-            </Link>
+            </div>
+            <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+              <ProductSearch />
+              <SortDropdown currentSort={sp.sort} />
+            </div>
           </div>
-        )}
+
+          {/* Results */}
+          {mappedProducts.length > 0 ? (
+            <>
+              <div className="mb-4">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Showing{" "}
+                  <span className="font-semibold">
+                    {rangeStart}–{rangeEnd}
+                  </span>{" "}
+                  of <span className="font-semibold">{metadata.total}</span>{" "}
+                  products
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {mappedProducts.map((product) => (
+                  <ProductCard key={product.id} {...product} />
+                ))}
+              </div>
+
+              {metadata.totalPages > 1 && (
+                <div className="mt-8">
+                  <Pagination
+                    currentPage={metadata.page}
+                    totalPages={metadata.totalPages}
+                    total={metadata.total}
+                  />
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-16">
+              <span className="material-symbols-outlined text-5xl text-slate-300 mb-4">
+                inventory_2
+              </span>
+              <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300 mb-2">
+                No Products Found
+              </h3>
+              <p className="text-slate-500 mb-6">
+                No products in this category yet. Check back soon!
+              </p>
+              <Link
+                href="/products"
+                className="inline-flex items-center gap-2 text-red-600 hover:text-red-700 font-semibold"
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  arrow_back
+                </span>
+                Browse All Products
+              </Link>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );

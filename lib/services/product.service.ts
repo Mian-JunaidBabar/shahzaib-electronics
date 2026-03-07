@@ -431,6 +431,8 @@ export function getStoreProductsPaginated(
   // Build a stable cache key from the filter values
   const cacheKey = JSON.stringify({
     q: filters.q,
+    categorySlug: filters.categorySlug,
+    categoryId: filters.categoryId,
     categories: filters.categories,
     tags: filters.tags,
     min: filters.min,
