@@ -30,14 +30,12 @@ export default async function InventoryPage({
     sort,
   });
 
-  // Fetch all distinct categories
-  const categoriesDb = await prisma.product.findMany({
-    select: { category: true },
-    distinct: ["category"],
+  // Fetch all active categories from the new Category model
+  const categories = await prisma.category.findMany({
+    where: { isActive: true },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, slug: true },
   });
-  const categories = categoriesDb
-    .map((r: { category: string | null }) => r.category)
-    .filter(Boolean) as string[];
 
   // Calculate stats for current page (can be expanded later for global stats if needed)
   const activeCount = products.filter((p) => p.isActive).length;

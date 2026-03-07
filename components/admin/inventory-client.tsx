@@ -91,6 +91,11 @@ type Product = {
     color: string;
     isActive: boolean;
   } | null;
+  categoryRelation?: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -137,7 +142,7 @@ export function InventoryClient({
   initialPage?: number;
   initialQuery?: string;
   initialStatus?: string;
-  categories: string[];
+  categories: { id: string; name: string; slug: string }[];
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -621,13 +626,15 @@ export function InventoryClient({
                       {/* SKU removed per request */}
                       {/* Category Column - hidden on small screens */}
                       <TableCell className="hidden lg:table-cell">
-                        {product.category ? (
+                        {product.categoryRelation ? (
                           <Badge variant="outline">
                             <Tag className="h-3 w-3 mr-1" />
-                            {product.category}
+                            {product.categoryRelation.name}
                           </Badge>
                         ) : (
-                          <span className="text-muted-foreground">-</span>
+                          <span className="text-muted-foreground">
+                            Uncategorized
+                          </span>
                         )}
                       </TableCell>
                       {/* Price column removed per request */}

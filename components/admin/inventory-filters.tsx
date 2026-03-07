@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
 interface InventoryFiltersProps {
-  categories: string[];
+  categories: { id: string; name: string; slug: string }[];
 }
 
 export function InventoryFilters({ categories }: InventoryFiltersProps) {
@@ -65,8 +65,8 @@ export function InventoryFilters({ categories }: InventoryFiltersProps) {
         <SelectContent>
           <SelectItem value="ALL">All Categories</SelectItem>
           {categories.map((category) => (
-            <SelectItem key={category} value={category}>
-              {category}
+            <SelectItem key={category.id} value={category.id}>
+              {category.name}
             </SelectItem>
           ))}
         </SelectContent>

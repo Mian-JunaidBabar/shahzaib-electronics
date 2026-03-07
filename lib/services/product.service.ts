@@ -597,8 +597,9 @@ export async function getAdminProducts(filters: AdminProductFilters = {}) {
     where.isActive = filters.status === "ACTIVE";
   }
 
+  // Filter by category ID (from the new Category model)
   if (filters.category && filters.category !== "ALL") {
-    where.category = filters.category;
+    where.categoryId = filters.category;
   }
 
   if (filters.categoryId && filters.categoryId !== "ALL") {
