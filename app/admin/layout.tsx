@@ -1,6 +1,5 @@
 import "./globals.css";
 
-import { ThemeProvider } from "@/context/theme-context";
 import { AuthProvider } from "@/context/auth-context";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -19,22 +18,7 @@ export default function AdminRootLayout({
         />
       </head>
       <body className="min-h-screen bg-background text-foreground">
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-            (function() {
-              try {
-                // Force Light mode for Admin Panel
-                document.documentElement.classList.remove('dark');
-                document.documentElement.classList.add('light');
-              } catch (e) {}
-            })();
-          `,
-          }}
-        />
-        <ThemeProvider forcedTheme="light">
-          <AuthProvider>{children}</AuthProvider>
-        </ThemeProvider>
+        <AuthProvider>{children}</AuthProvider>
         <Toaster position="top-right" />
       </body>
     </html>

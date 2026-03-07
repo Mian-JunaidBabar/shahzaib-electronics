@@ -59,7 +59,7 @@ export function MultimediaSection() {
             </div>
           </div>
           <div className="space-y-6">
-            <h2 className="text-4xl font-black text-slate-900 dark:text-white leading-tight">
+            <h2 className="text-4xl font-black text-slate-900 leading-tight">
               Next-Gen Multimedia <br />
               Experience
             </h2>
@@ -90,7 +90,7 @@ export function MultimediaSection() {
             </ul>
             <Link
               href="/products"
-              className="mt-4 px-8 py-4 bg-primary text-white dark:text-slate-900 font-bold rounded-xl shadow-lg hover:shadow-primary/50 transition-shadow inline-block"
+              className="mt-4 px-8 py-4 bg-primary text-white font-bold rounded-xl shadow-lg hover:shadow-primary/50 transition-shadow inline-block"
             >
               Explore Multimedia
             </Link>

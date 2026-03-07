@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/context/cart-context";
 import { useTheme } from "@/context/theme-context";
-import { ShoppingCart, Sun, Moon } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import { OptimizedImage } from "@/components/optimized-image";
 import { generateWhatsAppUrl } from "@/lib/whatsapp";
 
@@ -20,7 +20,6 @@ const navLinks = [
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { items } = useCart();
-  const { theme, toggleTheme } = useTheme();
   const distinctCount = items.length;
   const whatsappUrl = generateWhatsAppUrl(
     "Hi! I'm interested in your products.",
@@ -32,17 +31,16 @@ export default function Header() {
         {/* Logo */}
         <Link
           href="/"
-          className="flex items-center gap-2 text-text-primary hover:text-primary transition-colors"
+          className="flex items-center gap-2 text-primary hover:text-primary transition-colors"
         >
-          {/* Use a dark variant of the icon when the theme is dark for better contrast */}
           <OptimizedImage
-            src={theme === "dark" ? "/icon-dark.svg" : "/icon.svg"}
+            src={"/icon.svg"}
             alt="Shahzaib Autos"
             width={56}
             height={56}
             className="rounded h-10 md:h-14 w-auto"
           />
-          <h2 className="text-text-primary text-lg font-bold tracking-tight">
+          <h2 className="text-primary text-lg font-bold tracking-tight">
             Shahzaib Autos
           </h2>
         </Link>
@@ -53,7 +51,7 @@ export default function Header() {
             <Link
               key={link.href}
               href={link.href}
-              className="text-sm font-medium text-text-muted hover:text-text-primary transition-colors"
+              className="text-sm font-medium text-text-muted hover:text-primary transition-colors"
             >
               {link.label}
             </Link>
@@ -62,21 +60,6 @@ export default function Header() {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-muted transition-colors"
-            aria-label={
-              theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
-            }
-          >
-            {theme === "dark" ? (
-              <Sun className="h-5 w-5" />
-            ) : (
-              <Moon className="h-5 w-5" />
-            )}
-          </button>
-
           {/* Cart Icon */}
           <Link
             href="/cart"
@@ -85,7 +68,7 @@ export default function Header() {
             <ShoppingCart className="h-5 w-5" />
             {distinctCount > 0 && (
               <span
-                className={`absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-primary text-xs font-bold ${theme === "dark" ? "text-slate-900" : "text-white"}`}
+                className={`absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-primary text-xs font-bold text-white`}
               >
                 {distinctCount > 9 ? "9+" : distinctCount}
               </span>
@@ -138,23 +121,6 @@ export default function Header() {
               <ShoppingCart className="h-4 w-4" />
               Cart {distinctCount > 0 && `(${distinctCount})`}
             </Link>
-            <button
-              onClick={() => {
-                toggleTheme();
-                setMobileMenuOpen(false);
-              }}
-              className="flex items-center gap-2 text-sm font-medium text-text-muted hover:text-text-primary transition-colors"
-            >
-              {theme === "dark" ? (
-                <>
-                  <Sun className="h-4 w-4" /> Light Mode
-                </>
-              ) : (
-                <>
-                  <Moon className="h-4 w-4" /> Dark Mode
-                </>
-              )}
-            </button>
             <a
               href={whatsappUrl}
               target="_blank"

@@ -4,7 +4,7 @@ export function BrandSlider() {
   return (
     <section className="py-12 bg-white/50 dark:bg-background-dark/50 border-y border-primary/10">
       <div className="max-w-7xl mx-auto px-4">
-        <h3 className="text-center text-xs font-bold text-slate-400 dark:text-white uppercase tracking-widest mb-10">
+        <h3 className="text-center text-xs font-bold text-slate-400 uppercase tracking-widest mb-10">
           Our Trusted Partner Brands
         </h3>
         <div className="flex flex-wrap justify-center gap-8 lg:gap-16 opacity-70 grayscale hover:grayscale-0 transition-all duration-500">

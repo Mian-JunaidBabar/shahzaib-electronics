@@ -36,7 +36,7 @@ export function WeeklyBestSellers() {
   return (
     <section className="py-24 max-w-7xl mx-auto px-4">
       <div className="text-center mb-16">
-        <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-4">
+        <h2 className="text-3xl font-black text-slate-900 mb-4">
           Weekly Best Sellers
         </h2>
         <div className="w-20 h-1.5 bg-primary mx-auto rounded-full"></div>

@@ -13,7 +13,7 @@ export function HomeHero() {
               </span>{" "}
               2026 Collection
             </div>
-            <h2 className="text-5xl lg:text-7xl font-black leading-[1.1] text-slate-900 dark:text-white">
+            <h2 className="text-5xl lg:text-7xl font-black leading-[1.1] text-slate-900">
               Premium Car Accessories &amp;{" "}
               <span className="text-primary">Upgrades</span>
             </h2>
@@ -25,7 +25,7 @@ export function HomeHero() {
             <div className="flex flex-wrap gap-4">
               <Link
                 href="/products"
-                className="px-8 py-4 bg-primary text-white dark:text-slate-900 font-bold rounded-xl shadow-xl shadow-primary/30 hover:-translate-y-1 transition-transform"
+                className="px-8 py-4 bg-primary text-white font-bold rounded-xl shadow-xl shadow-primary/30 hover:-translate-y-1 transition-transform"
               >
                 Shop Now
               </Link>

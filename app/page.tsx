@@ -1,6 +1,5 @@
 "use client";
 
-import { ThemeProvider } from "@/context/theme-context";
 import { CartProvider } from "@/context/cart-context";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
@@ -14,9 +13,8 @@ import { NewsletterCta } from "@/components/home/NewsletterCta";
 
 export default function HomePage() {
   return (
-    <ThemeProvider>
-      <CartProvider>
-        <div className="min-h-screen bg-background-light dark:bg-background-dark font-display">
+    <CartProvider>
+        <div className="min-h-screen bg-background-light font-display">
           <Header />
           <main>
             <HomeHero />
@@ -28,7 +26,6 @@ export default function HomePage() {
           </main>
           <Footer />
         </div>
-      </CartProvider>
-    </ThemeProvider>
+    </CartProvider>
   );
 }

@@ -36,7 +36,7 @@ export function NewArrivals() {
     <section className="py-24 max-w-7xl mx-auto px-4">
       <div className="flex items-end justify-between mb-12">
         <div>
-          <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-2">
+          <h2 className="text-3xl font-black text-slate-900 mb-2">
             New Arrivals
           </h2>
           <p className="text-slate-500 dark:text-slate-400">
@@ -68,7 +68,7 @@ export function NewArrivals() {
                 key={product.slug || idx}
                 className="group bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm hover:shadow-xl transition-all border border-slate-100 dark:border-slate-700 overflow-hidden relative"
               >
-                <span className="absolute top-6 left-6 z-10 bg-primary text-white dark:text-slate-900 text-[10px] font-bold px-2 py-1 rounded">
+                <span className="absolute top-6 left-6 z-10 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded">
                   NEW
                 </span>
                 <div className="relative aspect-square rounded-xl overflow-hidden mb-4 bg-slate-50 dark:bg-slate-900">
@@ -84,7 +84,7 @@ export function NewArrivals() {
                   )}
                   <Link
                     href={`/products/${product.slug}`}
-                    className="absolute bottom-4 left-4 right-4 bg-primary text-white dark:text-slate-900 py-2 rounded-lg font-bold text-sm translate-y-12 group-hover:translate-y-0 transition-transform flex items-center justify-center gap-2"
+                    className="absolute bottom-4 left-4 right-4 bg-primary text-white py-2 rounded-lg font-bold text-sm translate-y-12 group-hover:translate-y-0 transition-transform flex items-center justify-center gap-2"
                   >
                     <span className="material-symbols-outlined text-lg">
                       add_shopping_cart
