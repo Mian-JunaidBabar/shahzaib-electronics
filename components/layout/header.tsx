@@ -34,7 +34,7 @@ export default function Header() {
           className="flex items-center gap-2 text-primary hover:text-primary transition-colors"
         >
           <OptimizedImage
-            src={"/icon.png"}
+            src={"/icon.svg"}
             alt="Shahzaib Electronics"
             width={56}
             height={56}

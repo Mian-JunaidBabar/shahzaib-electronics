@@ -166,7 +166,7 @@ export function ProductVariantSelector({
       <div className="flex flex-col sm:flex-row gap-4">
         <Button
           size="lg"
-          className={`flex-1 h-14 gap-2 ${
+          className={`flex-1 min-h-14 py-3 text-base gap-2 ${
             justAdded ? "bg-green-600 hover:bg-green-600" : ""
           }`}
           onClick={handleAddToCart}
@@ -193,7 +193,7 @@ export function ProductVariantSelector({
         <Button
           variant="outline"
           size="lg"
-          className="flex-1 h-14 gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white border-0"
+          className="flex-1 min-h-14 py-3 text-base gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white border-0"
           asChild
         >
           <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">

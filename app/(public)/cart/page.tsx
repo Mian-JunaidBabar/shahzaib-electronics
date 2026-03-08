@@ -1,5 +1,6 @@
 import { CartItems } from "@/components/store/CartItems";
 
+
 export const metadata = {
   title: "Shopping Cart | Shahzaib Electronics",
   description: "Review your cart and proceed to checkout",
@@ -11,7 +12,7 @@ export default function CartPage() {
       <div className="max-w-4xl mx-auto">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-black text-slate-900 dark:text-white mb-2 flex items-center gap-3">
+          <h1 className="text-4xl font-black text-primary mb-2 flex items-center gap-3">
             <span className="material-symbols-outlined text-5xl text-primary">
               shopping_cart
             </span>

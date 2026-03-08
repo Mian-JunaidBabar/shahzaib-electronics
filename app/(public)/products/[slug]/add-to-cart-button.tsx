@@ -43,7 +43,7 @@ export function AddToCartButton({ product, disabled = false }: Props) {
   return (
     <Button
       size="lg"
-      className={`flex-1 h-14 gap-2 ${
+      className={`flex-1 min-h-14 py-3 text-base gap-2 ${
         justAdded ? "bg-green-600 hover:bg-green-600" : ""
       }`}
       onClick={handleAddToCart}
