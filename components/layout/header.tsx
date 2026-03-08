@@ -100,8 +100,22 @@ export default function Header() {
       </div>
 
       {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-border bg-background">
+      <div
+        className={`lg:hidden fixed left-0 right-0 top-16 z-40 transition-opacity duration-300 ${
+          mobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        <button
+          aria-label="Close mobile menu"
+          className="absolute inset-0 h-[calc(100dvh-4rem)] bg-black/20"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+
+        <div
+          className={`relative border-t border-border bg-background transition-all duration-300 ease-out max-h-[calc(100dvh-4rem)] overflow-y-auto ${
+            mobileMenuOpen ? "translate-y-0" : "-translate-y-4"
+          }`}
+        >
           <nav className="flex flex-col px-4 py-4 space-y-4">
             {navLinks.map((link) => (
               <Link
@@ -126,6 +140,7 @@ export default function Header() {
               target="_blank"
               rel="noopener noreferrer"
               className="flex h-10 items-center justify-center rounded-md bg-[#25D366] px-4 text-white text-sm font-semibold shadow-sm hover:bg-[#20bd5a] transition-all"
+              onClick={() => setMobileMenuOpen(false)}
             >
               <span className="material-symbols-outlined text-[18px] mr-2">
                 chat
@@ -134,7 +149,7 @@ export default function Header() {
             </a>
           </nav>
         </div>
-      )}
+      </div>
     </header>
   );
 }
