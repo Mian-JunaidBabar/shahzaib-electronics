@@ -6,6 +6,9 @@ import { deleteImage } from "@/lib/cloudinary";
  */
 import { prisma } from "@/lib/prisma";
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { unstable_cache } = require("next/cache");
+
 export interface CategoryInput {
   name: string;
   slug: string;
@@ -67,7 +70,7 @@ export async function createCategory(input: CategoryInput) {
 /**
  * Get all categories (admin — includes inactive)
  */
-export async function getCategories() {
+async function _getCategories() {
   return prisma.category.findMany({
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     include: {
@@ -76,10 +79,17 @@ export async function getCategories() {
   });
 }
 
+export function getCategories() {
+  return unstable_cache(() => _getCategories(), ["categories-all"], {
+    tags: ["categories:all"],
+    revalidate: 120,
+  })();
+}
+
 /**
  * Get active categories only (public storefront)
  */
-export async function getActiveCategories() {
+async function _getActiveCategories() {
   return prisma.category.findMany({
     where: { isActive: true },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -87,6 +97,13 @@ export async function getActiveCategories() {
       _count: { select: { products: true } },
     },
   });
+}
+
+export function getActiveCategories() {
+  return unstable_cache(() => _getActiveCategories(), ["categories-active"], {
+    tags: ["categories:all"],
+    revalidate: 120,
+  })();
 }
 
 /**
@@ -108,6 +125,25 @@ export async function getCategoryBySlug(slug: string) {
   return prisma.category.findUnique({
     where: { slug },
     include: {
+      _count: { select: { products: true } },
+    },
+  });
+}
+
+/**
+ * Get a category with its related products in one database trip.
+ */
+export async function getCategoryWithProducts(slug: string) {
+  return prisma.category.findUnique({
+    where: { slug },
+    include: {
+      products: {
+        where: { isArchived: false, isActive: true },
+        include: {
+          images: true,
+          variants: true,
+        },
+      },
       _count: { select: { products: true } },
     },
   });

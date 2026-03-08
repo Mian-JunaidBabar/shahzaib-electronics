@@ -82,6 +82,7 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
         inventoryQty: number | null;
         salePrice: number | null;
         price: number;
+        product: { id: string; name: string };
       }
     >();
     if (cartItems.length > 0) {
@@ -89,34 +90,34 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
         .map((item) => item.variantId)
         .filter(Boolean) as string[];
 
+      if (variantIds.length !== cartItems.length) {
+        return {
+          success: false,
+          error: "Some cart items are missing variant IDs.",
+        };
+      }
+
       if (variantIds.length > 0) {
         const dbVariants = await prisma.productVariant.findMany({
           where: { id: { in: variantIds } },
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
         });
         dbVariants.forEach((v) => preFetchedVariants.set(v.id, v));
       }
 
-      const itemsFallingBack = cartItems.filter(
-        (item) => !item.variantId || !preFetchedVariants.has(item.variantId),
-      );
-
-      if (itemsFallingBack.length > 0) {
-        const productNames = itemsFallingBack.map((item) => item.name);
-        const dbProducts = await prisma.product.findMany({
-          where: { name: { in: productNames } },
-          include: { variants: true },
-        });
-
-        itemsFallingBack.forEach((item) => {
-          const product = dbProducts.find((p) => p.name === item.name);
-          if (product && product.variants && product.variants.length > 0) {
-            const variant =
-              product.variants.find((v) => v.name === item.variantName) ||
-              product.variants[0];
-            // Store fallback by constructed key
-            preFetchedVariants.set(`fallback_${item.name}`, variant);
-          }
-        });
+      if (preFetchedVariants.size !== variantIds.length) {
+        return {
+          success: false,
+          error:
+            "Some selected variants no longer exist. Please refresh your cart.",
+        };
       }
     }
 
@@ -177,11 +178,10 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
             inventoryQty: number | null;
             salePrice: number | null;
             price: number;
+            product: { id: string; name: string };
           } | null = null;
           if (item.variantId && preFetchedVariants.has(item.variantId)) {
             dbVariant = preFetchedVariants.get(item.variantId);
-          } else if (preFetchedVariants.has(`fallback_${item.name}`)) {
-            dbVariant = preFetchedVariants.get(`fallback_${item.name}`);
           }
 
           if (!dbVariant)

@@ -267,7 +267,7 @@ function buildStoreWhere(filters: StoreFilters = {}): Prisma.ProductWhereInput {
   return where;
 }
 
-export async function getStoreProducts(filters: StoreFilters = {}) {
+async function _getStoreProducts(filters: StoreFilters = {}) {
   const { sort, limit, offset } = filters;
   const where: Prisma.ProductWhereInput = buildStoreWhere(filters);
 
@@ -311,6 +311,29 @@ export async function getStoreProducts(filters: StoreFilters = {}) {
       badges: product.productBadges?.map((pb) => pb.badge) ?? [],
     };
   });
+}
+
+export function getStoreProducts(
+  filters: StoreFilters = {},
+): Promise<StoreProduct[]> {
+  const cacheKey = JSON.stringify({
+    q: filters.q,
+    categorySlug: filters.categorySlug,
+    categoryId: filters.categoryId,
+    categories: filters.categories,
+    tags: filters.tags,
+    min: filters.min,
+    max: filters.max,
+    sort: filters.sort,
+    limit: filters.limit,
+    offset: filters.offset,
+  });
+
+  return unstable_cache(
+    () => _getStoreProducts(filters),
+    ["store-products", cacheKey],
+    { tags: ["products:all"], revalidate: 120 },
+  )();
 }
 
 // returns both list and total count according to filters (ignores limit/offset for count)
@@ -374,6 +397,13 @@ export type PaginationMeta = {
   hasPrevPage: boolean;
 };
 
+const PRODUCT_RELATIONS_INCLUDE = {
+  variants: true,
+  images: true,
+  categoryRelation: true,
+  productBadges: { include: { badge: true } },
+} as const;
+
 const STORE_PAGE_SIZE = 24;
 
 async function _getStoreProductsPaginated(
@@ -387,30 +417,19 @@ async function _getStoreProductsPaginated(
   let orderBy: Prisma.ProductOrderByWithRelationInput = { createdAt: "desc" };
   if (filters.sort === "newest") orderBy = { createdAt: "desc" };
 
-  const [products, total] = await Promise.all([
-    prisma.product.findMany({
-      where,
-      orderBy,
-      take: limit,
-      skip,
-      include: {
-        images: {
-          orderBy: { sortOrder: "asc" },
-        },
-        variants: { orderBy: { createdAt: "asc" } },
-        badge: true,
-        tags: { orderBy: { name: "asc" } },
-        productBadges: { include: { badge: true } },
-        categoryRelation: true,
-      },
-    }),
-    prisma.product.count({ where }),
-  ]);
+  const products = await prisma.product.findMany({
+    where,
+    orderBy,
+    take: limit,
+    skip,
+    include: PRODUCT_RELATIONS_INCLUDE,
+  });
+  const total = await prisma.product.count({ where });
 
   const totalPages = Math.ceil(total / limit);
 
   return {
-    products: products as StoreProduct[],
+    products: products as unknown as StoreProduct[],
     metadata: {
       total,
       page,
@@ -515,17 +534,7 @@ export async function getProducts(
 
   const products = await prisma.product.findMany({
     where,
-    include: {
-      images: {
-        orderBy: { sortOrder: "asc" },
-      },
-      variants: true,
-      fitments: true,
-      badge: true,
-      tags: { orderBy: { name: "asc" } },
-      productBadges: { include: { badge: true } },
-      categoryRelation: true,
-    },
+    include: PRODUCT_RELATIONS_INCLUDE,
     orderBy: { [sortBy]: sortOrder },
     skip: (page - 1) * limit,
     take: limit,
@@ -534,7 +543,7 @@ export async function getProducts(
 
   return {
     products: products.map((p) => {
-      const product = p as Omit<ProductWithRelations, "badges"> & {
+      const product = p as unknown as Omit<ProductWithRelations, "badges"> & {
         productBadges?: { badge: Badge }[];
       };
       return {
@@ -623,30 +632,20 @@ export async function getAdminProducts(filters: AdminProductFilters = {}) {
     }
   }
 
-  const [products, total] = await Promise.all([
-    prisma.product.findMany({
-      where,
-      include: {
-        images: { orderBy: { sortOrder: "asc" } },
-        variants: true,
-        fitments: true,
-        badge: true,
-        tags: { orderBy: { name: "asc" } },
-        productBadges: { include: { badge: true } },
-        categoryRelation: true,
-      },
-      orderBy,
-      skip,
-      take: limit,
-    }),
-    prisma.product.count({ where }),
-  ]);
+  const products = await prisma.product.findMany({
+    where,
+    include: PRODUCT_RELATIONS_INCLUDE,
+    orderBy,
+    skip,
+    take: limit,
+  });
+  const total = await prisma.product.count({ where });
 
   const totalPages = Math.ceil(total / limit);
 
   return {
     products: products.map((p) => {
-      const product = p as Omit<ProductWithRelations, "badges"> & {
+      const product = p as unknown as Omit<ProductWithRelations, "badges"> & {
         productBadges?: { badge: Badge }[];
       };
       return {
@@ -1424,7 +1423,7 @@ export async function bulkDeleteProducts(ids: string[]): Promise<{
 /**
  * Get all unique categories
  */
-export async function getCategories(): Promise<string[]> {
+async function _getCategories(): Promise<string[]> {
   const categories = await prisma.product.findMany({
     where: { category: { not: null } },
     select: { category: true },
@@ -1434,6 +1433,13 @@ export async function getCategories(): Promise<string[]> {
   return categories
     .map((p) => p.category)
     .filter((c): c is string => c !== null);
+}
+
+export function getCategories(): Promise<string[]> {
+  return unstable_cache(() => _getCategories(), ["product-categories"], {
+    tags: ["categories:all"],
+    revalidate: 120,
+  })();
 }
 
 /**

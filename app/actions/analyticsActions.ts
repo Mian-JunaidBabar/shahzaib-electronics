@@ -27,15 +27,17 @@ export async function getRevenueOverTime(range?: DateRange) {
   const start = startOfDay(startDate);
   const end = endOfDay(endDate);
 
-  // Fetch orders within the date range
-  const orders = await prisma.order.findMany({
+  const groupedOrders = await prisma.order.groupBy({
+    by: ["createdAt"],
     where: {
       status: { in: ["CONFIRMED", "SHIPPED", "DELIVERED"] },
       createdAt: { gte: start, lte: end },
     },
-    select: {
+    _sum: {
       total: true,
-      createdAt: true,
+    },
+    _count: {
+      id: true,
     },
   });
 
@@ -49,11 +51,11 @@ export async function getRevenueOverTime(range?: DateRange) {
     groupedData[dateStr] = { revenue: 0, orders: 0 };
   });
 
-  orders.forEach((order) => {
-    const dateStr = format(order.createdAt, "yyyy-MM-dd");
+  groupedOrders.forEach((row) => {
+    const dateStr = format(row.createdAt, "yyyy-MM-dd");
     if (groupedData[dateStr]) {
-      groupedData[dateStr].revenue += order.total / 100; // Convert cents to dollars/rupees display unit
-      groupedData[dateStr].orders += 1;
+      groupedData[dateStr].revenue += (row._sum.total || 0) / 100;
+      groupedData[dateStr].orders += row._count.id || 0;
     }
   });
 
@@ -169,11 +171,14 @@ export async function getCustomerGrowth(days: number = 30) {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - days);
 
-  const customers = await prisma.customer.findMany({
+  const customerGroups = await prisma.customer.groupBy({
+    by: ["createdAt"],
     where: {
       createdAt: { gte: cutoffDate },
     },
-    select: { createdAt: true },
+    _count: {
+      id: true,
+    },
   });
 
   const groupedData: Record<string, number> = {};
@@ -185,10 +190,10 @@ export async function getCustomerGrowth(days: number = 30) {
     groupedData[dateStr] = 0;
   }
 
-  customers.forEach((customer) => {
-    const dateStr = customer.createdAt.toISOString().split("T")[0];
+  customerGroups.forEach((row) => {
+    const dateStr = row.createdAt.toISOString().split("T")[0];
     if (dateStr in groupedData) {
-      groupedData[dateStr] += 1;
+      groupedData[dateStr] += row._count.id || 0;
     }
   });
 
@@ -203,27 +208,42 @@ export async function getRevenueByCategory(range?: DateRange) {
   const start = startOfDay(startDate);
   const end = endOfDay(endDate);
 
-  const orderItems = await prisma.orderItem.findMany({
+  const groupedOrderItems = await prisma.orderItem.groupBy({
+    by: ["variantId", "price"],
     where: {
       order: {
         createdAt: { gte: start, lte: end },
       },
     },
-    include: {
-      variant: {
-        include: {
-          product: { select: { category: true } },
+    _sum: {
+      quantity: true,
+    },
+  });
+
+  const variantIds = Array.from(
+    new Set(groupedOrderItems.map((item) => item.variantId)),
+  );
+  const variants = await prisma.productVariant.findMany({
+    where: { id: { in: variantIds } },
+    select: {
+      id: true,
+      product: {
+        select: {
+          category: true,
         },
       },
     },
   });
+  const categoryByVariantId = new Map(
+    variants.map((variant) => [variant.id, variant.product?.category]),
+  );
 
   const categoryTotals: Record<string, number> = {};
 
-  orderItems.forEach((item) => {
-    const cat = item.variant?.product?.category || "Uncategorized";
+  groupedOrderItems.forEach((item) => {
+    const cat = categoryByVariantId.get(item.variantId) || "Uncategorized";
     if (!categoryTotals[cat]) categoryTotals[cat] = 0;
-    categoryTotals[cat] += (item.price * item.quantity) / 100;
+    categoryTotals[cat] += (item.price * (item._sum.quantity || 0)) / 100;
   });
 
   return Object.entries(categoryTotals)

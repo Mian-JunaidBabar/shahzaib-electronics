@@ -144,6 +144,10 @@ export async function createProductAction(
       undefined /* eslint-disable-line @typescript-eslint/no-explicit-any */ as any,
     );
     revalidateTag(
+      "categories:all",
+      undefined /* eslint-disable-line @typescript-eslint/no-explicit-any */ as any,
+    );
+    revalidateTag(
       "dashboard:stats",
       undefined /* eslint-disable-line @typescript-eslint/no-explicit-any */ as any,
     );
@@ -184,6 +188,10 @@ export async function updateProductAction(
 
     revalidateTag(
       "products:all",
+      undefined /* eslint-disable-line @typescript-eslint/no-explicit-any */ as any,
+    );
+    revalidateTag(
+      "categories:all",
       undefined /* eslint-disable-line @typescript-eslint/no-explicit-any */ as any,
     );
     revalidateTag(
@@ -233,6 +241,10 @@ export async function toggleProductActiveAction(
       "products:all",
       undefined /* eslint-disable-line @typescript-eslint/no-explicit-any */ as any,
     );
+    revalidateTag(
+      "categories:all",
+      undefined /* eslint-disable-line @typescript-eslint/no-explicit-any */ as any,
+    );
     revalidatePath("/admin/dashboard/products");
     revalidatePath("/admin/dashboard/inventory");
     revalidatePath("/products");
@@ -261,6 +273,15 @@ export async function deactivateProductAction(
 
     await ProductService.deactivateProduct(id);
 
+    revalidateTag(
+      "products:all",
+      undefined /* eslint-disable-line @typescript-eslint/no-explicit-any */ as any,
+    );
+    revalidateTag(
+      "categories:all",
+      undefined /* eslint-disable-line @typescript-eslint/no-explicit-any */ as any,
+    );
+
     revalidatePath("/admin/dashboard/products");
     revalidatePath("/admin/dashboard/inventory");
     revalidatePath("/products");
@@ -287,6 +308,10 @@ export async function archiveProductAction(id: string): Promise<ActionResult> {
 
     revalidateTag(
       "products:all",
+      undefined /* eslint-disable-line @typescript-eslint/no-explicit-any */ as any,
+    );
+    revalidateTag(
+      "categories:all",
       undefined /* eslint-disable-line @typescript-eslint/no-explicit-any */ as any,
     );
     revalidateTag(
@@ -319,6 +344,15 @@ export async function unarchiveProductAction(
 
     await ProductService.unarchiveProduct(id);
 
+    revalidateTag(
+      "products:all",
+      undefined /* eslint-disable-line @typescript-eslint/no-explicit-any */ as any,
+    );
+    revalidateTag(
+      "categories:all",
+      undefined /* eslint-disable-line @typescript-eslint/no-explicit-any */ as any,
+    );
+
     revalidatePath("/admin/dashboard/products");
     revalidatePath("/admin/dashboard/inventory");
     revalidatePath("/products");
@@ -349,6 +383,10 @@ export async function deleteProductAction(
     if (result.deleted) {
       revalidateTag(
         "products:all",
+        undefined /* eslint-disable-line @typescript-eslint/no-explicit-any */ as any,
+      );
+      revalidateTag(
+        "categories:all",
         undefined /* eslint-disable-line @typescript-eslint/no-explicit-any */ as any,
       );
       revalidateTag(
