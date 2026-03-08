@@ -38,7 +38,9 @@ export function MultimediaSection() {
                   <span className="material-symbols-outlined text-primary text-4xl mb-4">
                     {feature.icon}
                   </span>
-                  <h4 className="font-bold text-lg mb-2">{feature.title}</h4>
+                  <h4 className="font-bold text-lg mb-2 text-slate-900 dark:text-white">
+                    {feature.title}
+                  </h4>
                   <p className="text-sm text-slate-500">{feature.desc}</p>
                 </div>
               ))}
@@ -52,7 +54,9 @@ export function MultimediaSection() {
                   <span className="material-symbols-outlined text-primary text-4xl mb-4">
                     {feature.icon}
                   </span>
-                  <h4 className="font-bold text-lg mb-2">{feature.title}</h4>
+                  <h4 className="font-bold text-lg mb-2 text-slate-900 dark:text-white">
+                    {feature.title}
+                  </h4>
                   <p className="text-sm text-slate-500">{feature.desc}</p>
                 </div>
               ))}
@@ -63,7 +67,7 @@ export function MultimediaSection() {
               Next-Gen Multimedia <br />
               Experience
             </h2>
-            <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
+            <p className="text-lg text-slate-600 dark:text-white leading-relaxed">
               Revolutionize your cabin with our smart entertainment systems.
               Featuring high-definition Android displays, immersive sound
               stages, and seamless smartphone integration.

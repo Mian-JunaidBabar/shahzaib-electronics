@@ -90,31 +90,6 @@ export default function Footer() {
               </div>
             </div>
           </div>
-
-          {/* Social Links (stacked on the right) */}
-          <div className="flex flex-col items-end gap-4">
-            <a
-              href="#"
-              className="text-text-muted hover:text-text-primary transition-colors"
-              aria-label="Website"
-            >
-              <span className="material-symbols-outlined">public</span>
-            </a>
-            <a
-              href="#"
-              className="text-text-muted hover:text-text-primary transition-colors"
-              aria-label="Like"
-            >
-              <span className="material-symbols-outlined">thumb_up</span>
-            </a>
-            <a
-              href="#"
-              className="text-text-muted hover:text-text-primary transition-colors"
-              aria-label="Gallery"
-            >
-              <span className="material-symbols-outlined">photo_camera</span>
-            </a>
-          </div>
         </div>
 
         {/* Copyright */}
