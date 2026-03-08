@@ -27,7 +27,7 @@ export function TeamGrid() {
     <section className="px-4 py-20 bg-slate-50 dark:bg-slate-900/40 w-full">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4">
+          <h3 className="text-3xl font-black text-primary mb-4">
             Meet the Team
           </h3>
           <div className="h-1.5 w-16 bg-primary mx-auto rounded-full"></div>

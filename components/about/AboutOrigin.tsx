@@ -18,7 +18,7 @@ export function AboutOrigin() {
         {/* Right: Content */}
         <div className="flex-1 space-y-8">
           <div className="space-y-4">
-            <h3 className="text-3xl font-black text-slate-900 dark:text-white">
+            <h3 className="text-3xl font-black text-primary">
               The Shahzaib Autos Origin
             </h3>
             <div className="h-1.5 w-16 bg-primary rounded-full"></div>
@@ -31,7 +31,7 @@ export function AboutOrigin() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
             <div className="flex items-start gap-4 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow group">
-              <div className="bg-primary/10 p-3 rounded-xl text-primary group-hover:scale-110 transition-transform">
+              <div className="bg-primary/20 dark:bg-primary/30 p-3 rounded-xl text-primary group-hover:scale-110 transition-transform">
                 <span className="material-symbols-outlined text-[24px]">
                   verified
                 </span>
@@ -47,7 +47,7 @@ export function AboutOrigin() {
             </div>
 
             <div className="flex items-start gap-4 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow group">
-              <div className="bg-primary/10 p-3 rounded-xl text-primary group-hover:scale-110 transition-transform">
+              <div className="bg-primary/20 dark:bg-primary/30 p-3 rounded-xl text-primary group-hover:scale-110 transition-transform">
                 <span className="material-symbols-outlined text-[24px]">
                   precision_manufacturing
                 </span>
@@ -63,7 +63,7 @@ export function AboutOrigin() {
             </div>
 
             <div className="flex items-start gap-4 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow group">
-              <div className="bg-primary/10 p-3 rounded-xl text-primary group-hover:scale-110 transition-transform">
+              <div className="bg-primary/20 dark:bg-primary/30 p-3 rounded-xl text-primary group-hover:scale-110 transition-transform">
                 <span className="material-symbols-outlined text-[24px]">
                   lightbulb
                 </span>
