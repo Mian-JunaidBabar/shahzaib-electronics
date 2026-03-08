@@ -1,5 +1,6 @@
 import {
   getStoreProductsPaginated,
+  getRecentlyUpdatedProducts,
   StoreProduct,
 } from "@/lib/services/product.service";
 import ProductGridClient from "@/components/products/ProductGridClient";
@@ -196,14 +197,31 @@ export default async function ProductsPage({
   searchParams: SearchParams | Promise<SearchParams>;
 }) {
   const sp = await searchParams;
-  const hasFilters = !!(
-    sp.categories ||
-    sp.tags ||
-    sp.q ||
-    sp.min ||
-    sp.max ||
-    sp.favorites
-  );
+
+  const parsedFilters = {
+    q: sp.q || undefined,
+    categories: sp.categories
+      ? sp.categories
+          .split(",")
+          .map((c) => c.trim())
+          .filter(Boolean)
+      : undefined,
+    tags: sp.tags
+      ? sp.tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : undefined,
+    min: sp.min ? Number(sp.min) : undefined,
+    max: sp.max ? Number(sp.max) : undefined,
+    sort: sp.sort || undefined,
+  };
+
+  const freshArrivals = await getRecentlyUpdatedProducts(parsedFilters);
+
+  const mappedFreshArrivals = freshArrivals
+    .map(mapProductToCard)
+    .filter(Boolean) as React.ComponentProps<typeof ProductCard>[];
 
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark font-display flex flex-col">
@@ -226,12 +244,34 @@ export default async function ProductsPage({
         </div>
       </div>
 
-      {/* Category Grid — only when no filters active */}
-      {!hasFilters && (
-        <div className="max-w-7xl mx-auto w-full px-4 pt-12">
-          <CategoryGrid />
+      {/* Layer 2: Fresh Arrivals */}
+      <section className="max-w-7xl mx-auto w-full px-4 pt-10">
+        <h2 className="text-2xl font-black uppercase text-red-600 mb-6">
+          Fresh Arrivals &amp; Restocked
+        </h2>
+
+        {mappedFreshArrivals.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {mappedFreshArrivals.map((product) => (
+              <ProductCard key={`fresh-${product.id}`} {...product} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Fresh arrivals will appear here as soon as stock is updated.
+          </p>
+        )}
+      </section>
+
+      {/* Layer 3: Browse Categories */}
+      <section className="max-w-7xl mx-auto w-full px-4 pt-12">
+        <h2 className="text-2xl font-black uppercase text-red-600 mb-6">
+          Browse All Categories
+        </h2>
+        <div>
+          <CategoryGrid filters={parsedFilters} />
         </div>
-      )}
+      </section>
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Left Sidebar - Filters */}

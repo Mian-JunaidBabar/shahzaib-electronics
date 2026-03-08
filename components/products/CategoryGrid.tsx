@@ -1,4 +1,5 @@
 import { getActiveCategories } from "@/lib/services/category.service";
+import type { StoreFilters } from "@/lib/services/product.service";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -8,10 +9,12 @@ import Link from "next/link";
  * Displays active categories as a visual grid on the public /products page.
  * Red & White theme matching Shahzaib Electronics brand.
  */
-export async function CategoryGrid() {
-  const categories = await getActiveCategories();
+export async function CategoryGrid({
+  filters,
+}: { filters?: StoreFilters } = {}) {
+  const categories = await getActiveCategories(filters);
 
-  // Only show categories that have products
+  // Only show categories that have at least one matching product
   const withProducts = categories.filter((c) => c._count.products > 0);
 
   if (withProducts.length === 0) return null;

@@ -201,7 +201,9 @@ export async function getTopTags(limit: number = 3) {
  */
 
 // Helper to build a Prisma where object from StoreFilters
-function buildStoreWhere(filters: StoreFilters = {}): Prisma.ProductWhereInput {
+export function buildStoreWhere(
+  filters: StoreFilters = {},
+): Prisma.ProductWhereInput {
   const { q, categories, categoryId, categorySlug, tags, min, max } = filters;
   const where: Prisma.ProductWhereInput = {
     isActive: true,
@@ -333,6 +335,48 @@ export function getStoreProducts(
     () => _getStoreProducts(filters),
     ["store-products", cacheKey],
     { tags: ["products:all"], revalidate: 120 },
+  )();
+}
+
+async function _getRecentlyUpdatedProducts(
+  filters: StoreFilters = {},
+): Promise<StoreProduct[]> {
+  const where: Prisma.ProductWhereInput = buildStoreWhere(filters);
+
+  const products = await prisma.product.findMany({
+    where: {
+      ...where,
+      isActive: true,
+      isArchived: false,
+    },
+    orderBy: {
+      updatedAt: "desc",
+    },
+    take: 8,
+    include: {
+      variants: true,
+      images: true,
+      productBadges: { include: { badge: true } },
+      badge: true,
+      tags: { orderBy: { name: "asc" } },
+      categoryRelation: true,
+    },
+  });
+
+  return products as unknown as StoreProduct[];
+}
+
+export function getRecentlyUpdatedProducts(
+  filters: StoreFilters = {},
+): Promise<StoreProduct[]> {
+  const cacheKey = JSON.stringify(filters);
+  return unstable_cache(
+    () => _getRecentlyUpdatedProducts(filters),
+    ["fresh-arrivals", cacheKey],
+    {
+      tags: ["products:all"],
+      revalidate: 120,
+    },
   )();
 }
 

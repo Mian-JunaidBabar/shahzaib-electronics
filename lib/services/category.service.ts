@@ -6,6 +6,8 @@ import { deleteImage } from "@/lib/cloudinary";
  */
 import { prisma } from "@/lib/prisma";
 
+import { buildStoreWhere, type StoreFilters } from "./product.service";
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { unstable_cache } = require("next/cache");
 
@@ -89,21 +91,29 @@ export function getCategories() {
 /**
  * Get active categories only (public storefront)
  */
-async function _getActiveCategories() {
+async function _getActiveCategories(filters: StoreFilters = {}) {
+  // Build where clause for products matching the filters
+  const productWhere: any = buildStoreWhere(filters);
+
   return prisma.category.findMany({
     where: { isActive: true },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     include: {
-      _count: { select: { products: true } },
+      _count: { select: { products: { where: productWhere } } },
     },
   });
 }
 
-export function getActiveCategories() {
-  return unstable_cache(() => _getActiveCategories(), ["categories-active"], {
-    tags: ["categories:all"],
-    revalidate: 120,
-  })();
+export function getActiveCategories(filters: StoreFilters = {}) {
+  const cacheKey = JSON.stringify(filters);
+  return unstable_cache(
+    () => _getActiveCategories(filters),
+    ["categories-active", cacheKey],
+    {
+      tags: ["categories:all"],
+      revalidate: 120,
+    },
+  )();
 }
 
 /**
