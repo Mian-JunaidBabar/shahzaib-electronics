@@ -23,7 +23,7 @@ export default function Footer() {
               aria-label="Shahzaib Autos home"
             >
               <OptimizedImage
-                src="/logo.svg"
+                src="/web-app-manifest-512x512.png"
                 alt="Shahzaib Autos"
                 width={200}
                 height={200}

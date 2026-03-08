@@ -21,6 +21,11 @@ export const metadata: Metadata = {
   },
   description:
     "Upgrade your ride with premium car accessories, 7D mats, LEDs, and professional workshop services at Shahzaib Autos.",
+  manifest: "/manifest.json",
+  icons: {
+    icon: [{ url: "/favicon.ico" }, { url: "/icon1.png", type: "image/png" }],
+    apple: [{ url: "/apple-icon.png" }],
+  },
   appleWebApp: {
     title: "Shahzaib Autos",
   },
@@ -39,6 +44,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
         />
+        <meta name="apple-mobile-web-app-title" content="Shahzaib Autos" />
       </head>
       <body className={`${inter.variable} antialiased`}>
         {children}
