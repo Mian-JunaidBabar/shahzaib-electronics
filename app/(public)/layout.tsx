@@ -16,13 +16,13 @@ export default function PublicLayout({
 }>) {
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
-        <CartProvider>
-          <div className="relative flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-        </CartProvider>
+      <CartProvider>
+        <div className="relative flex min-h-screen flex-col">
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </div>
+      </CartProvider>
     </div>
   );
 }

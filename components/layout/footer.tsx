@@ -5,7 +5,7 @@ import { OptimizedImage } from "@/components/optimized-image";
 
 const footerLinks = [
   { href: "/products", label: "Products" },
-  { href: "/work", label: "Stories" },
+  { href: "/stories", label: "Stories" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
@@ -95,7 +95,8 @@ export default function Footer() {
         {/* Copyright */}
         <div className="border-t border-border pt-8 text-center text-xs text-text-subtle">
           <p>
-            © {new Date().getFullYear()} Shahzaib Electronics. All rights reserved.
+            © {new Date().getFullYear()} Shahzaib Electronics. All rights
+            reserved.
           </p>
         </div>
       </div>

@@ -1,4 +1,8 @@
-import { getStoreProductsPaginated, getRecentlyUpdatedProducts, StoreProduct, } from "@/lib/services/product.service";
+import {
+  getStoreProductsPaginated,
+  getRecentlyUpdatedProducts,
+  StoreProduct,
+} from "@/lib/services/product.service";
 import ProductGridClient from "@/components/products/ProductGridClient";
 import { ServiceMarquee } from "@/components/products/ServiceMarquee";
 import { ProductFilters } from "@/components/products/ProductFilters";
@@ -11,7 +15,6 @@ import { Pagination } from "@/components/store/pagination";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
-
 
 export const metadata: Metadata = {
   title: "Shop Premium Car Accessories",
@@ -197,6 +200,16 @@ export default async function ProductsPage({
 }) {
   const sp = await searchParams;
 
+  // Check if any filter is active in the URL
+  const isFiltered = !!(
+    sp.q ||
+    sp.categories ||
+    sp.tags ||
+    sp.min ||
+    sp.max ||
+    sp.page
+  );
+
   const parsedFilters = {
     q: sp.q || undefined,
     categories: sp.categories
@@ -271,34 +284,39 @@ export default async function ProductsPage({
         </div>
       </div>
 
-      {/* Layer 2: Fresh Arrivals */}
-      <section className="max-w-7xl mx-auto w-full px-4 pt-10">
-        <h2 className="text-2xl font-black uppercase text-red-600 mb-6">
-          Fresh Arrivals &amp; Restocked
-        </h2>
+      {/* Only show intro sections when no filters are active */}
+      {!isFiltered && (
+        <>
+          {/* Layer 2: Fresh Arrivals */}
+          <section className="max-w-7xl mx-auto w-full px-4 pt-10">
+            <h2 className="text-2xl font-black uppercase text-red-600 mb-6">
+              Fresh Arrivals &amp; Restocked
+            </h2>
 
-        {mappedFreshArrivals.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {mappedFreshArrivals.map((product) => (
-              <ProductCard key={`fresh-${product.id}`} {...product} />
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Fresh arrivals will appear here as soon as stock is updated.
-          </p>
-        )}
-      </section>
+            {mappedFreshArrivals.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {mappedFreshArrivals.map((product) => (
+                  <ProductCard key={`fresh-${product.id}`} {...product} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Fresh arrivals will appear here as soon as stock is updated.
+              </p>
+            )}
+          </section>
 
-      {/* Layer 3: Browse Categories */}
-      <section className="max-w-7xl mx-auto w-full px-4 pt-12 pb-4">
-        <h2 className="text-2xl font-black uppercase text-red-600 mb-6">
-          Browse All Categories
-        </h2>
-        <div>
-          <CategoryGrid filters={parsedFilters} />
-        </div>
-      </section>
+          {/* Layer 3: Browse Categories */}
+          <section className="max-w-7xl mx-auto w-full px-4 pt-12 pb-4">
+            <h2 className="text-2xl font-black uppercase text-red-600 mb-6">
+              Browse All Categories
+            </h2>
+            <div>
+              <CategoryGrid filters={parsedFilters} />
+            </div>
+          </section>
+        </>
+      )}
 
       {/* Layer 4: Services Marquee */}
       <ServiceMarquee />
