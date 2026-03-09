@@ -16,7 +16,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const fromEmail =
   process.env.EMAIL_FROM ||
   (process.env.NODE_ENV === "production"
-    ? process.env.ADMIN_EMAIL || "noreply@shahzaibautos.com"
+    ? "Shahzaib Electronics <noreply@shahzaibelectronics.pk>"
     : "noreply@resend.dev");
 
 // Admin email for notifications
