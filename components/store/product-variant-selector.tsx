@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/context/cart-context";
 import { generateWhatsAppUrl } from "@/lib/whatsapp";
+import { sendGAEvent } from "@next/third-parties/google";
 
 interface Variant {
   id: string;
@@ -77,6 +78,20 @@ export function ProductVariantSelector({
   const stockQuantity = selectedVariant.inventoryQty;
 
   const handleAddToCart = () => {
+    sendGAEvent("event", "add_to_cart", {
+      currency: "PKR",
+      value: displayPrice / 100,
+      items: [
+        {
+          item_id: selectedVariant.id,
+          item_name: product.name,
+          item_variant: selectedVariant.name,
+          price: displayPrice / 100,
+          quantity: 1,
+        },
+      ],
+    });
+
     addToCart({
       id: product.id,
       variantId: selectedVariant.id,

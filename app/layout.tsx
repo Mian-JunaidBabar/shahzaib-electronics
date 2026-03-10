@@ -1,5 +1,6 @@
 import "./globals.css";
 
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "@/components/ui/sonner";
 import { Inter } from "next/font/google";
@@ -118,6 +119,7 @@ export default function RootLayout({
       <body className={`${inter.variable} antialiased`}>
         {children}
         <Toaster position="top-right" />
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID as string} />
         <Analytics />
         <script
           type="application/ld+json"

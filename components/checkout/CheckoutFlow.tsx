@@ -6,6 +6,7 @@ import { createUnifiedOrderAction } from "@/app/actions/checkoutActions";
 import { CheckoutForm } from "./CheckoutForm";
 import { OrderSummary } from "./OrderSummary";
 import { Service } from "@prisma/client";
+import { sendGAEvent } from "@next/third-parties/google";
 
 export function CheckoutFlow({
   availableServices,
@@ -104,6 +105,14 @@ export function CheckoutFlow({
       });
 
       if (result.success && result.data?.whatsappUrl) {
+        if (result.data.orderNumber) {
+          sendGAEvent("event", "purchase", {
+            currency: "PKR",
+            transaction_id: result.data.orderNumber,
+            value: result.data.totalValue ?? getTotal(),
+          });
+        }
+
         clearCart();
         window.location.href = result.data.whatsappUrl; // Redirect to WA
       } else {

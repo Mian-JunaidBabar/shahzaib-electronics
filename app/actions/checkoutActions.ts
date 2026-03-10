@@ -317,7 +317,9 @@ Please confirm my request.`;
       data: {
         whatsappUrl,
         orderId: result.dbOrder?.id,
+        orderNumber: result.dbOrder?.orderNumber,
         bookingId: result.dbBooking?.id,
+        totalValue: totalRs,
       },
     };
   } catch (error: unknown) {
