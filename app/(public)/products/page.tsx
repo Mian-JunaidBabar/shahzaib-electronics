@@ -7,6 +7,7 @@ import ProductGridClient from "@/components/products/ProductGridClient";
 import { ServiceMarquee } from "@/components/products/ServiceMarquee";
 import { ProductFilters } from "@/components/products/ProductFilters";
 import { getActiveCategories } from "@/lib/services/category.service";
+import { FeaturedProducts } from "@/components/home/FeaturedProducts";
 import { SortDropdown } from "@/components/products/SortDropdown";
 import { CategoryGrid } from "@/components/products/CategoryGrid";
 import ProductSearch from "@/components/products/ProductSearch";
@@ -15,7 +16,6 @@ import { Pagination } from "@/components/store/pagination";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
-import { FeaturedProducts } from "@/components/home/FeaturedProducts";
 
 export const metadata: Metadata = {
   title: "Shop Premium Car Accessories",
@@ -300,8 +300,18 @@ export default async function ProductsPage({
       {/* Only show intro sections when no filters are active */}
       {!isFiltered && (
         <>
+          {/* Layer 1: Browse Categories */}
+          <section className="max-w-7xl mx-auto w-full px-4 pt-12 pb-8">
+            <h2 className="text-2xl font-black uppercase text-red-600 mb-6">
+              Browse All Categories
+            </h2>
+            <div>
+              <CategoryGrid filters={parsedFilters} />
+            </div>
+          </section>
+
           {/* Layer 2: Fresh Arrivals */}
-          <section className="max-w-7xl mx-auto w-full px-4 pt-10">
+          <section className="max-w-7xl mx-auto w-full px-4 pt-10 pb-12">
             <h2 className="text-2xl font-black uppercase text-red-600 mb-6">
               Fresh Arrivals &amp; Restocked
             </h2>
@@ -323,16 +333,6 @@ export default async function ProductsPage({
           <div className="bg-slate-50 dark:bg-slate-900/50 border-y border-slate-200 dark:border-slate-800">
             <FeaturedProducts />
           </div>
-
-          {/* Layer 3: Browse Categories */}
-          <section className="max-w-7xl mx-auto w-full px-4 pt-12 pb-4">
-            <h2 className="text-2xl font-black uppercase text-red-600 mb-6">
-              Browse All Categories
-            </h2>
-            <div>
-              <CategoryGrid filters={parsedFilters} />
-            </div>
-          </section>
         </>
       )}
 
