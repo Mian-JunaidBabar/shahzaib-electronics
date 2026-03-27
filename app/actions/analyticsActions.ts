@@ -234,14 +234,14 @@ export async function getRevenueByCategory(range?: DateRange) {
       },
     },
   });
-  const categoryByVariantId = new Map(
-    variants.map((variant) => [variant.id, variant.product?.category]),
+  const categoryByVariantId = new Map<string, string | null>(
+    variants.map((variant) => [variant.id, variant.product?.category ?? null]),
   );
 
   const categoryTotals: Record<string, number> = {};
 
   groupedOrderItems.forEach((item) => {
-    const cat = categoryByVariantId.get(item.variantId) || "Uncategorized";
+    const cat = categoryByVariantId.get(item.variantId) ?? "Uncategorized";
     if (!categoryTotals[cat]) categoryTotals[cat] = 0;
     categoryTotals[cat] += (item.price * (item._sum.quantity || 0)) / 100;
   });

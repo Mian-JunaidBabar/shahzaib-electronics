@@ -14,6 +14,13 @@ type SellerDTO = {
   sold?: number;
 };
 
+function formatSellerPrice(price: number | string) {
+  if (typeof price === "number") {
+    return `PKR ${(price / 100).toLocaleString("en-PK")}`;
+  }
+  return price;
+}
+
 export function WeeklyBestSellers() {
   const [sellers, setSellers] = useState<SellerDTO[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,9 +92,7 @@ export function WeeklyBestSellers() {
                   </p>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <span className="text-primary font-black text-xl">
-                      {typeof item.price === "number"
-                        ? "PKR " + item.price
-                        : item.price}
+                      {formatSellerPrice(item.price)}
                     </span>
                     <Link
                       href={`/products/${item.slug}`}

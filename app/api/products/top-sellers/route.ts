@@ -2,12 +2,11 @@ import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-
 async function fetchTopSellers() {
   const since = new Date();
   since.setDate(since.getDate() - 7);
 
-  // 1. Group by variantId
+  // 1. Group weekly sales by variant
   const grouped = await prisma.orderItem.groupBy({
     by: ["variantId"],
     _sum: { quantity: true },
@@ -27,19 +26,49 @@ async function fetchTopSellers() {
     return [];
   }
 
-  // 2. Fetch products containing these variants in ONE query
+  // 2. Resolve sold variant -> product and aggregate sales at product level.
+  // This avoids showing stale pricing from an older sold variant when the
+  // product's default/current variant pricing has changed.
+  const soldVariants = await prisma.productVariant.findMany({
+    where: { id: { in: variantIds } },
+    select: {
+      id: true,
+      productId: true,
+    },
+  });
+
+  const productSales = new Map<string, number>();
+  const variantToProduct = new Map(
+    soldVariants.map((v) => [v.id, v.productId]),
+  );
+
+  for (const g of grouped) {
+    const productId = variantToProduct.get(g.variantId);
+    if (!productId) continue;
+    productSales.set(
+      productId,
+      (productSales.get(productId) ?? 0) + (g._sum.quantity ?? 0),
+    );
+  }
+
+  const rankedProductIds = [...productSales.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([productId]) => productId);
+
+  if (rankedProductIds.length === 0) {
+    return [];
+  }
+
+  // 3. Fetch ranked products and use current display variant pricing.
   const products = await prisma.product.findMany({
     where: {
-      variants: {
-        some: { id: { in: variantIds } },
-      },
+      id: { in: rankedProductIds },
       isActive: true,
       isArchived: false,
     },
     include: {
-      variants: {
-        where: { id: { in: variantIds } },
-      },
+      variants: true,
       images: {
         where: { isPrimary: true },
         take: 1,
@@ -48,25 +77,24 @@ async function fetchTopSellers() {
     },
   });
 
-  // 3. Map back into sorted payload based on GROUP BY order
-  const payload = grouped
-    .map((g) => {
-      const p = products.find((prod) =>
-        prod.variants.some((v) => v.id === g.variantId)
-      );
-      if (!p) return null;
+  // 4. Map back into sorted payload based on aggregated product sales ranking.
+  const payload = rankedProductIds
+    .map((productId) => {
+      const p = products.find((prod) => prod.id === productId);
+      if (!p || p.variants.length === 0) return null;
 
-      const v = p.variants.find((v) => v.id === g.variantId);
-      if (!v) return null;
+      const displayVariant =
+        p.variants.find((v) => v.isDefault) ?? p.variants[0];
+      const displayPrice = displayVariant.salePrice ?? displayVariant.price;
 
       return {
         id: p.id,
         name: p.name,
         slug: p.slug,
-        price: v.price,
+        price: displayPrice,
         description: p.description,
         image: p.images?.[0]?.secureUrl ?? null,
-        sold: g._sum.quantity ?? 0,
+        sold: productSales.get(productId) ?? 0,
       };
     })
     .filter(Boolean);
@@ -77,7 +105,7 @@ async function fetchTopSellers() {
 const getCachedTopSellers = unstable_cache(
   () => fetchTopSellers(),
   ["products:top-sellers"],
-  { tags: ["products:all"], revalidate: 60 }
+  { tags: ["products:all", "products:top-sellers"], revalidate: 30 },
 );
 
 export async function GET() {

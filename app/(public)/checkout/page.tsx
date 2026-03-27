@@ -1,8 +1,8 @@
 import { CheckoutFlow } from "@/components/checkout/CheckoutFlow";
-import type { Service } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { Metadata } from "next";
 
+type Service = Awaited<ReturnType<typeof prisma.service.findMany>>[number];
 
 export const metadata: Metadata = {
   title: "Secure Checkout",
