@@ -13,9 +13,6 @@ This platform bypasses the limitations of generic SaaS solutions (like Shopify) 
 ---
 
 ## 📸 Project Showcase
-
-*(Replace these placeholder paths with actual screenshots of your application)*
-
 <p align="center">
   <img src="./docs/screenshots/home-page.png" width="48%" alt="Storefront Homepage showing Red/White Theme and Trending Models" />
   <img src="./docs/screenshots/product-detail.png" width="48%" alt="Product Detail Page with Variant Selector" />

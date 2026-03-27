@@ -1824,10 +1824,3 @@ export async function getAllTags(): Promise<Tag[]> {
     orderBy: { name: "asc" },
   });
 }
- * Get all available tags (for admin form multi-select)
- */
-export async function getAllTags(): Promise<Tag[]> {
-  return prisma.tag.findMany({
-    orderBy: { name: "asc" },
-  });
-}
