@@ -1,12 +1,4 @@
-import type {
-  Product,
-  Image,
-  ProductVariant,
-  VehicleFitment,
-  Badge,
-  Tag,
-  Category,
-} from "@prisma/client";
+import type { Product, Image, ProductVariant, VehicleFitment, Badge, Tag, Category, } from "@prisma/client";
 import { deleteImage, extractPublicId } from "@/lib/cloudinary";
 import { ProductStatus, Prisma } from "@prisma/client";
 /**
@@ -20,6 +12,7 @@ import { ProductStatus, Prisma } from "@prisma/client";
  * - Safe delete with referential integrity checks
  */
 import { prisma } from "@/lib/prisma";
+
 
 // Types
 export type ProductWithRelations = Product & {
@@ -377,6 +370,98 @@ export function getRecentlyUpdatedProducts(
       tags: ["products:all"],
       revalidate: 120,
     },
+  )();
+}
+
+/**
+ * Featured vehicles for homepage curated section
+ */
+export const FEATURED_VEHICLES = [
+  "Wagon R",
+  "Alto",
+  "WagonR",
+  "Cultus",
+  "City",
+  "Yaris",
+  "Mira",
+  "Corolla",
+  "Civic"
+];
+
+/**
+ * Get Alto products — searches for products with "Alto" in name or description
+ */
+async function _getAltoProducts(): Promise<StoreProduct[]> {
+  const products = await prisma.product.findMany({
+    where: {
+      isActive: true,
+      isArchived: false,
+      OR: [
+        { name: { contains: "Alto", mode: Prisma.QueryMode.insensitive } },
+        { description: { contains: "Alto", mode: Prisma.QueryMode.insensitive } },
+      ],
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 4,
+    include: {
+      variants: true,
+      images: true,
+      productBadges: { include: { badge: true } },
+      badge: true,
+      tags: { orderBy: { name: "asc" } },
+      categoryRelation: true,
+    },
+  });
+
+  return products as unknown as StoreProduct[];
+}
+
+export function getAltoProducts(): Promise<StoreProduct[]> {
+  return unstable_cache(
+    () => _getAltoProducts(),
+    ["alto-products"],
+    { tags: ["products:all"], revalidate: 60 },
+  )();
+}
+
+/**
+ * Get featured products — searches for products matching featured vehicle keywords
+ */
+async function _getFeaturedVehicleProducts(): Promise<StoreProduct[]> {
+  const searchTerms = FEATURED_VEHICLES.map((v) => ({
+    name: { contains: v, mode: Prisma.QueryMode.insensitive },
+  }));
+
+  const products = await prisma.product.findMany({
+    where: {
+      isActive: true,
+      isArchived: false,
+      OR: searchTerms,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 4,
+    include: {
+      variants: true,
+      images: true,
+      productBadges: { include: { badge: true } },
+      badge: true,
+      tags: { orderBy: { name: "asc" } },
+      categoryRelation: true,
+    },
+  });
+
+  return products as unknown as StoreProduct[];
+}
+
+export function getFeaturedVehicleProducts(): Promise<StoreProduct[]> {
+  return unstable_cache(
+    () => _getFeaturedVehicleProducts(),
+    ["featured-vehicles"],
+    { tags: ["products:all"], revalidate: 60 },
   )();
 }
 
@@ -1732,6 +1817,13 @@ export async function getProductStockDetails(productId: string) {
 }
 
 /**
+ * Get all available tags (for admin form multi-select)
+ */
+export async function getAllTags(): Promise<Tag[]> {
+  return prisma.tag.findMany({
+    orderBy: { name: "asc" },
+  });
+}
  * Get all available tags (for admin form multi-select)
  */
 export async function getAllTags(): Promise<Tag[]> {

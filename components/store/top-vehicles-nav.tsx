@@ -3,19 +3,14 @@
 import { useRouter } from "next/navigation";
 
 const TOP_VEHICLES = [
-  "Alto 660cc",
-  "Wagon R",
-  "Cultus New",
-  "City Silver",
-  "City Black",
-  "Yaris 1.3",
-  "Mira New",
-  "Corolla 2018",
-  "Corolla 2015",
-  "Corolla 2012",
-  "Japanese Wagon R",
-  "Honda Civic 2005",
-  "Honda Civic 1998",
+  "Alto",
+  "WagonR",
+  "Cultus",
+  "City",
+  "Yaris",
+  "Mira",
+  "Corolla",
+  "Civic"
 ];
 
 type TopVehiclesNavProps = {

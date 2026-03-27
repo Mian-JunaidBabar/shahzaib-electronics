@@ -153,6 +153,7 @@ export async function createProductAction(
     );
     revalidatePath("/admin/dashboard/products");
     revalidatePath("/products");
+    revalidatePath("/", "layout");
 
     return {
       success: true,
@@ -207,6 +208,7 @@ export async function updateProductAction(
     revalidatePath("/admin/dashboard/products");
     revalidatePath(`/products/${id}`);
     revalidatePath("/products");
+    revalidatePath("/", "layout");
 
     return {
       success: true,
@@ -396,6 +398,7 @@ export async function deleteProductAction(
       revalidatePath("/admin/dashboard/products");
       revalidatePath("/admin/dashboard/inventory");
       revalidatePath("/products");
+      revalidatePath("/", "layout");
     }
 
     return {

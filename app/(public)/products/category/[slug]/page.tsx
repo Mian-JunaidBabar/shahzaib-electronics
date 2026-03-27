@@ -1,8 +1,4 @@
-import {
-  getStoreProductsPaginated,
-  StoreProduct,
-  getRecentlyUpdatedProducts,
-} from "@/lib/services/product.service";
+import { getStoreProductsPaginated, StoreProduct, getRecentlyUpdatedProducts, } from "@/lib/services/product.service";
 import { ProductFilters } from "@/components/products/ProductFilters";
 import { getCategoryBySlug } from "@/lib/services/category.service";
 import { SortDropdown } from "@/components/products/SortDropdown";
@@ -14,6 +10,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
@@ -106,6 +103,13 @@ export default async function CategoryPage({
 
   const page = Math.max(1, parseInt(sp.page || "1", 10) || 1);
 
+  // Detect if any filters are active
+  const hasActiveFilters = !!(
+    sp.q ||
+    sp.sort ||
+    page > 1
+  );
+
   const parsedFilters = {
     categorySlug: slug,
     q: sp.q || undefined,
@@ -175,25 +179,29 @@ export default async function CategoryPage({
         </div>
       </div>
 
-      <TopVehiclesNav basePath={`/products/category/${slug}`} />
+      {!hasActiveFilters && (
+        <>
+          <TopVehiclesNav basePath={`/products/category/${slug}`} />
 
-      {/* Fresh arrivals within this category */}
-      <section className="max-w-7xl mx-auto w-full px-4 pt-8">
-        <h2 className="text-2xl font-black uppercase text-red-600 mb-6">
-          Fresh Arrivals &amp; Restocked
-        </h2>
-        {mappedFresh.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {mappedFresh.map((p) => (
-              <ProductCard key={`fresh-${p.id}`} {...p} />
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Fresh arrivals will appear here as soon as stock is updated.
-          </p>
-        )}
-      </section>
+          {/* Fresh arrivals within this category */}
+          <section className="max-w-7xl mx-auto w-full px-4 pt-8">
+            <h2 className="text-2xl font-black uppercase text-red-600 mb-6">
+              Fresh Arrivals &amp; Restocked
+            </h2>
+            {mappedFresh.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {mappedFresh.map((p) => (
+                  <ProductCard key={`fresh-${p.id}`} {...p} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Fresh arrivals will appear here as soon as stock is updated.
+              </p>
+            )}
+          </section>
+        </>
+      )}
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Left Sidebar - Filters */}

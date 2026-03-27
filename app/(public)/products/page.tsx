@@ -1,8 +1,4 @@
-import {
-  getStoreProductsPaginated,
-  getRecentlyUpdatedProducts,
-  StoreProduct,
-} from "@/lib/services/product.service";
+import { getStoreProductsPaginated, getRecentlyUpdatedProducts, StoreProduct, } from "@/lib/services/product.service";
 import ProductGridClient from "@/components/products/ProductGridClient";
 import { ServiceMarquee } from "@/components/products/ServiceMarquee";
 import { ProductFilters } from "@/components/products/ProductFilters";
@@ -15,6 +11,7 @@ import { Pagination } from "@/components/store/pagination";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
+
 
 export const metadata: Metadata = {
   title: "Shop Premium Car Accessories",
