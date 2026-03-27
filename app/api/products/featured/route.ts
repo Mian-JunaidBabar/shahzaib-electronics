@@ -16,6 +16,8 @@ async function fetchFeaturedProducts() {
       description: p.description,
       image: p.images?.[0]?.secureUrl ?? null,
       createdAt: p.createdAt,
+      variantId: defaultVariant?.id || "",
+      variantName: defaultVariant?.name || "Default",
     };
   });
 }

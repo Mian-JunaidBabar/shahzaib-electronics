@@ -4,7 +4,7 @@ A bespoke, high-performance Direct-to-Consumer (D2C) and B2B e-commerce platform
 
 This platform bypasses the limitations of generic SaaS solutions (like Shopify) by providing a completely custom, scalable Next.js architecture tailored specifically for the automotive parts industry. It handles complex product variants, vehicle fitment matrixes, and dynamic pricing, culminating in a seamless WhatsApp-integrated checkout flow.
 
-![Next.js](https://img.shields.io/badge/Next.js_14-black?style=for-the-badge&logo=next.js&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js_-black?style=for-the-badge&logo=next.js&logoColor=white)
 ![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
@@ -52,7 +52,7 @@ As a showcase of Senior-level engineering, several enterprise challenges were so
 
 ### 2. Next.js Native Edge Caching (Tag-Based Invalidation)
 **The Problem:** Standard in-memory caching fails in serverless environments, serving stale products to users.
-**The Solution:** Implemented Next.js 14's native `unstable_cache`. Public storefront queries are cached at the Edge and tagged (e.g., `['products:all']`). Admin CUD (Create/Update/Delete) actions trigger `revalidateTag()`, instantly invalidating the global cache only when inventory actually changes.
+**The Solution:** Implemented Next.js's native `unstable_cache`. Public storefront queries are cached at the Edge and tagged (e.g., `['products:all']`). Admin CUD (Create/Update/Delete) actions trigger `revalidateTag()`, instantly invalidating the global cache only when inventory actually changes.
 
 ### 3. The "Ghost Image" Fix
 **The Problem:** Deleting a product in the database left the actual image files stranded in Cloudinary, inflating storage costs.

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { OptimizedImage } from "@/components/optimized-image";
 import Link from "next/link";
+import { useCart } from "@/context/cart-context";
+import { useRouter } from "next/navigation";
 
 type ProductDTO = {
   id: string;
@@ -11,11 +13,29 @@ type ProductDTO = {
   price: number | string;
   description?: string | null;
   image?: string | null;
+  variantId?: string;
+  variantName?: string;
 };
 
 export function FeaturedProducts() {
   const [featuredProducts, setFeaturedProducts] = useState<ProductDTO[]>([]);
   const [loading, setLoading] = useState(true);
+  const { addItem } = useCart();
+  const router = useRouter();
+
+  const handleBuyNow = (e: React.MouseEvent, product: ProductDTO) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem({
+      id: product.slug,
+      variantId: product.variantId || product.id,
+      variantName: product.variantName || "Default",
+      name: product.name,
+      price: typeof product.price === "number" ? product.price / 100 : 0,
+      image: product.image || "/placeholder-image.jpg",
+    });
+    router.push("/checkout");
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -82,15 +102,15 @@ export function FeaturedProducts() {
                   ) : (
                     <div className="w-full h-full bg-slate-100 dark:bg-slate-900" />
                   )}
-                  <Link
-                    href={`/products/${product.slug}`}
+                  <button
+                    onClick={(e) => handleBuyNow(e, product)}
                     className="absolute bottom-4 left-4 right-4 bg-primary text-white py-2 rounded-lg font-bold text-sm transition-transform hidden md:flex md:translate-y-12 md:group-hover:translate-y-0 items-center justify-center gap-2"
                   >
                     <span className="material-symbols-outlined text-lg">
-                      add_shopping_cart
+                      shopping_cart_checkout
                     </span>
-                    View Product
-                  </Link>
+                    Buy Now
+                  </button>
                 </div>
                 <h4 className="font-bold text-slate-900 dark:text-white mb-1">
                   {product.name}

@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { OptimizedImage } from "@/components/optimized-image";
 import { useCart } from "@/context/cart-context";
-import { toast } from "sonner";
+
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type ProductCardProps = {
   id: string; // Used as slug for URL
@@ -60,7 +61,9 @@ export function ProductCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const router = useRouter();
+
+  const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addItem({
@@ -71,13 +74,7 @@ export function ProductCard({
       price: price,
       image,
     });
-    // Assuming sonner toast is installed, if not, native alert.
-    try {
-      toast.success("Added to cart", { description: title });
-    } catch (err) {
-      console.error("Toast error:", err);
-      alert("Added to cart!");
-    }
+    router.push("/checkout");
   };
 
   const toggleFavorite = (e: React.MouseEvent) => {
@@ -201,13 +198,13 @@ export function ProductCard({
             )}
           </div>
           <button
-            onClick={handleAddToCart}
+            onClick={handleBuyNow}
             className="w-full py-3 bg-slate-100 dark:bg-slate-800 hover:bg-primary dark:hover:bg-black text-slate-900 dark:text-white hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 group/btn"
           >
             <span className="material-symbols-outlined text-[18px] group-hover/btn:scale-110 transition-transform">
-              add_shopping_cart
+              shopping_cart_checkout
             </span>{" "}
-            Add to Cart
+            Buy Now
           </button>
         </div>
       </div>

@@ -6,9 +6,7 @@ import Footer from "@/components/layout/footer";
 
 import { HomeHero } from "@/components/home/HomeHero";
 import { BrandSlider } from "@/components/home/BrandSlider";
-import { NewArrivals } from "@/components/home/NewArrivals";
 import { FeaturedProducts } from "@/components/home/FeaturedProducts";
-import { AltoProducts } from "@/components/home/AltoProducts";
 import { MultimediaSection } from "@/components/home/MultimediaSection";
 import { WeeklyBestSellers } from "@/components/home/WeeklyBestSellers";
 import { NewsletterCta } from "@/components/home/NewsletterCta";
@@ -50,9 +48,7 @@ export default function HomePageClient() {
         <main>
           <HomeHero />
           <BrandSlider />
-          <NewArrivals />
           <FeaturedProducts />
-          <AltoProducts />
           <MultimediaSection />
           <WeeklyBestSellers />
           <NewsletterCta />
