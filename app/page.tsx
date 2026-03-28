@@ -1,4 +1,5 @@
 import HomePageClient from "@/components/home/HomePageClient";
+import WhatsAppFab from "@/components/layout/whatsapp-fab";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -9,5 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  return <HomePageClient />;
+  return (
+    <>
+      <HomePageClient />
+      <WhatsAppFab />
+    </>
+  );
 }
