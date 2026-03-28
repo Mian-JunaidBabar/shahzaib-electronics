@@ -154,12 +154,12 @@ export function ProductCard({ product }: Props) {
             </div>
           )}
 
-        <div className="mt-4 flex items-end gap-2">
-          <span className="text-2xl font-extrabold text-slate-900 dark:text-white">
+        <div className="mt-4 space-y-1">
+          <span className="block text-2xl font-extrabold leading-none text-slate-900 dark:text-white whitespace-nowrap">
             {formatPrice(displayPrice)}
           </span>
           {hasDiscount && (
-            <span className="text-sm text-slate-500 line-through mb-0.5">
+            <span className="block text-sm text-slate-500 line-through whitespace-nowrap">
               {formatPrice(defaultVariant.price)}
             </span>
           )}
@@ -180,7 +180,7 @@ export function ProductCard({ product }: Props) {
       </CardContent>
 
       {/* Footer */}
-      <CardFooter className="p-5 pt-0 flex flex-col sm:flex-row gap-2">
+      <CardFooter className="p-5 pt-0 flex flex-col gap-2">
         <Button
           size="lg"
           variant={isInCart ? "default" : "outline"}
