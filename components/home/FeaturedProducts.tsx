@@ -19,11 +19,9 @@ type ProductDTO = {
 export function FeaturedProducts() {
   const [featuredProducts, setFeaturedProducts] = useState<ProductDTO[]>([]);
   const [loading, setLoading] = useState(true);
-  const { addItem } = useCart();
+  const { addItem, items } = useCart();
 
-  const handleAddToCart = (e: React.MouseEvent, product: ProductDTO) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const addProductToCart = (product: ProductDTO) => {
     addItem({
       id: product.slug,
       variantId: product.variantId || product.id,
@@ -32,6 +30,29 @@ export function FeaturedProducts() {
       price: typeof product.price === "number" ? product.price / 100 : 0,
       image: product.image || "/placeholder-image.jpg",
     });
+  };
+
+  const handleAddToCart = (e: React.MouseEvent, product: ProductDTO) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addProductToCart(product);
+  };
+
+  const handleBuyNow = (e: React.MouseEvent, product: ProductDTO) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const selectedVariantId = product.variantId || product.id;
+    const alreadyInCart = items.some(
+      (item) =>
+        item.id === product.slug && item.variantId === selectedVariantId,
+    );
+
+    if (!alreadyInCart) {
+      addProductToCart(product);
+    }
+
+    window.location.assign("/checkout");
   };
 
   useEffect(() => {
@@ -99,26 +120,38 @@ export function FeaturedProducts() {
                   ) : (
                     <div className="w-full h-full bg-slate-100 dark:bg-slate-900" />
                   )}
+                </div>
+                <h4 className="font-bold text-slate-900 dark:text-white mb-1">
+                  {product.name}
+                </h4>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-primary font-black text-lg">
+                    {typeof product.price === "number"
+                      ? `Rs. ${(product.price / 100).toLocaleString("en-PK")}`
+                      : product.price}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <button
                     onClick={(e) => handleAddToCart(e, product)}
                     data-testid="featured-add-to-cart"
-                    className="absolute bottom-4 left-4 right-4 bg-primary text-white py-2 rounded-lg font-bold text-sm transition-transform flex items-center justify-center gap-2 translate-y-0 md:translate-y-12 md:group-hover:translate-y-0"
+                    className="w-full bg-primary text-white py-2 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 hover:opacity-90"
                   >
                     <span className="material-symbols-outlined text-lg">
                       add_shopping_cart
                     </span>
                     Add to Cart
                   </button>
-                </div>
-                <h4 className="font-bold text-slate-900 dark:text-white mb-1">
-                  {product.name}
-                </h4>
-                <div className="flex items-center justify-between">
-                  <span className="text-primary font-black text-lg">
-                    {typeof product.price === "number"
-                      ? `Rs. ${(product.price / 100).toLocaleString("en-PK")}`
-                      : product.price}
-                  </span>
+                  <button
+                    onClick={(e) => handleBuyNow(e, product)}
+                    data-testid="featured-buy-now"
+                    className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-lg">
+                      flash_on
+                    </span>
+                    Buy Now
+                  </button>
                 </div>
               </div>
             ))}

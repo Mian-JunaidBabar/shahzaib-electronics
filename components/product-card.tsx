@@ -48,6 +48,21 @@ export default function ProductCard({ product }: ProductCardProps) {
     setTimeout(() => setJustAdded(false), 1500);
   };
 
+  const handleBuyNow = () => {
+    if (!isInCart) {
+      addItem({
+        id: product.id,
+        variantId: String(product.id), // Legacy: product id used as variant id
+        variantName: "Default",
+        name: product.name,
+        price: product.price,
+        image: product.image,
+      });
+    }
+
+    window.location.assign("/checkout");
+  };
+
   return (
     <div className="group flex flex-col rounded-xl border border-border bg-card overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
       <Link
@@ -90,36 +105,47 @@ export default function ProductCard({ product }: ProductCardProps) {
         <p className="text-sm text-text-subtle mb-6 line-clamp-2 flex-1">
           {product.description}
         </p>
-        <div className="grid grid-cols-2 gap-3 mt-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-auto">
           <Link
             href={`/products/${product.slug}`}
             className="h-10 rounded-md border border-border bg-transparent hover:bg-muted text-text-muted hover:text-text-primary text-sm font-medium transition-colors flex items-center justify-center"
           >
             View Details
           </Link>
-          <button
-            onClick={handleAddToCart}
-            disabled={justAdded}
-            className={`h-10 rounded-md text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
-              justAdded
-                ? "bg-green-600"
-                : isInCart
-                  ? "bg-primary hover:opacity-90"
-                  : "bg-primary hover:opacity-90"
-            }`}
-          >
-            {justAdded ? (
-              <>
-                <Check className="h-4 w-4" />
-                Added!
-              </>
-            ) : (
-              <>
-                <ShoppingCart className="h-4 w-4" />
-                {isInCart ? "Add More" : "Add to Cart"}
-              </>
-            )}
-          </button>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:col-span-1">
+            <button
+              onClick={handleAddToCart}
+              disabled={justAdded}
+              className={`h-10 rounded-md text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
+                justAdded
+                  ? "bg-green-600"
+                  : isInCart
+                    ? "bg-primary hover:opacity-90"
+                    : "bg-primary hover:opacity-90"
+              }`}
+            >
+              {justAdded ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  Added!
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="h-4 w-4" />
+                  {isInCart ? "Add More" : "Add to Cart"}
+                </>
+              )}
+            </button>
+            <button
+              onClick={handleBuyNow}
+              className="h-10 rounded-md bg-red-600 hover:bg-red-700 text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-sm"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                flash_on
+              </span>
+              Buy Now
+            </button>
+          </div>
         </div>
       </div>
     </div>

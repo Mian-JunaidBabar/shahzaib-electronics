@@ -35,7 +35,11 @@ export function ProductCard({
   badgeText,
   category,
 }: ProductCardProps) {
-  const { addItem } = useCart();
+  const { addItem, items } = useCart();
+  const selectedVariantId = variantId || id;
+  const isInCart = items.some(
+    (item) => item.id === id && item.variantId === selectedVariantId,
+  );
   const [isFav, setIsFav] = useState(() => {
     try {
       const raw = localStorage.getItem("favorites");
@@ -65,12 +69,30 @@ export function ProductCard({
     e.stopPropagation();
     addItem({
       id,
-      variantId: variantId || id,
+      variantId: selectedVariantId,
       variantName: variantName || "Default",
       name: title,
       price: price,
       image,
     });
+  };
+
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isInCart) {
+      addItem({
+        id,
+        variantId: selectedVariantId,
+        variantName: variantName || "Default",
+        name: title,
+        price,
+        image,
+      });
+    }
+
+    window.location.assign("/checkout");
   };
 
   const toggleFavorite = (e: React.MouseEvent) => {
@@ -193,16 +215,28 @@ export function ProductCard({
               </p>
             )}
           </div>
-          <button
-            onClick={handleAddToCart}
-            data-testid="listing-add-to-cart"
-            className="w-full py-3 bg-slate-100 dark:bg-slate-800 hover:bg-primary dark:hover:bg-black text-slate-900 dark:text-white hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 group/btn"
-          >
-            <span className="material-symbols-outlined text-[18px] group-hover/btn:scale-110 transition-transform">
-              add_shopping_cart
-            </span>{" "}
-            Add to Cart
-          </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button
+              onClick={handleAddToCart}
+              data-testid="listing-add-to-cart"
+              className="w-full py-3 bg-slate-100 dark:bg-slate-800 hover:bg-primary dark:hover:bg-black text-slate-900 dark:text-white hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 group/btn"
+            >
+              <span className="material-symbols-outlined text-[18px] group-hover/btn:scale-110 transition-transform">
+                add_shopping_cart
+              </span>
+              Add to Cart
+            </button>
+            <button
+              onClick={handleBuyNow}
+              data-testid="listing-buy-now"
+              className="w-full py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                flash_on
+              </span>
+              Buy Now
+            </button>
+          </div>
         </div>
       </div>
     </div>

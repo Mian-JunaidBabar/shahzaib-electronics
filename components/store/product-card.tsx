@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingCart, Eye } from "lucide-react";
+import { ShoppingCart, Eye, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -58,6 +58,24 @@ export function ProductCard({ product }: Props) {
       image: primaryImage,
       quantity: 1,
     });
+  };
+
+  const handleBuyNow = () => {
+    if (!isInStock) return;
+
+    if (!isInCart) {
+      addToCart({
+        id: product.id,
+        variantId: defaultVariant.id,
+        variantName: defaultVariant.name,
+        name: product.name,
+        price: (defaultVariant.salePrice ?? defaultVariant.price) / 100,
+        image: primaryImage,
+        quantity: 1,
+      });
+    }
+
+    window.location.assign("/checkout");
   };
 
   return (
@@ -162,7 +180,7 @@ export function ProductCard({ product }: Props) {
       </CardContent>
 
       {/* Footer */}
-      <CardFooter className="p-5 pt-0 flex gap-2">
+      <CardFooter className="p-5 pt-0 flex flex-col sm:flex-row gap-2">
         <Button
           size="lg"
           variant={isInCart ? "default" : "outline"}
@@ -179,6 +197,16 @@ export function ProductCard({ product }: Props) {
               <span className="ml-2">Add to Cart</span>
             </>
           )}
+        </Button>
+        <Button
+          size="lg"
+          onClick={handleBuyNow}
+          data-testid="related-buy-now"
+          disabled={!isInStock}
+          className="w-full bg-red-600 hover:bg-red-700 text-white"
+        >
+          <Zap className="h-4 w-4" />
+          <span className="ml-2">Buy Now</span>
         </Button>
       </CardFooter>
     </Card>
