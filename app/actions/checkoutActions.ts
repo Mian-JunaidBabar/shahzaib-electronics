@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { generateWhatsAppUrl } from "@/lib/whatsapp";
 
+const FIXED_DELIVERY_CHARGE_CENTS = 30000;
+
 export type CheckoutData = {
   customerData: {
     fullName: string;
@@ -157,8 +159,10 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
 
       let dbOrder = null;
       let dbBooking = null;
-      let totalCents = 0;
+      let productsSubtotalCents = 0;
       let servicesSubtotal = 0;
+      const deliveryChargeCents =
+        cartItems.length > 0 ? FIXED_DELIVERY_CHARGE_CENTS : 0;
       const normalizedCartItems: {
         name: string;
         variantName: string;
@@ -194,7 +198,7 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
 
           // Determine price directly from DB (salePrice or regular price)
           const actualPriceCents = dbVariant.salePrice ?? dbVariant.price;
-          totalCents += actualPriceCents * item.quantity;
+          productsSubtotalCents += actualPriceCents * item.quantity;
 
           // Append variant name to snapshot (omit if it is "Default")
           const nameSnapshot =
@@ -232,8 +236,8 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
             customerPhone: customerData.phone,
             customerEmail: customerData.email,
             address: customerData.address,
-            subtotal: totalCents,
-            total: totalCents, // can add taxes/shipping here
+            subtotal: productsSubtotalCents,
+            total: productsSubtotalCents + deliveryChargeCents,
             status: "NEW",
             items: {
               create: orderItemsToCreate,
@@ -262,15 +266,19 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
             orderId: dbOrder ? dbOrder.id : null,
           },
         });
-
-        // Add services subtotal (Rupees -> cents)
-        totalCents += servicesSubtotal * 100;
       }
+
+      const servicesSubtotalCents = Math.round(servicesSubtotal * 100);
+      const totalCents =
+        productsSubtotalCents + servicesSubtotalCents + deliveryChargeCents;
 
       return {
         customer,
         dbOrder,
         dbBooking,
+        productsSubtotalCents,
+        servicesSubtotalCents,
+        deliveryChargeCents,
         totalCents,
         bookingServiceString,
         normalizedCartItems,
@@ -298,6 +306,23 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
     }
 
     const totalRs = result.totalCents / 100;
+    const productsSubtotalRs = result.productsSubtotalCents / 100;
+    const servicesSubtotalRs = result.servicesSubtotalCents / 100;
+    const deliveryChargeRs = result.deliveryChargeCents / 100;
+
+    const pricingBreakdown = [
+      result.productsSubtotalCents > 0
+        ? `*Products Subtotal:* Rs. ${productsSubtotalRs.toLocaleString()}`
+        : null,
+      result.servicesSubtotalCents > 0
+        ? `*Services Total:* Rs. ${servicesSubtotalRs.toLocaleString()}`
+        : null,
+      result.deliveryChargeCents > 0
+        ? `*Delivery Charges:* Rs. ${deliveryChargeRs.toLocaleString()}`
+        : null,
+    ]
+      .filter(Boolean)
+      .join("\n");
 
     const message = `Hello Shahzaib Electronics! I would like to place an order/booking.
 
@@ -305,6 +330,8 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
 *Name:* ${customerData.fullName}
 *Items:* ${parsedCartItems}
 *Services Required:* ${result.bookingServiceString || "None"}
+
+${pricingBreakdown}
 
 *Total:* Rs. ${totalRs.toLocaleString()}
 
@@ -319,6 +346,7 @@ Please confirm my request.`;
         orderId: result.dbOrder?.id,
         orderNumber: result.dbOrder?.orderNumber,
         bookingId: result.dbBooking?.id,
+        deliveryCharge: deliveryChargeRs,
         totalValue: totalRs,
       },
     };

@@ -6,7 +6,6 @@ import { useCart } from "@/context/cart-context";
 
 import { ShoppingCart } from "lucide-react";
 import { OptimizedImage } from "@/components/optimized-image";
-import { generateWhatsAppUrl } from "@/lib/whatsapp";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -21,9 +20,6 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { items } = useCart();
   const distinctCount = items.length;
-  const whatsappUrl = generateWhatsAppUrl(
-    "Hi! I'm interested in your products.",
-  );
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-header-bg backdrop-blur-md transition-colors duration-300">
@@ -75,18 +71,6 @@ export default function Header() {
             )}
           </Link>
 
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden sm:flex h-9 items-center justify-center rounded-md bg-[#25D366] px-4 text-white text-sm font-semibold shadow-sm hover:bg-[#20bd5a] transition-all focus:ring-1 focus:ring-[#25D366]"
-          >
-            <span className="material-symbols-outlined text-[18px] mr-2">
-              chat
-            </span>
-            WhatsApp
-          </a>
-
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -135,18 +119,6 @@ export default function Header() {
               <ShoppingCart className="h-4 w-4" />
               Cart {distinctCount > 0 && `(${distinctCount})`}
             </Link>
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex h-10 items-center justify-center rounded-md bg-[#25D366] px-4 text-white text-sm font-semibold shadow-sm hover:bg-[#20bd5a] transition-all"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <span className="material-symbols-outlined text-[18px] mr-2">
-                chat
-              </span>
-              WhatsApp
-            </a>
           </nav>
         </div>
       </div>

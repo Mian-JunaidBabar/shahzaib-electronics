@@ -1,6 +1,7 @@
 import "./globals.css";
 
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { ThemeProvider } from "@/context/theme-context";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "@/components/ui/sonner";
 import { Inter } from "next/font/google";
@@ -104,7 +105,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="light">
       <head>
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
@@ -117,8 +118,10 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} antialiased`}>
-        {children}
-        <Toaster position="top-right" />
+        <ThemeProvider forcedTheme="light">
+          {children}
+          <Toaster position="top-right" />
+        </ThemeProvider>
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID as string} />
         <Analytics />
         <script

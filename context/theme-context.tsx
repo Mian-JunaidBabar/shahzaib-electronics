@@ -27,14 +27,7 @@ export function ThemeProvider({
 }) {
   const [theme, setThemeState] = useState<Theme>(() => {
     if (forcedTheme) return forcedTheme;
-    if (typeof window !== "undefined") {
-      const savedTheme = localStorage.getItem("theme") as Theme | null;
-      if (savedTheme) return savedTheme;
-      if (window.matchMedia("(prefers-color-scheme: light)").matches) {
-        return "light";
-      }
-    }
-    return "dark";
+    return "light";
   });
   const [mounted, setMounted] = useState(false);
 
@@ -75,7 +68,7 @@ export function ThemeProvider({
 
   // Prevent flash of wrong theme
   if (!mounted) {
-    const initialTheme = forcedTheme || "dark";
+    const initialTheme = forcedTheme || "light";
     return (
       <ThemeContext.Provider
         value={{ theme: initialTheme, toggleTheme, setTheme }}

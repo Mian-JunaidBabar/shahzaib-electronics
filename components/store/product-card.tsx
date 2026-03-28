@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { ShoppingCart, Eye, Zap } from "lucide-react";
+import { ShoppingCart, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -19,7 +18,6 @@ function formatPrice(cents: number): string {
 }
 
 export function ProductCard({ product }: Props) {
-  const router = useRouter();
   const { addToCart, items } = useCart();
 
   // Get default variant (or fallback to first variant)
@@ -60,22 +58,6 @@ export function ProductCard({ product }: Props) {
       image: primaryImage,
       quantity: 1,
     });
-  };
-
-  const handleBuyNow = async () => {
-    // Add item to cart
-    addToCart({
-      id: product.id,
-      variantId: defaultVariant.id,
-      variantName: defaultVariant.name,
-      name: product.name,
-      price: (defaultVariant.salePrice ?? defaultVariant.price) / 100, // Convert cents to rupees for cart
-      image: primaryImage,
-      quantity: 1,
-    });
-    
-    // Immediately redirect to checkout
-    router.push("/checkout");
   };
 
   return (
@@ -185,8 +167,9 @@ export function ProductCard({ product }: Props) {
           size="lg"
           variant={isInCart ? "default" : "outline"}
           onClick={handleAddToCart}
+          data-testid="related-add-to-cart"
           disabled={!isInStock || isInCart}
-          className="flex-1"
+          className="w-full"
         >
           {isInCart ? (
             <>✓ In Cart</>
@@ -196,17 +179,6 @@ export function ProductCard({ product }: Props) {
               <span className="ml-2">Add to Cart</span>
             </>
           )}
-        </Button>
-
-        <Button
-          size="lg"
-          variant="default"
-          onClick={handleBuyNow}
-          disabled={!isInStock}
-          className="flex-1 bg-red-600 hover:bg-red-700"
-        >
-          <Zap className="h-4 w-4" />
-          <span className="ml-2">Buy Now</span>
         </Button>
       </CardFooter>
     </Card>

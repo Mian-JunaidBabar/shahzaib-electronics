@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ShoppingCart, Check, Package, MessageCircle } from "lucide-react";
+import { ShoppingCart, Check, Package, MessageCircle, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/context/cart-context";
@@ -77,6 +77,16 @@ export function ProductVariantSelector({
   const isInStock = selectedVariant.inventoryQty > 0;
   const stockQuantity = selectedVariant.inventoryQty;
 
+  const cartPayload = {
+    id: product.id,
+    variantId: selectedVariant.id,
+    variantName: selectedVariant.name,
+    name: product.name,
+    price: displayPrice / 100,
+    image: primaryImage,
+    quantity: 1,
+  };
+
   const handleAddToCart = () => {
     sendGAEvent("event", "add_to_cart", {
       currency: "PKR",
@@ -92,17 +102,19 @@ export function ProductVariantSelector({
       ],
     });
 
-    addToCart({
-      id: product.id,
-      variantId: selectedVariant.id,
-      variantName: selectedVariant.name,
-      name: product.name,
-      price: displayPrice / 100,
-      image: primaryImage,
-      quantity: 1,
-    });
+    addToCart(cartPayload);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1500);
+  };
+
+  const handleBuyNow = () => {
+    if (!isInStock) return;
+
+    if (!isInCart) {
+      addToCart(cartPayload);
+    }
+
+    window.location.assign("/checkout");
   };
 
   const handleVariantSelect = (variant: Variant) => {
@@ -181,6 +193,7 @@ export function ProductVariantSelector({
       <div className="flex flex-col sm:flex-row gap-4">
         <Button
           size="lg"
+          data-testid="detail-add-to-cart"
           className={`flex-1 min-h-14 py-3 text-base gap-2 ${
             justAdded ? "bg-green-600 hover:bg-green-600" : ""
           }`}
@@ -206,8 +219,20 @@ export function ProductVariantSelector({
         </Button>
 
         <Button
+          size="lg"
+          data-testid="detail-buy-now"
+          onClick={handleBuyNow}
+          disabled={!isInStock}
+          className="flex-1 min-h-14 py-3 text-base gap-2 bg-red-600 hover:bg-red-700 text-white"
+        >
+          <Zap className="h-5 w-5" />
+          Buy Now
+        </Button>
+
+        <Button
           variant="outline"
           size="lg"
+          data-testid="detail-whatsapp"
           className="flex-1 min-h-14 py-3 text-base gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white border-0"
           asChild
         >

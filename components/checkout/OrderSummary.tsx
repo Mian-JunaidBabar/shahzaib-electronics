@@ -25,7 +25,8 @@ export function OrderSummary({
     (sum, service) => sum + service.price,
     0,
   );
-  const total = cartTotal + servicesTotal;
+  const deliveryCharge = cartItems.length > 0 ? 300 : 0;
+  const total = cartTotal + servicesTotal + deliveryCharge;
 
   return (
     <aside className="w-full bg-slate-900 text-white p-6 lg:p-10 rounded-2xl shadow-2xl flex flex-col border border-slate-800 mt-8 lg:mt-8 lg:sticky lg:top-8 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto">
@@ -109,7 +110,10 @@ export function OrderSummary({
         {/* Cost Breakdown */}
         <div className="space-y-4 border-t border-slate-700 pt-6 mt-8">
           {cartItems.length > 0 && (
-            <div className="flex justify-between text-slate-400 text-sm font-medium">
+            <div
+              className="flex justify-between text-slate-400 text-sm font-medium"
+              data-testid="products-subtotal-row"
+            >
               <span>Products Subtotal ({cartItems.length} items)</span>
               <span className="text-slate-200">
                 Rs. {cartTotal.toLocaleString()}
@@ -117,10 +121,24 @@ export function OrderSummary({
             </div>
           )}
           {selectedServices.length > 0 && (
-            <div className="flex justify-between text-slate-400 text-sm font-medium">
+            <div
+              className="flex justify-between text-slate-400 text-sm font-medium"
+              data-testid="services-total-row"
+            >
               <span>Services Total ({selectedServices.length} items)</span>
               <span className="text-slate-200">
                 Rs. {servicesTotal.toLocaleString()}
+              </span>
+            </div>
+          )}
+          {deliveryCharge > 0 && (
+            <div
+              className="flex justify-between text-slate-400 text-sm font-medium"
+              data-testid="delivery-charge-row"
+            >
+              <span>Delivery Charges</span>
+              <span className="text-slate-200">
+                Rs. {deliveryCharge.toLocaleString()}
               </span>
             </div>
           )}
@@ -129,7 +147,10 @@ export function OrderSummary({
             <span className="text-lg font-bold text-slate-300">
               Total Amount
             </span>
-            <span className="text-3xl lg:text-4xl font-black text-white tracking-tight">
+            <span
+              className="text-3xl lg:text-4xl font-black text-white tracking-tight"
+              data-testid="checkout-total"
+            >
               Rs. {total.toLocaleString()}
             </span>
           </div>

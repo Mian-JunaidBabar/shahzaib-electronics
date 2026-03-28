@@ -60,3 +60,18 @@ next-env.d.ts
 
 /.gemini
 /.gemini/*
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# Local Playwright init scaffolding (do not commit)
+/new-project/
+/tests/
+/e2e/
+/playwright.config.ts
+/.github/workflows/playwright.yml

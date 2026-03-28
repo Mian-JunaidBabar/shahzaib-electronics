@@ -5,7 +5,6 @@ import { OptimizedImage } from "@/components/optimized-image";
 import { useCart } from "@/context/cart-context";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 type ProductCardProps = {
   id: string; // Used as slug for URL
@@ -61,9 +60,7 @@ export function ProductCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const router = useRouter();
-
-  const handleBuyNow = (e: React.MouseEvent) => {
+  const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addItem({
@@ -74,7 +71,6 @@ export function ProductCard({
       price: price,
       image,
     });
-    router.push("/checkout");
   };
 
   const toggleFavorite = (e: React.MouseEvent) => {
@@ -198,13 +194,14 @@ export function ProductCard({
             )}
           </div>
           <button
-            onClick={handleBuyNow}
+            onClick={handleAddToCart}
+            data-testid="listing-add-to-cart"
             className="w-full py-3 bg-slate-100 dark:bg-slate-800 hover:bg-primary dark:hover:bg-black text-slate-900 dark:text-white hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 group/btn"
           >
             <span className="material-symbols-outlined text-[18px] group-hover/btn:scale-110 transition-transform">
-              shopping_cart_checkout
+              add_shopping_cart
             </span>{" "}
-            Buy Now
+            Add to Cart
           </button>
         </div>
       </div>

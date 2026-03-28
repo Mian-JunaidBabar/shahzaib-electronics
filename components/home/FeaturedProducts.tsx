@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { OptimizedImage } from "@/components/optimized-image";
 import Link from "next/link";
 import { useCart } from "@/context/cart-context";
-import { useRouter } from "next/navigation";
 
 type ProductDTO = {
   id: string;
@@ -21,9 +20,8 @@ export function FeaturedProducts() {
   const [featuredProducts, setFeaturedProducts] = useState<ProductDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const { addItem } = useCart();
-  const router = useRouter();
 
-  const handleBuyNow = (e: React.MouseEvent, product: ProductDTO) => {
+  const handleAddToCart = (e: React.MouseEvent, product: ProductDTO) => {
     e.preventDefault();
     e.stopPropagation();
     addItem({
@@ -34,7 +32,6 @@ export function FeaturedProducts() {
       price: typeof product.price === "number" ? product.price / 100 : 0,
       image: product.image || "/placeholder-image.jpg",
     });
-    router.push("/checkout");
   };
 
   useEffect(() => {
@@ -103,13 +100,14 @@ export function FeaturedProducts() {
                     <div className="w-full h-full bg-slate-100 dark:bg-slate-900" />
                   )}
                   <button
-                    onClick={(e) => handleBuyNow(e, product)}
-                    className="absolute bottom-4 left-4 right-4 bg-primary text-white py-2 rounded-lg font-bold text-sm transition-transform hidden md:flex md:translate-y-12 md:group-hover:translate-y-0 items-center justify-center gap-2"
+                    onClick={(e) => handleAddToCart(e, product)}
+                    data-testid="featured-add-to-cart"
+                    className="absolute bottom-4 left-4 right-4 bg-primary text-white py-2 rounded-lg font-bold text-sm transition-transform flex items-center justify-center gap-2 translate-y-0 md:translate-y-12 md:group-hover:translate-y-0"
                   >
                     <span className="material-symbols-outlined text-lg">
-                      shopping_cart_checkout
+                      add_shopping_cart
                     </span>
-                    Buy Now
+                    Add to Cart
                   </button>
                 </div>
                 <h4 className="font-bold text-slate-900 dark:text-white mb-1">

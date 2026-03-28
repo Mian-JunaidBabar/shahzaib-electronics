@@ -10,7 +10,7 @@ export default function AdminRootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html>
+    <html className="light" lang="en" suppressHydrationWarning>
       <head>
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
