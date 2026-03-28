@@ -183,12 +183,12 @@ export function ProductCard({
         </div>
 
         <div className="mt-auto">
-          <div className="flex items-baseline gap-2 mb-3">
-            <p className="text-lg font-black text-primary">
+          <div className="mb-3 flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
+            <p className="text-lg font-black leading-none whitespace-nowrap text-primary">
               Rs. {price.toLocaleString()}
             </p>
             {originalPrice && (
-              <p className="text-xs font-semibold text-slate-400 line-through">
+              <p className="text-xs font-semibold leading-none text-slate-400 line-through sm:leading-normal">
                 Rs. {originalPrice.toLocaleString()}
               </p>
             )}

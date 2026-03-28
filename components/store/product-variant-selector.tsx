@@ -165,15 +165,17 @@ export function ProductVariantSelector({
       )}
 
       {/* Dynamic Price */}
-      <div className="flex items-baseline gap-3">
-        <span className="text-4xl font-bold">{formatPrice(displayPrice)}</span>
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-3">
+        <span className="whitespace-nowrap text-4xl font-bold leading-none sm:leading-normal">
+          {formatPrice(displayPrice)}
+        </span>
         {hasDiscount && (
-          <>
+          <div className="flex items-center gap-2">
             <span className="text-xl text-muted-foreground line-through">
               {formatPrice(selectedVariant.price)}
             </span>
             <Badge variant="destructive">-{discountPercent}% OFF</Badge>
-          </>
+          </div>
         )}
       </div>
 

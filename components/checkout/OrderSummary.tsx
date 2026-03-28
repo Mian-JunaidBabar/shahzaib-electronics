@@ -56,9 +56,9 @@ export function OrderSummary({
             {cartItems.map((item, idx) => (
               <div
                 key={`${item.id}-${idx}`}
-                className="flex justify-between items-center p-4 rounded-xl bg-slate-800/50 border border-slate-700 transition-colors hover:bg-slate-800"
+                className="p-4 rounded-xl bg-slate-800/50 border border-slate-700 transition-colors hover:bg-slate-800"
               >
-                <div className="flex-1 pr-4">
+                <div>
                   <p className="text-white font-semibold text-sm mb-1 leading-tight">
                     {item.name}
                   </p>
@@ -68,11 +68,9 @@ export function OrderSummary({
                         Variant: {item.variantName}
                       </p>
                     )}
-                  <p className="text-slate-400 text-xs font-medium">
-                    Qty: {item.quantity} × Rs. {item.price.toLocaleString()}
+                  <p className="text-slate-400 text-xs font-medium mt-1">
+                    Qty: {item.quantity}
                   </p>
-                </div>
-                <div className="text-right shrink-0">
                   <p className="text-white font-bold text-sm">
                     Rs. {(item.price * item.quantity).toLocaleString()}
                   </p>
@@ -191,15 +189,6 @@ export function OrderSummary({
               </>
             )}
           </button>
-
-          <div className="text-center mt-6">
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold flex items-center justify-center gap-1">
-              <span className="material-symbols-outlined text-[14px]">
-                lock
-              </span>
-              Protected by End-to-End Encryption
-            </p>
-          </div>
         </div>
       </div>
     </aside>

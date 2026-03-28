@@ -1,4 +1,7 @@
-import { getStorefrontProduct, getRelatedProducts, } from "@/lib/services/storefront.service";
+import {
+  getStorefrontProduct,
+  getRelatedProducts,
+} from "@/lib/services/storefront.service";
 import { ProductVariantSelector } from "@/components/store/product-variant-selector";
 import { Calendar, Truck, Shield, Headphones, ChevronLeft } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
@@ -10,7 +13,6 @@ import { Metadata } from "next";
 import Link from "next/link";
 
 import { ImageGallery } from "./image-gallery";
-
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -225,21 +227,28 @@ export default async function ProductDetailPage({ params }: Props) {
             <ChevronLeft className="h-4 w-4" />
             Back to Products
           </Link>
-          <nav className="flex items-center text-sm text-muted-foreground">
-            <Link href="/" className="hover:text-primary transition-colors">
+          <nav className="flex flex-wrap items-center gap-y-1 text-sm text-muted-foreground">
+            <Link
+              href="/"
+              className="whitespace-nowrap hover:text-primary transition-colors"
+            >
               Home
             </Link>
-            <span className="mx-2">/</span>
+            <span className="mx-2 text-muted-foreground/70">/</span>
             <Link
               href="/products"
-              className="hover:text-primary transition-colors"
+              className="whitespace-nowrap hover:text-primary transition-colors"
             >
               Products
             </Link>
-            <span className="mx-2">/</span>
-            <span className="text-muted-foreground">{categoryName}</span>
-            <span className="mx-2">/</span>
-            <span className="text-foreground font-medium">{product.name}</span>
+            <span className="mx-2 text-muted-foreground/70">/</span>
+            <span className="max-w-full break-words text-muted-foreground">
+              {categoryName}
+            </span>
+            <span className="mx-2 text-muted-foreground/70">/</span>
+            <span className="max-w-full break-words font-medium text-foreground">
+              {product.name}
+            </span>
           </nav>
         </div>
       </section>
@@ -253,19 +262,23 @@ export default async function ProductDetailPage({ params }: Props) {
           {/* Product Info */}
           <div className="space-y-6">
             {/* Category & Badge */}
-            <div className="flex items-center gap-2">
-              <p className="text-sm text-primary font-medium uppercase tracking-wide">
+            <div className="space-y-2">
+              <p className="text-sm font-medium uppercase tracking-wide text-primary">
                 {categoryName}
               </p>
-              {productBadges.map((badge) => (
-                <Badge
-                  key={badge.id}
-                  style={{ backgroundColor: badge.color }}
-                  className="text-white"
-                >
-                  {badge.name}
-                </Badge>
-              ))}
+              {productBadges.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  {productBadges.map((badge) => (
+                    <Badge
+                      key={badge.id}
+                      style={{ backgroundColor: badge.color }}
+                      className="text-white"
+                    >
+                      {badge.name}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Name & Description */}

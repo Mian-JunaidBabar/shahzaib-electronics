@@ -42,79 +42,69 @@ export function CartItems() {
         {items.map((item) => (
           <div
             key={item.id}
-            className="flex gap-4 p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow"
+            className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-slate-700 dark:bg-slate-800"
           >
-            {/* Product Image */}
-            <div className="size-24 bg-slate-100 dark:bg-slate-700 rounded-lg overflow-hidden shrink-0 relative">
-              <Image
-                src={item.image}
-                alt={item.name}
-                fill
-                className="object-cover"
-              />
-            </div>
+            <div className="flex gap-4">
+              {/* Product Image */}
+              <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-700 sm:size-24">
+                <Image
+                  src={item.image}
+                  alt={item.name}
+                  fill
+                  className="object-cover"
+                />
+              </div>
 
-            {/* Product Info */}
-            <div className="flex-1 flex flex-col justify-between">
-              <div>
-                <h3 className="font-bold text-slate-900 dark:text-white mb-1">
+              {/* Product Info */}
+              <div className="min-w-0 flex-1">
+                <h3 className="mb-1 text-base font-bold text-slate-900 dark:text-white sm:text-lg">
                   {item.name}
                 </h3>
                 {item.variantName &&
                   item.variantName.toLowerCase() !== "default" && (
-                    <p className="text-sm text-muted-foreground mt-0.5">
+                    <p className="mt-0.5 text-sm text-muted-foreground">
                       Variant: {item.variantName}
                     </p>
                   )}
-                <p className="text-lg font-semibold text-primary">
-                  Rs. {item.price.toLocaleString()}
+                <p className="mt-1 text-lg font-semibold text-primary">
+                  Rs. {(item.price * item.quantity).toLocaleString()}
                 </p>
-              </div>
-
-              {/* Quantity Controls */}
-              <div className="flex items-center gap-3 mt-3">
-                <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
-                  <button
-                    onClick={() =>
-                      updateQuantity(item.id, item.quantity - 1, item.variantId)
-                    }
-                    className="size-8 flex items-center justify-center rounded-md hover:bg-white dark:hover:bg-slate-600 transition-colors"
-                    aria-label="Decrease quantity"
-                  >
-                    <Minus className="size-4 text-slate-600 dark:text-slate-300" />
-                  </button>
-                  <span className="min-w-8 text-center font-semibold text-slate-900 dark:text-white">
-                    {item.quantity}
-                  </span>
-                  <button
-                    onClick={() =>
-                      updateQuantity(item.id, item.quantity + 1, item.variantId)
-                    }
-                    className="size-8 flex items-center justify-center rounded-md hover:bg-white dark:hover:bg-slate-600 transition-colors"
-                    aria-label="Increase quantity"
-                  >
-                    <Plus className="size-4 text-slate-600 dark:text-slate-300" />
-                  </button>
-                </div>
-
-                <button
-                  onClick={() => removeItem(item.id, item.variantId)}
-                  className="ml-auto size-9 flex items-center justify-center rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
-                  aria-label="Remove item"
-                >
-                  <Trash2 className="size-5" />
-                </button>
               </div>
             </div>
 
-            {/* Item Total */}
-            <div className="flex flex-col items-end justify-between">
-              <p className="text-xl font-bold text-red-600 dark:text-red-400">
-                Rs. {(item.price * item.quantity).toLocaleString()}
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {item.quantity} × Rs. {item.price.toLocaleString()}
-              </p>
+            {/* Quantity Controls */}
+            <div className="mt-3 flex items-center gap-3">
+              <div className="flex items-center gap-2 rounded-lg bg-slate-100 p-1 dark:bg-slate-700">
+                <button
+                  onClick={() =>
+                    updateQuantity(item.id, item.quantity - 1, item.variantId)
+                  }
+                  className="size-8 flex items-center justify-center rounded-md transition-colors hover:bg-white dark:hover:bg-slate-600"
+                  aria-label="Decrease quantity"
+                >
+                  <Minus className="size-4 text-slate-600 dark:text-slate-300" />
+                </button>
+                <span className="min-w-8 text-center font-semibold text-slate-900 dark:text-white">
+                  {item.quantity}
+                </span>
+                <button
+                  onClick={() =>
+                    updateQuantity(item.id, item.quantity + 1, item.variantId)
+                  }
+                  className="size-8 flex items-center justify-center rounded-md transition-colors hover:bg-white dark:hover:bg-slate-600"
+                  aria-label="Increase quantity"
+                >
+                  <Plus className="size-4 text-slate-600 dark:text-slate-300" />
+                </button>
+              </div>
+
+              <button
+                onClick={() => removeItem(item.id, item.variantId)}
+                className="ml-auto size-9 flex items-center justify-center rounded-lg text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                aria-label="Remove item"
+              >
+                <Trash2 className="size-5" />
+              </button>
             </div>
           </div>
         ))}
