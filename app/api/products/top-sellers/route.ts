@@ -85,13 +85,13 @@ async function fetchTopSellers() {
 
       const displayVariant =
         p.variants.find((v) => v.isDefault) ?? p.variants[0];
-      const displayPrice = displayVariant.salePrice ?? displayVariant.price;
 
       return {
         id: p.id,
         name: p.name,
         slug: p.slug,
-        price: displayPrice,
+        price: displayVariant.price,
+        salePrice: displayVariant.salePrice || null,
         description: p.description,
         image: p.images?.[0]?.secureUrl ?? null,
         sold: productSales.get(productId) ?? 0,

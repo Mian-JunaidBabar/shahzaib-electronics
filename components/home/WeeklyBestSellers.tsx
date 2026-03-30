@@ -9,6 +9,7 @@ type SellerDTO = {
   name: string;
   slug: string;
   price: number | string;
+  salePrice?: number | null;
   description?: string | null;
   image?: string | null;
   sold?: number;
@@ -16,7 +17,7 @@ type SellerDTO = {
 
 function formatSellerPrice(price: number | string) {
   if (typeof price === "number") {
-    return `PKR ${(price / 100).toLocaleString("en-PK")}`;
+    return `Rs. ${(price / 100).toLocaleString("en-PK")}`;
   }
   return price;
 }
@@ -91,9 +92,22 @@ export function WeeklyBestSellers() {
                     {item.description}
                   </p>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <span className="text-primary font-black text-xl">
-                      {formatSellerPrice(item.price)}
-                    </span>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-primary font-black text-xl">
+                        {formatSellerPrice(
+                          typeof item.price === "number"
+                            ? (item.salePrice ?? item.price)
+                            : item.price,
+                        )}
+                      </span>
+                      {item.salePrice &&
+                        typeof item.price === "number" &&
+                        item.salePrice !== item.price && (
+                          <span className="text-sm text-slate-500 line-through">
+                            {formatSellerPrice(item.price)}
+                          </span>
+                        )}
+                    </div>
                     <Link
                       href={`/products/${item.slug}`}
                       className="flex items-center justify-center gap-2 text-sm font-bold border border-primary bg-primary text-white px-4 py-2 rounded-lg hover:opacity-90 transition-all"

@@ -32,17 +32,25 @@ export function ProductCard({ product }: Props) {
   const productBadges =
     product.productBadges?.map((pb) => pb.badge).filter(Boolean) || [];
 
-  const hasDiscount =
-    defaultVariant.salePrice !== null &&
-    defaultVariant.salePrice < defaultVariant.price;
-  const displayPrice = defaultVariant.salePrice ?? defaultVariant.price;
-  const discountPercent = hasDiscount
-    ? Math.round(
-        ((defaultVariant.price - defaultVariant.salePrice!) /
-          defaultVariant.price) *
-          100,
-      )
-    : 0;
+  // Determine correct and discounted prices
+  const originalPrice = defaultVariant.price;
+  const salePrice = defaultVariant.salePrice;
+
+  // Show discount only if salePrice exists and is different from original price
+  const hasDiscount = salePrice !== null && salePrice !== originalPrice;
+
+  // Display the discounted price if available, otherwise the original price
+  const displayPrice = salePrice !== null ? salePrice : originalPrice;
+  const discountedPrice = salePrice !== null ? originalPrice : null;
+
+  const discountPercent =
+    hasDiscount && salePrice !== null
+      ? Math.round(
+          (Math.abs(originalPrice - salePrice) /
+            Math.max(originalPrice, salePrice)) *
+            100,
+        )
+      : 0;
 
   const isInStock = defaultVariant.inventoryQty > 0;
   const isInCart =
@@ -158,9 +166,9 @@ export function ProductCard({ product }: Props) {
           <span className="block text-2xl font-extrabold leading-none text-slate-900 dark:text-white whitespace-nowrap">
             {formatPrice(displayPrice)}
           </span>
-          {hasDiscount && (
+          {hasDiscount && discountedPrice !== null && (
             <span className="block text-sm text-slate-500 line-through whitespace-nowrap">
-              {formatPrice(defaultVariant.price)}
+              {formatPrice(discountedPrice)}
             </span>
           )}
         </div>

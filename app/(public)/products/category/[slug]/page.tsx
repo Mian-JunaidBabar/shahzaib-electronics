@@ -174,6 +174,31 @@ export default async function CategoryPage({
         </div>
       </div>
 
+      {/* Search & Filter Bar Section */}
+      <section className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-red-600 dark:text-red-400">
+                  Search & Filter
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Find exactly what you&apos;re looking for
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                <ProductSearch />
+                <SortDropdown currentSort={sp.sort} />
+              </div>
+            </div>
+            <div className="text-sm text-slate-600 dark:text-slate-400">
+              Showing <span className="font-semibold">{metadata.total}</span> {metadata.total === 1 ? "product" : "products"}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {!hasActiveFilters && (
         <section className="max-w-7xl mx-auto w-full px-4 pt-8">
           <h2 className="text-2xl font-black uppercase text-red-600 mb-6">
@@ -201,22 +226,6 @@ export default async function CategoryPage({
 
         {/* Main Content */}
         <div className="lg:col-span-3">
-          {/* Top Bar */}
-          <div className="flex flex-col sm:flex-row items-center justify-between mb-8 pb-4 border-b border-slate-200 dark:border-slate-800">
-            <div className="flex items-center gap-4 mb-4 sm:mb-0">
-              <h2 className="text-xl font-bold text-red-600 dark:text-red-400">
-                {category.name}
-              </h2>
-              <span className="text-sm text-slate-500">
-                {metadata.total} {metadata.total === 1 ? "product" : "products"}
-              </span>
-            </div>
-            <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-              <ProductSearch />
-              <SortDropdown currentSort={sp.sort} />
-            </div>
-          </div>
-
           {/* Results */}
           {mappedProducts.length > 0 ? (
             <>
