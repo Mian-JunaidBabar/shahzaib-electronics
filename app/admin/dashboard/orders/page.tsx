@@ -186,7 +186,7 @@ export default function OrdersPage() {
   };
 
   const formatCurrency = (amount: number) => {
-    return `PKR ${amount.toLocaleString()}`;
+    return `PKR ${(amount / 100).toLocaleString("en-PK")}`;
   };
 
   const openWhatsApp = (phone: string, orderNumber: string) => {

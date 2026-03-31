@@ -205,7 +205,7 @@ export default function OrderDetailPage({ params }: OrderDetailsPageProps) {
   };
 
   const formatCurrency = (amount: number) => {
-    return `PKR ${amount.toLocaleString()}`;
+    return `PKR ${(amount / 100).toLocaleString("en-PK")}`;
   };
 
   if (isLoading) {

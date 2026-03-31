@@ -69,7 +69,8 @@ type Customer = {
   }>;
 };
 
-const formatCurrency = (amount: number) => `PKR ${amount.toLocaleString()}`;
+const formatCurrency = (amount: number) =>
+  `PKR ${(amount / 100).toLocaleString("en-PK")}`;
 const formatDate = (date: Date) =>
   new Date(date).toLocaleDateString("en-PK", {
     year: "numeric",

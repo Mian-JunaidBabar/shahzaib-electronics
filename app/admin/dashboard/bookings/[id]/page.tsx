@@ -123,6 +123,9 @@ const BOOKING_STATUSES = [
 const getStatusMeta = (status: string) =>
   BOOKING_STATUSES.find((s) => s.value === status) || BOOKING_STATUSES[0];
 
+const formatOrderCurrency = (amount: number) =>
+  `PKR ${(amount / 100).toLocaleString("en-PK")}`;
+
 // Timeline step order for visualization
 const TIMELINE_ORDER = ["PENDING", "CONFIRMED", "IN_PROGRESS", "COMPLETED"];
 
@@ -443,7 +446,7 @@ export default function BookingDetailsPage({
                       Order #{booking.order.orderNumber}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Total: PKR {booking.order.total.toLocaleString()}
+                      Total: {formatOrderCurrency(booking.order.total)}
                     </p>
                   </div>
                   <Button variant="outline" size="sm" asChild>
