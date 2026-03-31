@@ -1,4 +1,12 @@
-import type { Product, Image, ProductVariant, VehicleFitment, Badge, Tag, Category, } from "@prisma/client";
+import type {
+  Product,
+  Image,
+  ProductVariant,
+  VehicleFitment,
+  Badge,
+  Tag,
+  Category,
+} from "@prisma/client";
 import { deleteImage, extractPublicId } from "@/lib/cloudinary";
 import { ProductStatus, Prisma } from "@prisma/client";
 /**
@@ -12,7 +20,6 @@ import { ProductStatus, Prisma } from "@prisma/client";
  * - Safe delete with referential integrity checks
  */
 import { prisma } from "@/lib/prisma";
-
 
 // Types
 export type ProductWithRelations = Product & {
@@ -385,7 +392,7 @@ export const FEATURED_VEHICLES = [
   "Yaris",
   "Mira",
   "Corolla",
-  "Civic"
+  "Civic",
 ];
 
 /**
@@ -398,7 +405,9 @@ async function _getAltoProducts(): Promise<StoreProduct[]> {
       isArchived: false,
       OR: [
         { name: { contains: "Alto", mode: Prisma.QueryMode.insensitive } },
-        { description: { contains: "Alto", mode: Prisma.QueryMode.insensitive } },
+        {
+          description: { contains: "Alto", mode: Prisma.QueryMode.insensitive },
+        },
       ],
     },
     orderBy: {
@@ -419,31 +428,45 @@ async function _getAltoProducts(): Promise<StoreProduct[]> {
 }
 
 export function getAltoProducts(): Promise<StoreProduct[]> {
-  return unstable_cache(
-    () => _getAltoProducts(),
-    ["alto-products"],
-    { tags: ["products:all"], revalidate: 60 },
-  )();
+  return unstable_cache(() => _getAltoProducts(), ["alto-products"], {
+    tags: ["products:all"],
+    revalidate: 60,
+  })();
 }
 
 /**
  * Get featured products — searches for products matching featured vehicle keywords
  */
 async function _getFeaturedVehicleProducts(): Promise<StoreProduct[]> {
-  const searchTerms = FEATURED_VEHICLES.map((v) => ({
-    name: { contains: v, mode: Prisma.QueryMode.insensitive },
-  }));
+  const featuredSelectors = [
+    { type: "id" as const, value: "f32d9e12-02ad-4bbf-b514-73c43a7b2e3a" },
+    { type: "id" as const, value: "6a580301-3547-48f5-a2e2-762ebfa1e1f6" },
+    { type: "name" as const, value: "Suzuki Alto 660cc (2019–2026)" },
+    { type: "id" as const, value: "e7db3d25-f40d-4300-94c2-ff6923576e6d" },
+  ];
+
+  const featuredIds = featuredSelectors
+    .filter((s) => s.type === "id")
+    .map((s) => s.value);
+
+  const featuredNames = featuredSelectors
+    .filter((s) => s.type === "name")
+    .map((s) => s.value);
 
   const products = await prisma.product.findMany({
     where: {
       isActive: true,
       isArchived: false,
-      OR: searchTerms,
+      OR: [
+        { id: { in: featuredIds } },
+        ...featuredNames.map((name) => ({
+          name: {
+            equals: name,
+            mode: Prisma.QueryMode.insensitive,
+          },
+        })),
+      ],
     },
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 4,
     include: {
       variants: true,
       images: true,
@@ -454,7 +477,24 @@ async function _getFeaturedVehicleProducts(): Promise<StoreProduct[]> {
     },
   });
 
-  return products as unknown as StoreProduct[];
+  const normalized = (value: string) =>
+    value.toLowerCase().replace(/\s+/g, " ").trim();
+
+  const orderedProducts = featuredSelectors
+    .map((selector) => {
+      if (selector.type === "id") {
+        return products.find((p) => p.id === selector.value) ?? null;
+      }
+
+      return (
+        products.find(
+          (p) => normalized(p.name) === normalized(selector.value),
+        ) ?? null
+      );
+    })
+    .filter(Boolean);
+
+  return orderedProducts as unknown as StoreProduct[];
 }
 
 export function getFeaturedVehicleProducts(): Promise<StoreProduct[]> {

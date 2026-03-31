@@ -7,7 +7,6 @@ import ProductGridClient from "@/components/products/ProductGridClient";
 import { ServiceMarquee } from "@/components/products/ServiceMarquee";
 import { ProductFilters } from "@/components/products/ProductFilters";
 import { getActiveCategories } from "@/lib/services/category.service";
-import { FeaturedProducts } from "@/components/home/FeaturedProducts";
 import { SortDropdown } from "@/components/products/SortDropdown";
 import { CategoryGrid } from "@/components/products/CategoryGrid";
 import ProductSearch from "@/components/products/ProductSearch";
@@ -328,11 +327,6 @@ export default async function ProductsPage({
               </p>
             )}
           </section>
-
-          {/* Layer 2.5: Featured Products */}
-          <div className="bg-slate-50 dark:bg-slate-900/50 border-y border-slate-200 dark:border-slate-800">
-            <FeaturedProducts />
-          </div>
         </>
       )}
 
