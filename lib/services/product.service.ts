@@ -1,12 +1,4 @@
-import type {
-  Product,
-  Image,
-  ProductVariant,
-  VehicleFitment,
-  Badge,
-  Tag,
-  Category,
-} from "@prisma/client";
+import type { Product, Image, ProductVariant, VehicleFitment, Badge, Tag, Category, } from "@prisma/client";
 import { deleteImage, extractPublicId } from "@/lib/cloudinary";
 import { ProductStatus, Prisma } from "@prisma/client";
 /**
@@ -20,6 +12,7 @@ import { ProductStatus, Prisma } from "@prisma/client";
  * - Safe delete with referential integrity checks
  */
 import { prisma } from "@/lib/prisma";
+
 
 // Types
 export type ProductWithRelations = Product & {
@@ -441,7 +434,14 @@ async function _getFeaturedVehicleProducts(): Promise<StoreProduct[]> {
   const featuredSelectors = [
     { type: "id" as const, value: "f32d9e12-02ad-4bbf-b514-73c43a7b2e3a" },
     { type: "id" as const, value: "6a580301-3547-48f5-a2e2-762ebfa1e1f6" },
-    { type: "name" as const, value: "Suzuki Alto 660cc (2019–2026)" },
+    {
+      type: "alto" as const,
+      exactNames: [
+        "Suzuki Alto 660cc (2019–2026)",
+        "Suzuki Alto 660cc (2019-2026)",
+        "Suzuki Alto 2019-2020",
+      ],
+    },
     { type: "id" as const, value: "e7db3d25-f40d-4300-94c2-ff6923576e6d" },
   ];
 
@@ -449,9 +449,9 @@ async function _getFeaturedVehicleProducts(): Promise<StoreProduct[]> {
     .filter((s) => s.type === "id")
     .map((s) => s.value);
 
-  const featuredNames = featuredSelectors
-    .filter((s) => s.type === "name")
-    .map((s) => s.value);
+  const featuredNames = featuredSelectors.flatMap((s) =>
+    s.type === "alto" ? s.exactNames : [],
+  );
 
   const products = await prisma.product.findMany({
     where: {
@@ -465,6 +465,21 @@ async function _getFeaturedVehicleProducts(): Promise<StoreProduct[]> {
             mode: Prisma.QueryMode.insensitive,
           },
         })),
+        {
+          AND: [
+            {
+              name: { contains: "suzuki", mode: Prisma.QueryMode.insensitive },
+            },
+            { name: { contains: "alto", mode: Prisma.QueryMode.insensitive } },
+          ],
+        },
+        { slug: { contains: "alto", mode: Prisma.QueryMode.insensitive } },
+        {
+          description: {
+            contains: "Suzuki Alto",
+            mode: Prisma.QueryMode.insensitive,
+          },
+        },
       ],
     },
     include: {
@@ -486,10 +501,25 @@ async function _getFeaturedVehicleProducts(): Promise<StoreProduct[]> {
         return products.find((p) => p.id === selector.value) ?? null;
       }
 
+      const exactMatch = products.find((p) =>
+        selector.exactNames.some(
+          (candidate) => normalized(p.name) === normalized(candidate),
+        ),
+      );
+
+      if (exactMatch) return exactMatch;
+
       return (
-        products.find(
-          (p) => normalized(p.name) === normalized(selector.value),
-        ) ?? null
+        products.find((p) => {
+          const name = p.name.toLowerCase();
+          const slug = (p.slug || "").toLowerCase();
+          const desc = (p.description || "").toLowerCase();
+          return (
+            (name.includes("suzuki") && name.includes("alto")) ||
+            slug.includes("alto") ||
+            desc.includes("suzuki alto")
+          );
+        }) ?? null
       );
     })
     .filter(Boolean);
