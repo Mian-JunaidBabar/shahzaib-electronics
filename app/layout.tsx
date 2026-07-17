@@ -72,6 +72,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     title: "Shahzaib Electronics",
   },
+  authors: [{ name: "Deep Dev Solutions" }],
 };
 
 export default function RootLayout({
@@ -116,6 +117,7 @@ export default function RootLayout({
           name="apple-mobile-web-app-title"
           content="Shahzaib Electronics"
         />
+        <meta name="author" content="Deep Dev Solutions" />
       </head>
       <body className={`${inter.variable} antialiased`}>
         <ThemeProvider forcedTheme="light">

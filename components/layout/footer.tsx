@@ -100,12 +100,12 @@ export default function Footer() {
           </p>
 
           <p className="text-xs text-text-subtle mt-4 md:mt-0">
-            Designed &amp; Developed by{" "}
+            Developed by{" "}
             <a
-              href="https://deep-dev-solutions.vercel.app/"
+              href="https://www.deepdevsolutions.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium hover:text-primary transition-colors"
+              className="font-medium text-text-secondary hover:text-primary transition-all duration-300 relative pb-0.5 after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-0 hover:after:w-full after:bg-primary after:transition-all after:duration-300"
             >
               Deep Dev Solutions
             </a>
