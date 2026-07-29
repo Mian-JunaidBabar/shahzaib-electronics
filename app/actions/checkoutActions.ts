@@ -11,6 +11,8 @@ export type CheckoutData = {
     phone: string;
     email?: string;
     address?: string;
+    city?: string;
+    paymentMethod?: string;
     vehicleInfo?: string;
   };
   cartItems: {
@@ -27,6 +29,8 @@ export type CheckoutData = {
     title: string;
     price: number;
   }[];
+  deliveryFee?: number;
+  provincialTax?: number;
   bookingDate?: string;
 };
 
@@ -161,14 +165,31 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
       let dbBooking = null;
       let productsSubtotalCents = 0;
       let servicesSubtotal = 0;
-      const deliveryChargeCents =
-        cartItems.length > 0 ? FIXED_DELIVERY_CHARGE_CENTS : 0;
+
       const normalizedCartItems: {
         name: string;
         variantName: string;
         quantity: number;
         price: number;
       }[] = [];
+
+      // Determine delivery fee & provincial tax in cents
+      let deliveryChargeCents = 0;
+      let provincialTaxCents = 0;
+
+      if (data.deliveryFee !== undefined) {
+        deliveryChargeCents = Math.round(data.deliveryFee * 100);
+      } else if (
+        customerData.city &&
+        customerData.city.trim().toLowerCase() === "lahore" &&
+        cartItems.length > 0
+      ) {
+        deliveryChargeCents = FIXED_DELIVERY_CHARGE_CENTS;
+      }
+
+      if (data.provincialTax !== undefined) {
+        provincialTaxCents = Math.round(data.provincialTax * 100);
+      }
 
       // 2. Create Order & Items if cartItems exist
       if (cartItems.length > 0) {
@@ -227,7 +248,20 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
           });
         }
 
-        // Create the Order
+        // If provincialTax was not explicitly set, compute 5% based strictly on product subtotal whenever COD is selected
+        if (data.provincialTax === undefined) {
+          const isCOD =
+            customerData.paymentMethod &&
+            (customerData.paymentMethod.toLowerCase() === "cod" ||
+              customerData.paymentMethod.toLowerCase() ===
+              "cash on delivery");
+
+          if (isCOD) {
+            provincialTaxCents = Math.round(productsSubtotalCents * 0.05);
+          }
+        }
+
+        // Create the Order with separate fee fields
         dbOrder = await tx.order.create({
           data: {
             orderNumber: generateOrderNumber(),
@@ -236,8 +270,15 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
             customerPhone: customerData.phone,
             customerEmail: customerData.email,
             address: customerData.address,
+            city: customerData.city || null,
+            paymentMethod: customerData.paymentMethod || null,
+            deliveryFee: deliveryChargeCents,
+            provincialTax: provincialTaxCents,
             subtotal: productsSubtotalCents,
-            total: productsSubtotalCents + deliveryChargeCents,
+            total:
+              productsSubtotalCents +
+              deliveryChargeCents +
+              provincialTaxCents,
             status: "NEW",
             items: {
               create: orderItemsToCreate,
@@ -270,7 +311,10 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
 
       const servicesSubtotalCents = Math.round(servicesSubtotal * 100);
       const totalCents =
-        productsSubtotalCents + servicesSubtotalCents + deliveryChargeCents;
+        productsSubtotalCents +
+        servicesSubtotalCents +
+        deliveryChargeCents +
+        provincialTaxCents;
 
       return {
         customer,
@@ -279,6 +323,7 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
         productsSubtotalCents,
         servicesSubtotalCents,
         deliveryChargeCents,
+        provincialTaxCents,
         totalCents,
         bookingServiceString,
         normalizedCartItems,
@@ -309,6 +354,21 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
     const productsSubtotalRs = result.productsSubtotalCents / 100;
     const servicesSubtotalRs = result.servicesSubtotalCents / 100;
     const deliveryChargeRs = result.deliveryChargeCents / 100;
+    const provincialTaxRs = result.provincialTaxCents / 100;
+
+    const isLahore = customerData.city?.trim().toLowerCase() === "lahore";
+    const paymentMethodLabel =
+      customerData.paymentMethod?.toLowerCase() === "cod" ||
+        customerData.paymentMethod?.toLowerCase() === "cash on delivery"
+        ? "Cash on Delivery (COD)"
+        : customerData.paymentMethod || "Cash on Delivery (COD)";
+
+    const deliveryChargeText =
+      result.deliveryChargeCents > 0
+        ? `Rs. ${deliveryChargeRs.toLocaleString()}`
+        : isLahore
+          ? "Rs. 300"
+          : "+ Delivery charges apply (Calculated on dispatch)";
 
     const pricingBreakdown = [
       result.productsSubtotalCents > 0
@@ -317,8 +377,9 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
       result.servicesSubtotalCents > 0
         ? `*Services Total:* Rs. ${servicesSubtotalRs.toLocaleString()}`
         : null,
-      result.deliveryChargeCents > 0
-        ? `*Delivery Charges:* Rs. ${deliveryChargeRs.toLocaleString()}`
+      `*Delivery Charges:* ${deliveryChargeText}`,
+      result.provincialTaxCents > 0
+        ? `*5% COD Tax:* Rs. ${provincialTaxRs.toLocaleString()}`
         : null,
     ]
       .filter(Boolean)
@@ -328,7 +389,10 @@ export async function createUnifiedOrderAction(data: CheckoutData) {
 
 *Reference:* #${orderRef}
 *Name:* ${customerData.fullName}
-*Items:* ${parsedCartItems}
+*City:* ${customerData.city || "Lahore"}
+*Payment Method:* ${paymentMethodLabel}
+*Items:*
+${parsedCartItems}
 *Services Required:* ${result.bookingServiceString || "None"}
 
 ${pricingBreakdown}

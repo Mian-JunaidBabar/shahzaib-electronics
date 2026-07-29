@@ -18,6 +18,8 @@ import {
   XCircle,
   Wrench,
   Calendar,
+  Building,
+  CreditCard,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,6 +61,10 @@ type Order = {
   customerPhone: string;
   customerEmail: string | null;
   address: string | null;
+  city: string | null;
+  paymentMethod: string | null;
+  deliveryFee: number;
+  provincialTax: number;
   subtotal: number;
   total: number;
   status: OrderStatus;
@@ -83,15 +89,15 @@ const statusOptions: {
   label: string;
   icon: React.ElementType;
 }[] = [
-  { value: "NEW", label: "New", icon: Clock },
-  { value: "CONTACTED", label: "Contacted", icon: Phone },
-  { value: "CONFIRMED", label: "Confirmed", icon: CheckCircle },
-  { value: "PROCESSING", label: "Processing", icon: Package },
-  { value: "SHIPPED", label: "Shipped", icon: Truck },
-  { value: "DELIVERED", label: "Delivered", icon: CheckCircle },
-  { value: "CANCELLED", label: "Cancelled", icon: XCircle },
-  { value: "STALE", label: "Stale", icon: Clock },
-];
+    { value: "NEW", label: "New", icon: Clock },
+    { value: "CONTACTED", label: "Contacted", icon: Phone },
+    { value: "CONFIRMED", label: "Confirmed", icon: CheckCircle },
+    { value: "PROCESSING", label: "Processing", icon: Package },
+    { value: "SHIPPED", label: "Shipped", icon: Truck },
+    { value: "DELIVERED", label: "Delivered", icon: CheckCircle },
+    { value: "CANCELLED", label: "Cancelled", icon: XCircle },
+    { value: "STALE", label: "Stale", icon: Clock },
+  ];
 
 const getStatusColor = (status: OrderStatus) => {
   switch (status) {
@@ -185,8 +191,35 @@ export default function OrderDetailPage({ params }: OrderDetailsPageProps) {
 
   const openWhatsApp = () => {
     if (!order) return;
+    const isLahore = order.city?.trim().toLowerCase() === "lahore";
+    const deliveryText =
+      order.deliveryFee > 0
+        ? `PKR ${(order.deliveryFee / 100).toLocaleString("en-PK")}`
+        : isLahore
+          ? "PKR 300 (Lahore Flat)"
+          : "+ Delivery charges apply (Calculated on dispatch)";
+    const taxText =
+      order.provincialTax > 0
+        ? `PKR ${(order.provincialTax / 100).toLocaleString("en-PK")}`
+        : order.paymentMethod === "cod" || order.paymentMethod === "Cash on Delivery"
+          ? `PKR ${(Math.round(order.subtotal * 0.05) / 100).toLocaleString("en-PK")}`
+          : "PKR 0";
+
+    const paymentLabel =
+      order.paymentMethod === "cod" || order.paymentMethod === "Cash on Delivery"
+        ? "Cash on Delivery (COD)"
+        : order.paymentMethod || "Cash on Delivery (COD)";
+
     const message = encodeURIComponent(
-      `Hello ${order.customerName}! Regarding your order #${order.orderNumber} at Shahzaib Electronics...`,
+      `Hello ${order.customerName}! Regarding your order #${order.orderNumber} at Shahzaib Electronics:
+- City: ${order.city || "Lahore"}
+- Payment Method: ${paymentLabel}
+- Subtotal: PKR ${(order.subtotal / 100).toLocaleString("en-PK")}
+- Delivery Charges: ${deliveryText}
+- 5% COD Tax: ${taxText}
+- Total Amount: PKR ${(order.total / 100).toLocaleString("en-PK")}
+
+Please confirm your order details.`,
     );
     window.open(
       `https://wa.me/${order.customerPhone.replace(/\D/g, "")}?text=${message}`,
@@ -306,6 +339,35 @@ export default function OrderDetailPage({ params }: OrderDetailsPageProps) {
                   <span className="text-muted-foreground">Subtotal</span>
                   <span>{formatCurrency(order.subtotal)}</span>
                 </div>
+
+                {/* Delivery Charges */}
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    Delivery Charges {order.city ? `(${order.city})` : ""}
+                  </span>
+                  <span>
+                    {order.deliveryFee > 0
+                      ? formatCurrency(order.deliveryFee)
+                      : order.city && order.city.trim().toLowerCase() === "lahore"
+                        ? formatCurrency(30000)
+                        : "+ Charges apply on dispatch"}
+                  </span>
+                </div>
+
+                {/* 5% COD Tax */}
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">5% COD Tax</span>
+                  <span>
+                    {order.provincialTax > 0
+                      ? formatCurrency(order.provincialTax)
+                      : order.paymentMethod === "cod" || order.paymentMethod === "Cash on Delivery"
+                        ? formatCurrency(Math.round(order.subtotal * 0.05))
+                        : "PKR 0"}
+                  </span>
+                </div>
+
+                <Separator className="my-2" />
+
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
                   <span>{formatCurrency(order.total)}</span>
@@ -457,7 +519,7 @@ export default function OrderDetailPage({ params }: OrderDetailsPageProps) {
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
                 <User className="h-4 w-4 text-muted-foreground" />
-                <span>{order.customerName}</span>
+                <span className="font-medium">{order.customerName}</span>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="h-4 w-4 text-muted-foreground" />
@@ -485,6 +547,26 @@ export default function OrderDetailPage({ params }: OrderDetailsPageProps) {
                   <span className="text-sm">{order.address}</span>
                 </div>
               )}
+              <div className="flex items-center gap-3 pt-2 border-t text-sm">
+                <Building className="h-4 w-4 text-muted-foreground" />
+                <span>
+                  Shipping City:{" "}
+                  <strong className="text-foreground">
+                    {order.city || "Lahore"}
+                  </strong>
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-sm">
+                <CreditCard className="h-4 w-4 text-muted-foreground" />
+                <span>
+                  Payment Method:{" "}
+                  <strong className="text-foreground">
+                    {order.paymentMethod === "cod" || order.paymentMethod === "Cash on Delivery"
+                      ? "Cash on Delivery (COD)"
+                      : order.paymentMethod || "Cash on Delivery (COD)"}
+                  </strong>
+                </span>
+              </div>
             </CardContent>
           </Card>
         </div>

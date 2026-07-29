@@ -43,6 +43,10 @@ type Order = {
   customerName: string;
   customerPhone: string;
   customerEmail: string | null;
+  city?: string | null;
+  paymentMethod?: string | null;
+  deliveryFee?: number;
+  provincialTax?: number;
   total: number;
   status: OrderStatus;
   createdAt: Date;
@@ -358,7 +362,10 @@ export default function OrdersPage() {
                     <TableCell>
                       <div>
                         <p className="font-medium">{order.customerName}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
+                          {order.city ? `City: ${order.city}` : "Lahore"} • {order.paymentMethod === "cod" || order.paymentMethod === "Cash on Delivery" ? "COD" : "Online"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
                           {order.customerEmail || order.customerPhone}
                         </p>
                       </div>

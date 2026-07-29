@@ -25,6 +25,9 @@ export function CheckoutFlow({
     address: "",
   });
 
+  const [city, setCity] = useState<string>("Lahore");
+  const [paymentMethod, setPaymentMethod] = useState<string>("cod");
+
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [bookingDate, setBookingDate] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,6 +53,21 @@ export function CheckoutFlow({
       title: s.title,
       price: s.price,
     }));
+
+  const cartSubtotal = getTotal();
+  const isLahore = city.trim().toLowerCase() === "lahore";
+  const isCOD =
+    paymentMethod.toLowerCase() === "cod" ||
+    paymentMethod.toLowerCase() === "cash on delivery";
+
+  // Delivery Charges: Flat 300 PKR for Lahore
+  const deliveryFee = items.length > 0 && isLahore ? 300 : 0;
+
+  // COD Tax: 5% tax strictly on cart subtotal whenever COD payment method is selected
+  const provincialTax =
+    items.length > 0 && isCOD
+      ? Math.round(cartSubtotal * 0.05)
+      : 0;
 
   const handleServiceToggle = (serviceId: string) => {
     setSelectedServiceIds((prev) =>
@@ -90,6 +108,8 @@ export function CheckoutFlow({
       const result = await createUnifiedOrderAction({
         customerData: {
           ...customerData,
+          city,
+          paymentMethod,
           vehicleInfo: customerData.vehicleModel,
         },
         cartItems: items.map((i) => ({
@@ -97,10 +117,12 @@ export function CheckoutFlow({
           variantId: i.variantId,
           variantName: i.variantName,
           name: i.name,
-          price: i.price,
+          price: i.price, // Retains original base price without tax baked in
           quantity: i.quantity,
         })),
         selectedServices,
+        deliveryFee,
+        provincialTax,
         bookingDate: bookingDate || undefined,
       });
 
@@ -139,6 +161,10 @@ export function CheckoutFlow({
         <CheckoutForm
           customerData={customerData}
           setCustomerData={setCustomerData}
+          city={city}
+          setCity={setCity}
+          paymentMethod={paymentMethod}
+          setPaymentMethod={setPaymentMethod}
           availableServices={availableServices}
           selectedServiceIds={selectedServiceIds}
           onServiceToggle={handleServiceToggle}
@@ -154,6 +180,8 @@ export function CheckoutFlow({
           cartItems={items}
           cartTotal={getTotal()}
           selectedServices={selectedServices}
+          deliveryFee={deliveryFee}
+          provincialTax={provincialTax}
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
           pageError={error ?? undefined}

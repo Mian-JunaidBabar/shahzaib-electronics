@@ -68,10 +68,10 @@ export function ProductVariantSelector({
   const displayPrice = selectedVariant.salePrice ?? selectedVariant.price;
   const discountPercent = hasDiscount
     ? Math.round(
-        ((selectedVariant.price - selectedVariant.salePrice!) /
-          selectedVariant.price) *
-          100,
-      )
+      ((selectedVariant.price - selectedVariant.salePrice!) /
+        selectedVariant.price) *
+      100,
+    )
     : 0;
 
   const isInStock = selectedVariant.inventoryQty > 0;
@@ -179,16 +179,38 @@ export function ProductVariantSelector({
         )}
       </div>
 
-      {/* Dynamic Stock Status */}
-      <div className="flex items-center gap-2">
-        <Package className="h-4 w-4" />
-        {isInStock ? (
-          <span className="text-sm text-green-600 font-medium">
-            In Stock ({stockQuantity} available)
+      {/* Dynamic Stock Status & 5% COD Tax Tag */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Package className="h-4 w-4" />
+          {isInStock ? (
+            <span className="text-sm text-green-600 font-medium">
+              In Stock ({stockQuantity} available)
+            </span>
+          ) : (
+            <span className="text-sm text-red-600 font-medium">Out of Stock</span>
+          )}
+        </div>
+        <Badge
+          variant="outline"
+          className="bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/30 text-xs font-semibold px-2.5 py-1"
+          data-testid="cod-tax-tag"
+        >
+          5% Tax on COD Payments
+        </Badge>
+      </div>
+
+      {/* 5% COD Tax & Delivery Info Banner */}
+      <div className="p-3.5 bg-amber-500/10 dark:bg-amber-950/40 border border-amber-500/20 rounded-xl text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
+        <span className="material-symbols-outlined text-[18px] text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
+          local_shipping
+        </span>
+        <div>
+          <span className="font-bold block text-xs mb-0.5">Shipping & Payment Terms</span>
+          <span>
+            Flat Rs. 300 delivery fee for Lahore (+ delivery charges apply for all other cities). A 5% COD Tax applies to Cash on Delivery payments.
           </span>
-        ) : (
-          <span className="text-sm text-red-600 font-medium">Out of Stock</span>
-        )}
+        </div>
       </div>
 
       {/* CTA Buttons */}
@@ -196,9 +218,8 @@ export function ProductVariantSelector({
         <Button
           size="lg"
           data-testid="detail-add-to-cart"
-          className={`flex-1 min-h-14 py-3 text-base gap-2 ${
-            justAdded ? "bg-green-600 hover:bg-green-600" : ""
-          }`}
+          className={`flex-1 min-h-14 py-3 text-base gap-2 ${justAdded ? "bg-green-600 hover:bg-green-600" : ""
+            }`}
           onClick={handleAddToCart}
           disabled={!isInStock || justAdded || isInCart}
         >

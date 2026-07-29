@@ -8,6 +8,8 @@ interface OrderSummaryProps {
   cartItems: CartItem[];
   cartTotal: number;
   selectedServices: Array<Pick<ServiceDTO, "id" | "title" | "price">>;
+  deliveryFee?: number;
+  provincialTax?: number;
   onSubmit: () => void;
   isSubmitting: boolean;
   pageError?: string;
@@ -17,6 +19,8 @@ export function OrderSummary({
   cartItems,
   cartTotal,
   selectedServices,
+  deliveryFee = 0,
+  provincialTax = 0,
   onSubmit,
   isSubmitting,
   pageError,
@@ -25,8 +29,7 @@ export function OrderSummary({
     (sum, service) => sum + service.price,
     0,
   );
-  const deliveryCharge = cartItems.length > 0 ? 300 : 0;
-  const total = cartTotal + servicesTotal + deliveryCharge;
+  const total = cartTotal + servicesTotal + deliveryFee + provincialTax;
 
   return (
     <aside className="w-full bg-slate-900 text-white p-6 lg:p-10 rounded-2xl shadow-2xl flex flex-col border border-slate-800 mt-8 lg:mt-8 lg:sticky lg:top-8 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto">
@@ -129,14 +132,27 @@ export function OrderSummary({
               </span>
             </div>
           )}
-          {deliveryCharge > 0 && (
+          {cartItems.length > 0 && (
             <div
               className="flex justify-between text-slate-400 text-sm font-medium"
               data-testid="delivery-charge-row"
             >
               <span>Delivery Charges</span>
               <span className="text-slate-200">
-                Rs. {deliveryCharge.toLocaleString()}
+                {deliveryFee > 0
+                  ? `Rs. ${deliveryFee.toLocaleString()}`
+                  : "+ Delivery charges apply"}
+              </span>
+            </div>
+          )}
+          {provincialTax > 0 && (
+            <div
+              className="flex justify-between text-slate-400 text-sm font-medium"
+              data-testid="provincial-tax-row"
+            >
+              <span>5% COD Tax</span>
+              <span className="text-slate-200">
+                Rs. {provincialTax.toLocaleString()}
               </span>
             </div>
           )}

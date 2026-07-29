@@ -647,6 +647,8 @@ export const checkoutCustomerSchema = z.object({
   phone: phoneSchema,
   email: z.string().email("Invalid email address").optional().or(z.literal("")),
   address: z.string().min(5, "Please provide a delivery address"),
+  city: z.string().optional(),
+  paymentMethod: z.string().optional(),
 });
 
 // Full checkout payload
@@ -654,6 +656,8 @@ export const checkoutSchema = z.object({
   customer: checkoutCustomerSchema,
   items: z.array(checkoutCartItemSchema).min(1, "Cart is empty"),
   serviceIds: z.array(z.string().uuid()).optional(), // Optional linked services
+  deliveryFee: z.coerce.number().optional(),
+  provincialTax: z.coerce.number().optional(),
 });
 
 export type CheckoutCartItem = z.infer<typeof checkoutCartItemSchema>;

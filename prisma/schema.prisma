@@ -278,6 +278,10 @@ model Order {
   customerPhone String      @map("customer_phone")
   customerEmail String?     @map("customer_email")
   address       String?     @db.Text
+  city          String?
+  paymentMethod String?     @map("payment_method")
+  deliveryFee   Int         @default(0) @map("delivery_fee")
+  provincialTax Int         @default(0) @map("provincial_tax")
   subtotal      Int         // In cents
   total         Int         // In cents
   status        OrderStatus @default(NEW)
