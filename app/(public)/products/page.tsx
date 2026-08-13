@@ -363,65 +363,6 @@ export default async function ProductsPage({
           </Suspense>
         </div>
       </main>
-
-      {/* Trust Banner */}
-      <section className="bg-slate-50 dark:bg-slate-900/50 py-16 border-y border-slate-200 dark:border-slate-800 mt-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-center text-sm font-bold uppercase tracking-widest text-slate-500 mb-10">
-            The Shahzaib Electronics Promise
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="flex flex-col items-center text-center group">
-              <div className="size-16 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm mb-4 group-hover:-translate-y-2 transition-transform duration-300">
-                <span className="material-symbols-outlined text-3xl text-primary">
-                  local_shipping
-                </span>
-              </div>
-              <h4 className="font-bold text-slate-900 dark:text-white mb-2">
-                Free Shipping
-              </h4>
-              <p className="text-xs text-slate-500">
-                On all orders over PKR 5000
-              </p>
-            </div>
-            <div className="flex flex-col items-center text-center group">
-              <div className="size-16 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm mb-4 group-hover:-translate-y-2 transition-transform duration-300">
-                <span className="material-symbols-outlined text-3xl text-primary">
-                  verified
-                </span>
-              </div>
-              <h4 className="font-bold text-slate-900 dark:text-white mb-2">
-                Genuine Parts
-              </h4>
-              <p className="text-xs text-slate-500">100% Original Guaranteed</p>
-            </div>
-            <div className="flex flex-col items-center text-center group">
-              <div className="size-16 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm mb-4 group-hover:-translate-y-2 transition-transform duration-300">
-                <span className="material-symbols-outlined text-3xl text-primary">
-                  support_agent
-                </span>
-              </div>
-              <h4 className="font-bold text-slate-900 dark:text-white mb-2">
-                24/7 Support
-              </h4>
-              <p className="text-xs text-slate-500">Expert help anytime</p>
-            </div>
-            <div className="flex flex-col items-center text-center group">
-              <div className="size-16 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm mb-4 group-hover:-translate-y-2 transition-transform duration-300">
-                <span className="material-symbols-outlined text-3xl text-primary">
-                  assignment_return
-                </span>
-              </div>
-              <h4 className="font-bold text-slate-900 dark:text-white mb-2">
-                Money-back
-              </h4>
-              <p className="text-xs text-slate-500">
-                30-day hassle-free returns
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

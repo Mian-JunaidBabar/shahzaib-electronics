@@ -3,7 +3,7 @@ import {
   getRelatedProducts,
 } from "@/lib/services/storefront.service";
 import { ProductVariantSelector } from "@/components/store/product-variant-selector";
-import { Calendar, Truck, Shield, Headphones, ChevronLeft } from "lucide-react";
+import { Calendar, ChevronLeft } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ProductCard } from "@/components/store";
 import { Button } from "@/components/ui/button";
@@ -317,21 +317,6 @@ export default async function ProductDetailPage({ params }: Props) {
               primaryImage={primaryImage}
             />
 
-            {/* Trust Badges */}
-            <div className="flex flex-wrap gap-4 pt-4">
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <Truck className="h-4 w-4" />
-                Free Installation
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <Shield className="h-4 w-4" />
-                Warranty Included
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <Headphones className="h-4 w-4" />
-                24/7 Support
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -348,7 +333,7 @@ export default async function ProductDetailPage({ params }: Props) {
             </p>
           </div>
           <Button size="lg" asChild>
-            <Link href="/booking" className="gap-2">
+            <Link href="/contact" className="gap-2">
               <Calendar className="h-5 w-5" />
               Book Installation
             </Link>

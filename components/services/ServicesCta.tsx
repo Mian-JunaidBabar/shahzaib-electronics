@@ -17,7 +17,7 @@ export function ServicesCta() {
 
         <div className="mt-4 relative z-10 flex flex-col sm:flex-row gap-4 w-full max-w-md">
           <Link
-            href="/checkout"
+            href="/contact"
             className="flex-1 bg-white dark:bg-slate-900 text-primary dark:text-primary hover:bg-slate-50 px-8 py-4 rounded-xl font-bold text-lg shadow-xl hover:-translate-y-1 transition-all duration-300 text-center"
           >
             Book Appointment

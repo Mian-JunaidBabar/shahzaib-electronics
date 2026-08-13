@@ -613,10 +613,10 @@ export function BookingForm() {
                   <CheckCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-text-primary">
-                      Free Home Visit
+                      Home Visit Service
                     </p>
                     <p className="text-xs text-text-muted mt-1">
-                      Our experts will come to your location at no extra charge
+                      Our expert technicians will come directly to your location
                     </p>
                   </div>
                 </div>

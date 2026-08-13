@@ -1,6 +1,7 @@
 # 🔑 Quick Environment Setup Reference
 
 ## For Local Development (.env.local)
+
 ✅ Already configured with your credentials
 
 ## For Production Deployment
@@ -35,9 +36,9 @@ WHATSAPP_BUSINESS_PHONE="+92 302 1191771"
 RESEND_API_KEY="re_your_key"
 
 # OPTIONAL - Admin Seed
-ADMIN_EMAIL="owner.shahzaib.autos@gmail.com"
+ADMIN_EMAIL="admin@admin.com"
 ADMIN_PASSWORD="YourPassword"
-ADMIN_NAME="Shahzaib"
+ADMIN_NAME="admin"
 ```
 
 ## 🚀 Deployment Commands
