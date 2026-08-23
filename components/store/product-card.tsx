@@ -188,33 +188,33 @@ export function ProductCard({ product }: Props) {
       </CardContent>
 
       {/* Footer */}
-      <CardFooter className="p-5 pt-0 flex flex-col gap-2">
+      <CardFooter className="p-4 pt-0 flex flex-col gap-2">
         <Button
-          size="lg"
+          size="sm"
           variant={isInCart ? "default" : "outline"}
           onClick={handleAddToCart}
           data-testid="related-add-to-cart"
           disabled={!isInStock || isInCart}
-          className="w-full"
+          className="w-full h-9 rounded-lg text-xs font-semibold"
         >
           {isInCart ? (
             <>✓ In Cart</>
           ) : (
             <>
-              <ShoppingCart className="h-4 w-4" />
-              <span className="ml-2">Add to Cart</span>
+              <ShoppingCart className="h-3.5 w-3.5" />
+              <span className="ml-1.5">Add to Cart</span>
             </>
           )}
         </Button>
         <Button
-          size="lg"
+          size="sm"
           onClick={handleBuyNow}
           data-testid="related-buy-now"
           disabled={!isInStock}
-          className="w-full bg-red-600 hover:bg-red-700 text-white"
+          className="w-full h-9 rounded-lg text-xs font-semibold bg-red-600 hover:bg-red-700 text-white"
         >
-          <Zap className="h-4 w-4" />
-          <span className="ml-2">Buy Now</span>
+          <Zap className="h-3.5 w-3.5 fill-current" />
+          <span className="ml-1.5">Buy Now</span>
         </Button>
       </CardFooter>
     </Card>

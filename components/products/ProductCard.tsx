@@ -5,6 +5,7 @@ import { OptimizedImage } from "@/components/optimized-image";
 import { useCart } from "@/context/cart-context";
 
 import { useEffect, useState } from "react";
+import { ShoppingCart, Zap, Check } from "lucide-react";
 
 type ProductCardProps = {
   id: string; // Used as slug for URL
@@ -215,26 +216,35 @@ export function ProductCard({
               </p>
             )}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <button
               onClick={handleAddToCart}
               data-testid="listing-add-to-cart"
-              className="w-full py-3 bg-slate-100 dark:bg-slate-800 hover:bg-primary dark:hover:bg-black text-slate-900 dark:text-white hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 group/btn"
+              className={`w-full py-2 px-2.5 rounded-lg text-xs font-semibold transition-all duration-150 flex items-center justify-center gap-1.5 border active:scale-[0.98] ${
+                isInCart
+                  ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400"
+                  : "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-600"
+              }`}
             >
-              <span className="material-symbols-outlined text-[18px] group-hover/btn:scale-110 transition-transform">
-                add_shopping_cart
-              </span>
-              Add to Cart
+              {isInCart ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span>In Cart</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                  <span>Add to Cart</span>
+                </>
+              )}
             </button>
             <button
               onClick={handleBuyNow}
               data-testid="listing-buy-now"
-              className="w-full py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+              className="w-full py-2 px-2.5 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-lg text-xs font-semibold transition-all duration-150 flex items-center justify-center gap-1.5 shadow-2xs hover:shadow-xs active:scale-[0.98]"
             >
-              <span className="material-symbols-outlined text-[18px]">
-                flash_on
-              </span>
-              Buy Now
+              <Zap className="w-3.5 h-3.5 fill-current shrink-0" />
+              <span>Buy Now</span>
             </button>
           </div>
         </div>

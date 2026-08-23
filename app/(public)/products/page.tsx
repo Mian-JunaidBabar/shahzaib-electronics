@@ -186,7 +186,7 @@ async function ProductsGrid({ searchParams }: { searchParams: SearchParams }) {
       {favoritesFlag ? (
         <ProductGridClient products={mappedProducts} favoritesOnly={true} />
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {mappedProducts.map((product) => (
             <ProductCard key={product.id} {...product} />
           ))}
@@ -336,7 +336,7 @@ export default async function ProductsPage({
             </h2>
 
             {mappedFreshArrivals.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {mappedFreshArrivals.map((product) => (
                   <ProductCard key={`fresh-${product.id}`} {...product} />
                 ))}

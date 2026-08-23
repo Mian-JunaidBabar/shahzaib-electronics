@@ -1,4 +1,8 @@
-import { getStoreProductsPaginated, StoreProduct, getRecentlyUpdatedProducts, } from "@/lib/services/product.service";
+import {
+  getStoreProductsPaginated,
+  StoreProduct,
+  getRecentlyUpdatedProducts,
+} from "@/lib/services/product.service";
 import { ProductFilters } from "@/components/products/ProductFilters";
 import { getCategoryBySlug } from "@/lib/services/category.service";
 import { SortDropdown } from "@/components/products/SortDropdown";
@@ -9,7 +13,6 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
@@ -235,7 +238,8 @@ export default async function CategoryPage({
               </div>
             </div>
             <div className="text-sm text-slate-600 dark:text-slate-400">
-              Showing <span className="font-semibold">{metadata.total}</span> {metadata.total === 1 ? "product" : "products"}
+              Showing <span className="font-semibold">{metadata.total}</span>{" "}
+              {metadata.total === 1 ? "product" : "products"}
             </div>
           </div>
         </div>
@@ -247,7 +251,7 @@ export default async function CategoryPage({
             Fresh Arrivals &amp; Restocked
           </h2>
           {mappedFresh.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {mappedFresh.map((p) => (
                 <ProductCard key={`fresh-${p.id}`} {...p} />
               ))}
@@ -282,7 +286,7 @@ export default async function CategoryPage({
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {mappedProducts.map((product) => (
                   <ProductCard key={product.id} {...product} />
                 ))}

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/cart-context";
 import { formatPrice } from "@/lib/whatsapp";
-import { ShoppingCart, Check } from "lucide-react";
+import { ShoppingCart, Check, Zap } from "lucide-react";
 import { useState } from "react";
 
 export interface Product {
@@ -138,11 +138,9 @@ export default function ProductCard({ product }: ProductCardProps) {
             </button>
             <button
               onClick={handleBuyNow}
-              className="h-10 rounded-md bg-red-600 hover:bg-red-700 text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-sm"
+              className="h-10 rounded-md bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-2xs active:scale-[0.98]"
             >
-              <span className="material-symbols-outlined text-[18px]">
-                flash_on
-              </span>
+              <Zap className="h-4 w-4 fill-current" />
               Buy Now
             </button>
           </div>
