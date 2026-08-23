@@ -22,8 +22,10 @@
         "name": "next"
       }
     ],
-    "baseUrl": ".",
     "paths": {
+      "*": [
+        "./*"
+      ],
       "@/*": [
         "./*"
       ]
@@ -41,6 +43,7 @@
     "node_modules",
     "sanity.cli.ts",
     "sanity.config.ts",
-    "sanity/**/*"
+    "sanity/**/*",
+    "extras/**/*"
   ]
 }

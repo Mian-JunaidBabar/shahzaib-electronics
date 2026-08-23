@@ -70,7 +70,7 @@ export default function Footer() {
                 <span className="material-symbols-outlined text-lg">call</span>
               </div>
               <div>
-                <a href="tel:03260454233" className="hover:underline">
+                <a href="tel:+923260454233" className="hover:underline">
                   03260454233
                 </a>
               </div>

@@ -82,12 +82,31 @@ export default function RootLayout({
 }>) {
   const APP_URL =
     process.env.NEXT_PUBLIC_APP_URL || "https://www.shahzaibelectronics.pk";
-  const BUSINESS_NAME =
-    process.env.NEXT_PUBLIC_BUSINESS_NAME || "Shahzaib Electronics";
-  const CONTACT_PHONE =
-    process.env.NEXT_PUBLIC_CONTACT_PHONE || "+92-337-4990542";
-  const CONTACT_EMAIL =
-    process.env.NEXT_PUBLIC_CONTACT_EMAIL || "info@shahzaib-electronics.com";
+
+  // NEXT_PUBLIC_BUSINESS_NAME/CONTACT_PHONE/CONTACT_EMAIL are not currently
+  // set in any environment, so the fallbacks below are what actually renders
+  // in production. They previously disagreed with the real NAP shown in the
+  // footer (a different phone number, and a stale @shahzaib-electronics.com
+  // email domain) — that mismatch is exactly the "conflicting phone/email"
+  // finding from the SEO audit. Fixed to match the footer's real values.
+  // `sanitize` strips stray quote characters (straight or curly) that can
+  // end up baked into an env var value if it's ever pasted into a host
+  // dashboard (e.g. Vercel) with quotes included — that was the source of
+  // the literal \"Shahzaib Electronics\" bug the audit flagged.
+  const sanitize = (v: string) => v.trim().replace(/^["'“”‘’]+|["'“”‘’]+$/g, "");
+
+  const BUSINESS_NAME = sanitize(
+    process.env.NEXT_PUBLIC_BUSINESS_NAME || "Shahzaib Electronics",
+  );
+  const CONTACT_PHONE = sanitize(
+    process.env.NEXT_PUBLIC_CONTACT_PHONE || "+923260454233",
+  );
+  const CONTACT_EMAIL = sanitize(
+    process.env.NEXT_PUBLIC_CONTACT_EMAIL || "owner.shahzaib.autos@gmail.com",
+  );
+  const STREET_ADDRESS = "Shop No. 3, Basher Centre, Montgomery Road";
+  const CITY = "Lahore";
+  const COUNTRY = "PK";
 
   const organizationJsonLd = {
     "@context": "https://schema.org",
@@ -105,13 +124,79 @@ export default function RootLayout({
     },
   };
 
+  // LocalBusiness schema — previously missing entirely despite a real,
+  // staffed storefront. Opening hours are a placeholder (Mon–Sat, 11am–9pm)
+  // until confirmed with the client; update openingHoursSpecification once
+  // real hours are provided.
+  const localBusinessJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "AutoPartsStore",
+    name: BUSINESS_NAME,
+    url: APP_URL,
+    image: `${APP_URL}/icon.png`,
+    telephone: CONTACT_PHONE,
+    email: CONTACT_EMAIL,
+    priceRange: "PKR",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: STREET_ADDRESS,
+      addressLocality: CITY,
+      addressCountry: COUNTRY,
+    },
+    openingHoursSpecification: [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ],
+        opens: "11:00",
+        closes: "21:00",
+      },
+    ],
+  };
+
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: BUSINESS_NAME,
+    url: APP_URL,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${APP_URL}/products?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <html lang="en" suppressHydrationWarning className="light">
       <head>
+        {/* The audit measured this stylesheet contributing to ~1.86s of
+            render-blocking delay on category pages (part of the "LCP is
+            Poor site-wide" finding). It's preloaded + injected after the
+            initial parse instead of blocking render, with a <noscript>
+            fallback so icons still resolve with JS disabled. */}
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
+          rel="preload"
+          as="style"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-          rel="stylesheet"
+        />
+        <noscript>
+          {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+          <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+          />
+        </noscript>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap';document.head.appendChild(l);})();`,
+          }}
         />
         <meta
           name="apple-mobile-web-app-title"
@@ -129,7 +214,11 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationJsonLd),
+            __html: JSON.stringify([
+              organizationJsonLd,
+              localBusinessJsonLd,
+              websiteJsonLd,
+            ]),
           }}
         />
       </body>

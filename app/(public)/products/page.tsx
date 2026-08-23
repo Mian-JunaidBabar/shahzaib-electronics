@@ -266,8 +266,28 @@ export default async function ProductsPage({
     .map(mapProductToCard)
     .filter(Boolean) as React.ComponentProps<typeof ProductCard>[];
 
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL || "https://www.shahzaibelectronics.pk";
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: appUrl },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Products",
+        item: `${appUrl}/products`,
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark font-display flex flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {topCategories.length > 0 && (
         <script
           type="application/ld+json"
@@ -363,6 +383,35 @@ export default async function ProductsPage({
           </Suspense>
         </div>
       </main>
+
+      {/* Rendered as real visible text, not just JSON-LD — this FAQPage
+          schema previously existed only inside the <script> tag above and
+          was never shown to a visitor or crawlable as content. */}
+      {!isFiltered && topCategories.length > 0 && (
+        <section className="max-w-4xl mx-auto w-full px-4 pb-16">
+          <h2 className="text-2xl font-black uppercase text-red-600 mb-6">
+            Frequently Asked Questions
+          </h2>
+          <div className="space-y-4">
+            {categoryFaqJsonLd.mainEntity.map((faq, i) => (
+              <details
+                key={i}
+                className="group rounded-xl border border-slate-200 dark:border-slate-800 p-4 open:bg-slate-50 dark:open:bg-slate-900/50"
+              >
+                <summary className="cursor-pointer list-none font-medium text-slate-900 dark:text-slate-100 flex items-center justify-between gap-4">
+                  {faq.name}
+                  <span className="text-slate-400 text-sm shrink-0 group-open:hidden">
+                    Show
+                  </span>
+                </summary>
+                <p className="mt-3 text-slate-600 dark:text-slate-400 leading-relaxed">
+                  {faq.acceptedAnswer.text}
+                </p>
+              </details>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -104,7 +104,7 @@ export function TopProductsBarChart({ data }: { data: ProductData[] }) {
             radius={[0, 4, 4, 0]}
             barSize={24}
             style={{ cursor: "pointer" }}
-            onClick={(data) => handleBarClick(data)}
+            onClick={(data: any) => handleBarClick(data.payload || data)}
           >
             {data.map((entry, index) => (
               <Cell

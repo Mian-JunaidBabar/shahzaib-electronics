@@ -28,6 +28,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${normalizedBaseUrl}/services`,
       lastModified: new Date(),
     },
+    {
+      url: `${normalizedBaseUrl}/stories`,
+      lastModified: new Date(),
+    },
   ];
 
   try {

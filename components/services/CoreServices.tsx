@@ -8,12 +8,24 @@ export function CoreServices({
 }: {
   dbServices: ServiceWithImages[];
 }) {
+  // NOTE: this empty state is a DATA gap, not a code bug — there are
+  // currently zero active rows in the Service table. The SEO audit flagged
+  // this exact copy ("No Services Available Currently") as contradicting
+  // the surrounding marketing sections (ServicesHero/ProcessTimeline/
+  // ServicesCta), which actively promote installation services. The real
+  // fix is adding actual service records via /admin/dashboard/services/new
+  // — this fallback text is only softened so the page doesn't contradict
+  // itself in the meantime.
   if (!dbServices || dbServices.length === 0) {
     return (
       <section className="px-4 py-16 text-center max-w-7xl mx-auto w-full">
-        <h2 className="text-slate-900 border-b border-transparent text-xl font-bold">
-          No Services Available Currently
+        <h2 className="text-slate-900 dark:text-white text-xl font-bold mb-2">
+          Service Pricing Coming Soon
         </h2>
+        <p className="text-slate-600 dark:text-slate-400 max-w-xl mx-auto">
+          We&apos;re updating our service menu. For installation pricing and
+          availability right now, message us on WhatsApp or get in touch.
+        </p>
       </section>
     );
   }

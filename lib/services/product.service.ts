@@ -1,6 +1,7 @@
 import type { Product, Image, ProductVariant, VehicleFitment, Badge, Tag, Category, } from "@prisma/client";
 import { deleteImage, extractPublicId } from "@/lib/cloudinary";
 import { ProductStatus, Prisma } from "@prisma/client";
+import { unstable_cache } from "next/cache";
 /**
  * Product Service
  *
@@ -640,9 +641,7 @@ async function _getStoreProductsPaginated(
   };
 }
 
-// Re-export for use by the products page — cache key includes filter+page
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { unstable_cache } = require("next/cache");
+
 
 export function getStoreProductsPaginated(
   filters: StoreFilters & { page?: number },
@@ -1894,3 +1893,119 @@ export async function getAllTags(): Promise<Tag[]> {
     orderBy: { name: "asc" },
   });
 }
+
+// Weekly top sellers by units sold, ranked at the product level.
+//
+// Moved here from app/api/products/top-sellers/route.ts, which previously
+// contained this logic and was only reachable via a client-side fetch from
+// the homepage's WeeklyBestSellers component. That client fetch was the
+// root cause of the SEO audit's "broken product images on mobile" finding:
+// on a slow connection, Lighthouse's mobile crawl could capture the section
+// still showing its gray loading skeleton, before the fetch ever resolved.
+// The API route below is kept (in case anything else calls it) but now
+// just wraps this same function; WeeklyBestSellers calls it directly as a
+// server component instead, so the real content ships in the initial HTML.
+export type TopSellerDTO = {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  salePrice: number | null;
+  description: string | null;
+  image: string | null;
+  sold: number;
+};
+
+async function _getTopSellers(limit: number = 5): Promise<TopSellerDTO[]> {
+  const since = new Date();
+  since.setDate(since.getDate() - 7);
+
+  // 1. Group weekly sales by variant
+  const grouped = await prisma.orderItem.groupBy({
+    by: ["variantId"],
+    _sum: { quantity: true },
+    where: {
+      order: { createdAt: { gte: since } },
+    },
+    orderBy: {
+      _sum: { quantity: "desc" },
+    },
+    take: limit,
+  });
+
+  const variantIds = grouped.map((g) => g.variantId);
+  if (variantIds.length === 0) return [];
+
+  // 2. Resolve sold variant -> product and aggregate sales at product level.
+  // This avoids showing stale pricing from an older sold variant when the
+  // product's default/current variant pricing has changed.
+  const soldVariants = await prisma.productVariant.findMany({
+    where: { id: { in: variantIds } },
+    select: { id: true, productId: true },
+  });
+
+  const productSales = new Map<string, number>();
+  const variantToProduct = new Map(
+    soldVariants.map((v) => [v.id, v.productId]),
+  );
+
+  for (const g of grouped) {
+    const productId = variantToProduct.get(g.variantId);
+    if (!productId) continue;
+    productSales.set(
+      productId,
+      (productSales.get(productId) ?? 0) + (g._sum.quantity ?? 0),
+    );
+  }
+
+  const rankedProductIds = [...productSales.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([productId]) => productId);
+
+  if (rankedProductIds.length === 0) return [];
+
+  // 3. Fetch ranked products and use current display variant pricing.
+  const products = await prisma.product.findMany({
+    where: {
+      id: { in: rankedProductIds },
+      isActive: true,
+      isArchived: false,
+    },
+    include: {
+      variants: true,
+      images: {
+        where: { isPrimary: true },
+        take: 1,
+        select: { secureUrl: true },
+      },
+    },
+  });
+
+  return rankedProductIds
+    .map((productId): TopSellerDTO | null => {
+      const p = products.find((prod) => prod.id === productId);
+      if (!p || p.variants.length === 0) return null;
+
+      const displayVariant =
+        p.variants.find((v) => v.isDefault) ?? p.variants[0];
+
+      return {
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        price: displayVariant.price,
+        salePrice: displayVariant.salePrice || null,
+        description: p.description,
+        image: p.images?.[0]?.secureUrl ?? null,
+        sold: productSales.get(productId) ?? 0,
+      };
+    })
+    .filter((p): p is TopSellerDTO => p !== null);
+}
+
+export const getTopSellers = unstable_cache(
+  (limit: number = 5) => _getTopSellers(limit),
+  ["products:top-sellers"],
+  { tags: ["products:all", "products:top-sellers"], revalidate: 30 },
+);

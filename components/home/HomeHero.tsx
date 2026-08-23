@@ -13,10 +13,10 @@ export function HomeHero() {
               </span>{" "}
               2026 Collection
             </div>
-            <h2 className="text-5xl lg:text-7xl font-black leading-[1.1] text-slate-900">
+            <h1 className="text-5xl lg:text-7xl font-black leading-[1.1] text-slate-900">
               Premium Car Accessories &amp;{" "}
               <span className="text-primary">Upgrades</span>
-            </h2>
+            </h1>
             <p className="text-lg text-slate-600 dark:text-slate-400 max-w-lg leading-relaxed">
               Enhance your driving experience with our curated collection of
               high-end automotive enhancements, from carbon fiber trims to
@@ -40,10 +40,16 @@ export function HomeHero() {
           <div className="relative group">
             <div className="absolute inset-0 bg-primary/20 rounded-4xl blur-3xl group-hover:bg-primary/30 transition-colors"></div>
             <div className="relative aspect-video lg:aspect-square rounded-4xl shadow-2xl overflow-hidden border-4 border-white dark:border-slate-800">
+              {/* `priority` makes next/image both preload this image and
+                  set fetchpriority="high" on the underlying <img> — the
+                  fix for the audit's "LCP is Poor site-wide" finding,
+                  since this hero image is the page's LCP element. */}
               <OptimizedImage
                 alt="Modern luxury car interior featuring high-end dashboard accessories"
                 src="/home/home-hero.png"
                 fill
+                priority
+                sizes="(min-width: 1024px) 50vw, 100vw"
                 className="object-cover"
               />
             </div>

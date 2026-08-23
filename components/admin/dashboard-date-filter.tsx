@@ -192,7 +192,6 @@ export function DashboardDateFilter({ className }: DashboardDateFilterProps) {
             {/* Calendar */}
             <div className="p-4">
               <Calendar
-                initialFocus
                 mode="range"
                 defaultMonth={date?.from}
                 selected={date}

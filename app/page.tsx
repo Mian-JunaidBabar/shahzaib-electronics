@@ -1,4 +1,5 @@
 import HomePageClient from "@/components/home/HomePageClient";
+import { WeeklyBestSellers } from "@/components/home/WeeklyBestSellers";
 import WhatsAppFab from "@/components/layout/whatsapp-fab";
 import type { Metadata } from "next";
 
@@ -12,7 +13,10 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <>
-      <HomePageClient />
+      {/* WeeklyBestSellers is an async Server Component — it's rendered
+          here (in this Server Component) and handed down to the client
+          tree as a prop, rather than imported inside HomePageClient. */}
+      <HomePageClient weeklyBestSellers={<WeeklyBestSellers />} />
       <WhatsAppFab />
     </>
   );

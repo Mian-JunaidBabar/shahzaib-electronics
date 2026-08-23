@@ -611,7 +611,6 @@ export default function BookingDetailsPage({
                   mode="single"
                   selected={rescheduleDate}
                   onSelect={setRescheduleDate}
-                  initialFocus
                   disabled={(date) => {
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);

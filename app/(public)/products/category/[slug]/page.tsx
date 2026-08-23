@@ -33,6 +33,21 @@ export async function generateMetadata({
     description:
       category.description ||
       `Browse ${category.name} products at Shahzaib Electronics`,
+    // NOTE: without this, Next.js falls back to the root layout's
+    // `alternates.canonical: "/"`, which is the bug that had every
+    // category page canonicalizing to the homepage and getting dropped
+    // from Google's index. Each category must self-canonicalize.
+    alternates: {
+      canonical: `/products/category/${slug}`,
+    },
+    openGraph: {
+      title: `${category.name} — Shahzaib Electronics`,
+      description:
+        category.description ||
+        `Browse ${category.name} products at Shahzaib Electronics`,
+      url: `/products/category/${slug}`,
+      type: "website",
+    },
   };
 }
 
@@ -130,8 +145,34 @@ export default async function CategoryPage({
   const rangeStart = (metadata.page - 1) * metadata.limit + 1;
   const rangeEnd = Math.min(metadata.page * metadata.limit, metadata.total);
 
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL || "https://www.shahzaibelectronics.pk";
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: appUrl },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Products",
+        item: `${appUrl}/products`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: category.name,
+        item: `${appUrl}/products/category/${slug}`,
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark font-display flex flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* Category Header */}
       <div className="bg-slate-900 py-16 px-4 relative overflow-hidden">
         {category.imageUrl && (
@@ -139,6 +180,7 @@ export default async function CategoryPage({
             src={category.imageUrl}
             alt={category.name}
             fill
+            sizes="100vw"
             className="object-cover opacity-20"
             priority
           />

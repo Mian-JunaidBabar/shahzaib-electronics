@@ -13,6 +13,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 
 import { ImageGallery } from "./image-gallery";
+import { detectBrand } from "@/lib/seo/brand-detection";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -105,6 +106,18 @@ export default async function ProductDetailPage({ params }: Props) {
   const displayPrice =
     (defaultVariant.salePrice ?? defaultVariant.price ?? 0) / 100;
 
+  // Detected from the product title against a known-manufacturer list — see
+  // lib/seo/brand-detection.ts. Previously hardcoded to the retailer name,
+  // which Google Merchant Center treats as a brand-mismatch disapproval
+  // cause. When no manufacturer is detected, `brand` is omitted entirely
+  // rather than falsely claiming "Shahzaib Electronics" as the brand.
+  const detectedBrand = detectBrand(product.name);
+
+  // No gtin/mpn column exists on the catalog yet, so rather than fabricate
+  // one, this honestly declares identifier_exists: false per Google's own
+  // guidance for products without a standard identifier. Once real
+  // GTIN/MPN data is captured (see prisma/schema.prisma follow-up), this
+  // should be replaced with the real values instead.
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -114,10 +127,10 @@ export default async function ProductDetailPage({ params }: Props) {
       `Buy ${product.name} direct from the importer in Lahore.`,
     image: product.images.map((img) => img.secureUrl).filter(Boolean),
     sku: defaultVariant.sku,
-    brand: {
-      "@type": "Brand",
-      name: "Shahzaib Electronics",
-    },
+    ...(detectedBrand
+      ? { brand: { "@type": "Brand", name: detectedBrand } }
+      : {}),
+    identifier_exists: false,
     category: categoryName,
     offers: {
       "@type": "Offer",
@@ -131,6 +144,40 @@ export default async function ProductDetailPage({ params }: Props) {
       seller: {
         "@type": "Organization",
         name: "Shahzaib Electronics",
+      },
+      // Delivery terms as actually disclosed to the customer on this page
+      // (see the Shipping & Payment Terms banner below). Only the Lahore
+      // rate is quantified anywhere on the site today — "delivery charges
+      // apply for all other cities" isn't broken out by city/amount, so a
+      // nationwide rate table can't be added here honestly until that
+      // pricing is confirmed with the client.
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingRate: {
+          "@type": "MonetaryAmount",
+          value: "300",
+          currency: "PKR",
+        },
+        shippingDestination: {
+          "@type": "DefinedRegion",
+          addressCountry: "PK",
+          addressRegion: "Lahore",
+        },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          handlingTime: {
+            "@type": "QuantitativeValue",
+            minValue: 0,
+            maxValue: 1,
+            unitCode: "DAY",
+          },
+          transitTime: {
+            "@type": "QuantitativeValue",
+            minValue: 1,
+            maxValue: 3,
+            unitCode: "DAY",
+          },
+        },
       },
     },
   };
@@ -338,6 +385,33 @@ export default async function ProductDetailPage({ params }: Props) {
               Book Installation
             </Link>
           </Button>
+        </div>
+      </section>
+
+      {/* FAQ — rendered as real visible text, not just JSON-LD.
+          The audit flagged that this FAQPage schema existed only inside the
+          <script> tag above and was never shown to a human visitor, which
+          is cloaking-adjacent and forfeits any AI/answer-engine citation
+          value the Q&A content could otherwise carry. */}
+      <section className="container px-4 md:px-8 lg:px-16 max-w-7xl mx-auto pb-16">
+        <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
+        <div className="space-y-4">
+          {faqJsonLd.mainEntity.map((faq, i) => (
+            <details
+              key={i}
+              className="group rounded-xl border p-4 open:bg-muted/30"
+            >
+              <summary className="cursor-pointer list-none font-medium flex items-center justify-between gap-4">
+                {faq.name}
+                <span className="text-muted-foreground text-sm shrink-0 group-open:hidden">
+                  Show
+                </span>
+              </summary>
+              <p className="mt-3 text-muted-foreground leading-relaxed">
+                {faq.acceptedAnswer.text}
+              </p>
+            </details>
+          ))}
         </div>
       </section>
 
