@@ -4,6 +4,8 @@
 /* Admin theme color palette */
 :root,
 .dark {
+  --font-inter:
+    "Segoe UI", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
   --primary: #3b82f6;
   --primary-foreground: #ffffff;
   --background: #020817;

@@ -20,8 +20,7 @@ export const revalidate = 0; // Don't cache checkout
 export default async function CheckoutPage({
   searchParams,
 }: {
-  // `searchParams` may be a Promise in some Next.js runtimes — await it before use.
-  searchParams: Promise<{ service?: string }> | { service?: string };
+  searchParams: Promise<{ service?: string }>;
 }) {
   // Fetch active services to show as upsells in the checkout flow
   let services: Service[] = [];
@@ -32,7 +31,6 @@ export default async function CheckoutPage({
       where: { isActive: true },
     });
 
-    // Resolve searchParams safely (some runtimes may pass a Promise)
     const resolvedSearchParams = await searchParams;
     const preSelectedServiceSlug = resolvedSearchParams?.service;
     preSelectedService = preSelectedServiceSlug

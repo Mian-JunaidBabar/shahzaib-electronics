@@ -4,14 +4,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { ThemeProvider } from "@/context/theme-context";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "@/components/ui/sonner";
-import { Inter } from "next/font/google";
 import type { Metadata } from "next";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
-});
 
 // Plain module-scope constant — `metadata` is evaluated outside the
 // RootLayout component, so it can't reach the sanitized BUSINESS_NAME
@@ -98,7 +91,8 @@ export default function RootLayout({
   // end up baked into an env var value if it's ever pasted into a host
   // dashboard (e.g. Vercel) with quotes included — that was the source of
   // the literal \"Shahzaib Electronics\" bug the audit flagged.
-  const sanitize = (v: string) => v.trim().replace(/^["'“”‘’]+|["'“”‘’]+$/g, "");
+  const sanitize = (v: string) =>
+    v.trim().replace(/^["'“”‘’]+|["'“”‘’]+$/g, "");
 
   const BUSINESS_NAME = sanitize(
     process.env.NEXT_PUBLIC_BUSINESS_NAME || "Shahzaib Electronics",
@@ -214,7 +208,7 @@ export default function RootLayout({
         />
         <meta name="author" content={BUSINESS_NAME} />
       </head>
-      <body className={`${inter.variable} antialiased`}>
+      <body className="antialiased">
         <ThemeProvider forcedTheme="light">
           {children}
           <Toaster position="top-right" />

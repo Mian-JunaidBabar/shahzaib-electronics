@@ -2,6 +2,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  --font-inter:
+    "Segoe UI", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
   --primary: #e60000;
   --primary-foreground: #ffffff;
   --background: #ffffff;

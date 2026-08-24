@@ -142,7 +142,7 @@ export default function Footer() {
               href="https://www.deepdevsolutions.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium text-text-secondary hover:text-primary transition-all duration-300 relative pb-0.5 after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-0 hover:after:w-full after:bg-primary after:transition-all after:duration-300"
+              className="font-medium text-text-secondary hover:text-primary transition-all duration-300 relative pb-0.5 after:absolute after:bottom-0 after:left-0 after:h-px after:w-0 hover:after:w-full after:bg-primary after:transition-all after:duration-300"
             >
               Deep Dev Solutions
             </a>

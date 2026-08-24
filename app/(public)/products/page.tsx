@@ -232,7 +232,7 @@ async function ProductsGrid({ searchParams }: { searchParams: SearchParams }) {
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: SearchParams | Promise<SearchParams>;
+  searchParams: Promise<SearchParams>;
 }) {
   const sp = await searchParams;
 

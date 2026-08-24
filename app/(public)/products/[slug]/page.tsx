@@ -298,11 +298,11 @@ export default async function ProductDetailPage({ params }: Props) {
               Products
             </Link>
             <span className="mx-2 text-muted-foreground/70">/</span>
-            <span className="max-w-full break-words text-muted-foreground">
+            <span className="max-w-full wrap-break-word text-muted-foreground">
               {categoryName}
             </span>
             <span className="mx-2 text-muted-foreground/70">/</span>
-            <span className="max-w-full break-words font-medium text-foreground">
+            <span className="max-w-full wrap-break-word font-medium text-foreground">
               {product.name}
             </span>
           </nav>
@@ -372,7 +372,6 @@ export default async function ProductDetailPage({ params }: Props) {
               }))}
               primaryImage={primaryImage}
             />
-
           </div>
         </div>
       </section>
