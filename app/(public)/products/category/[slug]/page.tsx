@@ -251,8 +251,8 @@ export default async function CategoryPage({
             Fresh Arrivals &amp; Restocked
           </h2>
           {mappedFresh.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mappedFresh.map((p) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {mappedFresh.slice(0, 4).map((p) => (
                 <ProductCard key={`fresh-${p.id}`} {...p} />
               ))}
             </div>
