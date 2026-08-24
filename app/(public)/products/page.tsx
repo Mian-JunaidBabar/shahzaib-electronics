@@ -273,11 +273,9 @@ export default async function ProductsPage({
     .sort((a, b) => (b._count?.products || 0) - (a._count?.products || 0))
     .slice(0, 5);
 
-  // Google retired FAQ rich results May 7, 2026, so this is no longer
-  // serialized as FAQPage JSON-LD (see below where the schema <script>
-  // tags are built) — the visible accordion further down still renders it
-  // for AI/answer-engine crawlers.
   const categoryFaqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
     mainEntity: topCategories.map((category) => ({
       "@type": "Question",
       name: `Where can I buy original ${category.name} accessories at wholesale price in Lahore?`,
@@ -314,6 +312,14 @@ export default async function ProductsPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
+      {topCategories.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(categoryFaqJsonLd),
+          }}
+        />
+      )}
 
       {/* Page Header */}
       <div className="bg-slate-900 py-16 px-4 relative overflow-hidden">
@@ -402,9 +408,6 @@ export default async function ProductsPage({
         </div>
       </main>
 
-      {/* Rendered as real visible text, not just JSON-LD — this FAQPage
-          schema previously existed only inside the <script> tag above and
-          was never shown to a visitor or crawlable as content. */}
       {!isFiltered && topCategories.length > 0 && (
         <section className="max-w-4xl mx-auto w-full px-4 pb-16">
           <h2 className="text-2xl font-black uppercase text-red-600 mb-6">

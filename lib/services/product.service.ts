@@ -1,4 +1,12 @@
-import type { Product, Image, ProductVariant, VehicleFitment, Badge, Tag, Category, } from "@prisma/client";
+import type {
+  Product,
+  Image,
+  ProductVariant,
+  VehicleFitment,
+  Badge,
+  Tag,
+  Category,
+} from "@prisma/client";
 import { deleteImage, extractPublicId } from "@/lib/cloudinary";
 import { ProductStatus, Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
@@ -13,7 +21,6 @@ import { unstable_cache } from "next/cache";
  * - Safe delete with referential integrity checks
  */
 import { prisma } from "@/lib/prisma";
-
 
 // Types
 export type ProductWithRelations = Product & {
@@ -640,8 +647,6 @@ async function _getStoreProductsPaginated(
     } satisfies PaginationMeta,
   };
 }
-
-
 
 export function getStoreProductsPaginated(
   filters: StoreFilters & { page?: number },
@@ -1914,6 +1919,7 @@ export type TopSellerDTO = {
   description: string | null;
   image: string | null;
   sold: number;
+  inventoryQty: number;
 };
 
 async function _getTopSellers(limit: number = 5): Promise<TopSellerDTO[]> {
@@ -1999,6 +2005,7 @@ async function _getTopSellers(limit: number = 5): Promise<TopSellerDTO[]> {
         description: p.description,
         image: p.images?.[0]?.secureUrl ?? null,
         sold: productSales.get(productId) ?? 0,
+        inventoryQty: displayVariant.inventoryQty,
       };
     })
     .filter((p): p is TopSellerDTO => p !== null);

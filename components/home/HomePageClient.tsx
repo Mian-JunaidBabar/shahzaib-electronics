@@ -27,11 +27,9 @@ export default function HomePageClient({
 }: {
   weeklyBestSellers: ReactNode;
 }) {
-  // Google retired FAQ rich results May 7, 2026, so this is no longer
-  // serialized as FAQPage JSON-LD — see the product and category pages for
-  // the same fix. The visible accordion below still renders this content
-  // for AI/answer-engine crawlers.
   const homepageFaqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
     mainEntity: [directImporterFaq, professionalInstallationFaq].map((faq) => ({
       "@type": "Question",
       name: faq.question,
@@ -45,6 +43,12 @@ export default function HomePageClient({
   return (
     <CartProvider>
       <div className="min-h-screen bg-background-light font-display">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(homepageFaqJsonLd),
+          }}
+        />
         <Header />
         <main>
           <HomeHero />

@@ -134,8 +134,13 @@ export default async function ProductDetailPage({ params }: Props) {
       : {}),
     identifier_exists: false,
     category: categoryName,
-    datePublished: product.createdAt.toISOString(),
-    dateModified: product.updatedAt.toISOString(),
+    // `getStorefrontProduct` is wrapped in `unstable_cache`, which
+    // JSON-serializes its return value — on a cache hit, createdAt/
+    // updatedAt come back as ISO strings rather than Date instances, so
+    // `new Date(...)` is needed here rather than calling `.toISOString()`
+    // directly (that throws once the cache is warm).
+    datePublished: new Date(product.createdAt).toISOString(),
+    dateModified: new Date(product.updatedAt).toISOString(),
     offers: {
       "@type": "Offer",
       url: productUrl,
@@ -206,11 +211,9 @@ export default async function ProductDetailPage({ params }: Props) {
         },
       }));
 
-  // Google retired FAQ rich results May 7, 2026, so this FAQ content is no
-  // longer serialized as FAQPage JSON-LD (see below where the schema
-  // <script> is built) — the visible accordion further down still renders
-  // it for AI/answer-engine crawlers.
   const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
     mainEntity:
       faqEntities.length > 0
         ? faqEntities
@@ -266,7 +269,7 @@ export default async function ProductDetailPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify([productJsonLd, breadcrumbJsonLd]),
+          __html: JSON.stringify([productJsonLd, faqJsonLd, breadcrumbJsonLd]),
         }}
       />
 
