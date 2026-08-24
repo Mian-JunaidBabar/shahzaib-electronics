@@ -142,8 +142,8 @@ export function ContactForm() {
                 </span>
                 <h4 className="text-2xl font-black text-white">Thank You!</h4>
                 <p className="mt-2 text-white/90">
-                  Your inquiry has been sent to Shahzaib Electronics. We&apos;ll get
-                  back to you shortly.
+                  Your inquiry has been sent to Shahzaib Electronics. We&apos;ll
+                  get back to you shortly.
                 </p>
                 {newsletterNote && (
                   <p className="mt-4 text-sm text-amber-300">
@@ -285,21 +285,28 @@ export function ContactForm() {
               </h3>
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
-                  <div className="bg-white dark:bg-slate-900 p-3 rounded-full shadow-sm text-primary">
-                    <span className="material-symbols-outlined text-xl">
-                      location_on
-                    </span>
-                  </div>
-                  <div>
-                    <p className="font-bold text-slate-900 dark:text-white mb-1">
-                      Main Facility
-                    </p>
-                    <p className="text-sm text-slate-500 leading-relaxed">
-                      Shop no 3 Basher Centre,
-                      <br />
-                      Montgomery Road, Lahore
-                    </p>
-                  </div>
+                  <a
+                    href="https://maps.app.goo.gl/ZK39GAaXz7YtbBQd6"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-start gap-4 group/loc hover:opacity-80 transition-opacity"
+                  >
+                    <div className="bg-white dark:bg-slate-900 p-3 rounded-full shadow-sm text-primary">
+                      <span className="material-symbols-outlined text-xl">
+                        location_on
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-900 dark:text-white mb-1 group-hover/loc:underline">
+                        Main Facility
+                      </p>
+                      <p className="text-sm text-slate-500 leading-relaxed">
+                        Shop no 3 Basher Centre,
+                        <br />
+                        Montgomery Road, Lahore
+                      </p>
+                    </div>
+                  </a>
                 </div>
 
                 <div className="flex items-start gap-4">
@@ -393,7 +400,7 @@ export function ContactForm() {
                 className="w-full h-full border-0"
                 allowFullScreen
                 loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
+                referrerPolicy="strict-origin-when-cross-origin"
                 title="Shahzaib Electronics - Shop No. 3 Basher Centre, Montgomery Road, Lahore"
               />
             </div>

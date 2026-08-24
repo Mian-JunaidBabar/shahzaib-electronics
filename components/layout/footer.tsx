@@ -84,7 +84,7 @@ export default function Footer() {
           {/* Contact Info */}
           <div className="text-sm text-text-muted">
             <a
-              href="https://maps.google.com/?q=Shop+No.+3+Basher+Centre,+Montgomery+Road,+Lahore"
+              href="https://maps.app.goo.gl/ZK39GAaXz7YtbBQd6"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-start gap-3 mb-3 hover:opacity-80 transition-opacity"
