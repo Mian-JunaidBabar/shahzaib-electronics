@@ -13,6 +13,11 @@ const inter = Inter({
   weight: ["300", "400", "500", "600", "700", "800", "900"],
 });
 
+// Plain module-scope constant — `metadata` is evaluated outside the
+// RootLayout component, so it can't reach the sanitized BUSINESS_NAME
+// defined inside the component below.
+const AUTHOR_NAME = "Shahzaib Electronics";
+
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL || "https://www.shahzaibelectronics.pk",
@@ -72,7 +77,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     title: "Shahzaib Electronics",
   },
-  authors: [{ name: "Deep Dev Solutions" }],
+  authors: [{ name: AUTHOR_NAME }],
 };
 
 export default function RootLayout({
@@ -122,6 +127,11 @@ export default function RootLayout({
       contactType: "Customer Service",
       email: CONTACT_EMAIL,
     },
+    sameAs: [
+      "https://www.facebook.com/shahzaibelectronics1",
+      "https://www.instagram.com/shahzaib.electronics/",
+      "https://www.tiktok.com/@shahzaibelectronics_1",
+    ],
   };
 
   // LocalBusiness schema — previously missing entirely despite a real,
@@ -202,7 +212,7 @@ export default function RootLayout({
           name="apple-mobile-web-app-title"
           content="Shahzaib Electronics"
         />
-        <meta name="author" content="Deep Dev Solutions" />
+        <meta name="author" content={BUSINESS_NAME} />
       </head>
       <body className={`${inter.variable} antialiased`}>
         <ThemeProvider forcedTheme="light">

@@ -7,14 +7,30 @@ const footerLinks = [
   { href: "/products", label: "Products" },
   { href: "/stories", label: "Stories" },
   { href: "/about", label: "About" },
+  { href: "/faqs", label: "FAQs" },
   { href: "/contact", label: "Contact" },
+];
+
+const socialLinks = [
+  {
+    href: "https://www.facebook.com/shahzaibelectronics1",
+    label: "Facebook",
+  },
+  {
+    href: "https://www.instagram.com/shahzaib.electronics/",
+    label: "Instagram",
+  },
+  {
+    href: "https://www.tiktok.com/@shahzaibelectronics_1",
+    label: "TikTok",
+  },
 ];
 
 export default function Footer() {
   return (
     <footer className="bg-background border-t border-border pt-16 pb-8 transition-colors duration-300">
       <div className="px-4 md:px-8 lg:px-40">
-        <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-8 mb-12">
+        <div className="flex flex-col md:flex-row md:flex-wrap justify-between items-center md:items-start gap-8 mb-12">
           {/* Logo and Description */}
           <div className="text-center md:text-left">
             <Link
@@ -49,21 +65,42 @@ export default function Footer() {
             ))}
           </div>
 
+          {/* Follow Us */}
+          <div className="flex flex-col gap-3 text-sm font-medium text-text-muted">
+            <p className="font-semibold text-text-primary">Follow Us</p>
+            {socialLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-text-primary transition-colors block"
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+
           {/* Contact Info */}
           <div className="text-sm text-text-muted">
-            <div className="flex items-start gap-3 mb-3">
+            <a
+              href="https://maps.google.com/?q=Shop+No.+3+Basher+Centre,+Montgomery+Road,+Lahore"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-start gap-3 mb-3 hover:opacity-80 transition-opacity"
+            >
               <div className="bg-white dark:bg-slate-900 p-2 rounded-full shadow-sm text-primary">
                 <span className="material-symbols-outlined text-lg">
                   location_on
                 </span>
               </div>
               <div>
-                <p className="font-semibold text-text-primary">
+                <p className="font-semibold text-text-primary hover:underline">
                   Shop no 3 Basher Centre
                 </p>
                 <p className="text-xs">Montgomery Road, Lahore</p>
               </div>
-            </div>
+            </a>
 
             <div className="flex items-start gap-3 mb-2">
               <div className="bg-white dark:bg-slate-900 p-2 rounded-full shadow-sm text-primary">

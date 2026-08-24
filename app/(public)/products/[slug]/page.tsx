@@ -14,6 +14,8 @@ import Link from "next/link";
 
 import { ImageGallery } from "./image-gallery";
 import { detectBrand } from "@/lib/seo/brand-detection";
+import { universalVsVehicleSpecificFaq } from "@/lib/content/faq-content";
+import { FaqAccordion } from "@/components/ui/faq-accordion";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -132,6 +134,8 @@ export default async function ProductDetailPage({ params }: Props) {
       : {}),
     identifier_exists: false,
     category: categoryName,
+    datePublished: product.createdAt.toISOString(),
+    dateModified: product.updatedAt.toISOString(),
     offers: {
       "@type": "Offer",
       url: productUrl,
@@ -189,7 +193,7 @@ export default async function ProductDetailPage({ params }: Props) {
           name: "Will this fit my car?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: `Yes, ${product.name} is a universal product and is designed to fit a wide range of compatible vehicles. Contact Shahzaib Electronics for model-specific installation guidance.`,
+            text: `Yes — ${product.name} is a universal-fit product, designed to work across a wide range of vehicles using a standard mounting kit and generic wiring connections rather than being built for one specific make and model. ${universalVsVehicleSpecificFaq.answer}`,
           },
         },
       ]
@@ -198,13 +202,15 @@ export default async function ProductDetailPage({ params }: Props) {
         name: `Will this fit a ${fitment.make} ${fitment.model}?`,
         acceptedAnswer: {
           "@type": "Answer",
-          text: `Yes, ${product.name} supports ${fitment.make} ${fitment.model}${fitment.startYear ? ` (${fitment.startYear}${fitment.endYear ? `-${fitment.endYear}` : ""})` : ""}. For perfect compatibility and installation support, contact Shahzaib Electronics before ordering.`,
+          text: `Yes, ${product.name} is designed to fit the ${fitment.make} ${fitment.model}${fitment.startYear ? ` (${fitment.startYear}${fitment.endYear ? `-${fitment.endYear}` : ""})` : ""}. It uses a 100% Grip-to-Grip plug-and-play connection, meaning it connects directly into this vehicle's factory wiring harness using the original connectors — no cutting, splicing, or rewiring required, and the installation stays fully reversible. Because it's matched to this vehicle's factory wiring, it's built to retain functions your ${fitment.make} ${fitment.model} already has, including steering wheel audio controls, reverse camera input, and parking sensor integration where supported. For exact compatibility confirmation and installation support, contact Shahzaib Electronics via WhatsApp or phone before ordering.`,
         },
       }));
 
+  // Google retired FAQ rich results May 7, 2026, so this FAQ content is no
+  // longer serialized as FAQPage JSON-LD (see below where the schema
+  // <script> is built) — the visible accordion further down still renders
+  // it for AI/answer-engine crawlers.
   const faqJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
     mainEntity:
       faqEntities.length > 0
         ? faqEntities
@@ -260,7 +266,7 @@ export default async function ProductDetailPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify([productJsonLd, faqJsonLd, breadcrumbJsonLd]),
+          __html: JSON.stringify([productJsonLd, breadcrumbJsonLd]),
         }}
       />
 
@@ -395,24 +401,12 @@ export default async function ProductDetailPage({ params }: Props) {
           value the Q&A content could otherwise carry. */}
       <section className="container px-4 md:px-8 lg:px-16 max-w-7xl mx-auto pb-16">
         <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
-        <div className="space-y-4">
-          {faqJsonLd.mainEntity.map((faq, i) => (
-            <details
-              key={i}
-              className="group rounded-xl border p-4 open:bg-muted/30"
-            >
-              <summary className="cursor-pointer list-none font-medium flex items-center justify-between gap-4">
-                {faq.name}
-                <span className="text-muted-foreground text-sm shrink-0 group-open:hidden">
-                  Show
-                </span>
-              </summary>
-              <p className="mt-3 text-muted-foreground leading-relaxed">
-                {faq.acceptedAnswer.text}
-              </p>
-            </details>
-          ))}
-        </div>
+        <FaqAccordion
+          items={faqJsonLd.mainEntity.map((faq) => ({
+            question: faq.name,
+            answer: faq.acceptedAnswer.text,
+          }))}
+        />
       </section>
 
       {/* Related Products */}

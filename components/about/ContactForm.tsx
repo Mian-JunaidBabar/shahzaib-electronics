@@ -344,18 +344,57 @@ export function ContactForm() {
                     <p className="text-sm text-slate-500">Sunday: Closed</p>
                   </div>
                 </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="bg-white dark:bg-slate-900 p-3 rounded-full shadow-sm text-primary">
+                    <span className="material-symbols-outlined text-xl">
+                      share
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-900 dark:text-white mb-1">
+                      Follow Us
+                    </p>
+                    <p className="text-sm text-slate-500 space-x-3">
+                      <a
+                        href="https://www.facebook.com/shahzaibelectronics1"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline"
+                      >
+                        Facebook
+                      </a>
+                      <a
+                        href="https://www.instagram.com/shahzaib.electronics/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline"
+                      >
+                        Instagram
+                      </a>
+                      <a
+                        href="https://www.tiktok.com/@shahzaibelectronics_1"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline"
+                      >
+                        TikTok
+                      </a>
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Stylized Map Placeholder */}
+            {/* Map Embed */}
             <div className="mt-10 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 aspect-video bg-slate-200 relative group">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3399.4508994634107!2d74.32497027561348!3d31.566680874192755!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMzHCsDM0JzAwLjEiTiA3NMKwMTknMzkuMiJF!5e0!3m2!1sen!2s!4v1772311405643!5m2!1sen!2s"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d54379.719381609895!2d74.27301166157557!3d31.586383701382523!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39191b17b7db6185%3A0x6c0fc076f222d89c!2sShahzaib%20Electronics!5e0!3m2!1sen!2s!4v1787563069506!5m2!1sen!2s"
                 className="w-full h-full border-0"
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                title="Our location"
+                title="Shahzaib Electronics - Shop No. 3 Basher Centre, Montgomery Road, Lahore"
               />
             </div>
           </div>

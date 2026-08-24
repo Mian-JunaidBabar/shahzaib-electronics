@@ -9,6 +9,11 @@ import { BrandSlider } from "@/components/home/BrandSlider";
 import { FeaturedProducts } from "@/components/home/FeaturedProducts";
 import { MultimediaSection } from "@/components/home/MultimediaSection";
 import { NewsletterCta } from "@/components/home/NewsletterCta";
+import {
+  directImporterFaq,
+  professionalInstallationFaq,
+} from "@/lib/content/faq-content";
+import { FaqAccordion } from "@/components/ui/faq-accordion";
 import type { ReactNode } from "react";
 
 // `weeklyBestSellers` is rendered server-side in app/page.tsx (a Server
@@ -22,38 +27,24 @@ export default function HomePageClient({
 }: {
   weeklyBestSellers: ReactNode;
 }) {
+  // Google retired FAQ rich results May 7, 2026, so this is no longer
+  // serialized as FAQPage JSON-LD — see the product and category pages for
+  // the same fix. The visible accordion below still renders this content
+  // for AI/answer-engine crawlers.
   const homepageFaqJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "Are you the direct importer of car electronics in Lahore?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Yes, Shahzaib Electronics is a direct importer and wholesale distributor. This allows us to offer the best prices on Android panels, speakers, and other car accessories by cutting out the middleman.",
-        },
+    mainEntity: [directImporterFaq, professionalInstallationFaq].map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer,
       },
-      {
-        "@type": "Question",
-        name: "Do you offer installation for your products?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Yes, we offer professional, at-home installation services for all of our multimedia systems and car accessories. You can book an installation directly on our website.",
-        },
-      },
-    ],
+    })),
   };
 
   return (
     <CartProvider>
       <div className="min-h-screen bg-background-light font-display">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(homepageFaqJsonLd),
-          }}
-        />
         <Header />
         <main>
           <HomeHero />
@@ -67,24 +58,12 @@ export default function HomePageClient({
             <h2 className="text-2xl font-black text-slate-900 mb-8 text-center">
               Frequently Asked Questions
             </h2>
-            <div className="space-y-4">
-              {homepageFaqJsonLd.mainEntity.map((faq, i) => (
-                <details
-                  key={i}
-                  className="group rounded-xl border border-slate-200 p-4 open:bg-slate-50"
-                >
-                  <summary className="cursor-pointer list-none font-medium text-slate-900 flex items-center justify-between gap-4">
-                    {faq.name}
-                    <span className="text-slate-400 text-sm shrink-0 group-open:hidden">
-                      Show
-                    </span>
-                  </summary>
-                  <p className="mt-3 text-slate-600 leading-relaxed">
-                    {faq.acceptedAnswer.text}
-                  </p>
-                </details>
-              ))}
-            </div>
+            <FaqAccordion
+              items={homepageFaqJsonLd.mainEntity.map((faq) => ({
+                question: faq.name,
+                answer: faq.acceptedAnswer.text,
+              }))}
+            />
           </section>
           <NewsletterCta />
         </main>

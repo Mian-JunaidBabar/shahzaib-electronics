@@ -12,9 +12,33 @@ import { CategoryGrid } from "@/components/products/CategoryGrid";
 import ProductSearch from "@/components/products/ProductSearch";
 import { ProductCard } from "@/components/products/ProductCard";
 import { Pagination } from "@/components/store/pagination";
+import {
+  ampVsSubwooferFaq,
+  universalVsVehicleSpecificFaq,
+  directImporterFaq,
+} from "@/lib/content/faq-content";
+import { FaqAccordion } from "@/components/ui/faq-accordion";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
+
+// Categories dealing in amplifiers/subwoofers/speakers get the amp-vs-sub
+// education answer; Android panel/multimedia categories (which carry both
+// universal and vehicle-specific units) get the fitment-distinction
+// answer; everything else falls back to the direct-importer answer, since
+// it already explains our universal vs. vehicle-specific catalog split.
+const AUDIO_CATEGORY_PATTERN = /amplifier|subwoofer|speaker|audio/i;
+const PANEL_CATEGORY_PATTERN = /android|panel|multimedia|screen|stereo/i;
+
+function getCategoryFaqAnswer(categoryName: string): string {
+  if (AUDIO_CATEGORY_PATTERN.test(categoryName)) {
+    return `Shahzaib Electronics is a direct importer and wholesale distributor in Lahore for ${categoryName} accessories. ${ampVsSubwooferFaq.answer}`;
+  }
+  if (PANEL_CATEGORY_PATTERN.test(categoryName)) {
+    return `Shahzaib Electronics is a direct importer and wholesale distributor in Lahore for ${categoryName} accessories. ${universalVsVehicleSpecificFaq.answer}`;
+  }
+  return `For ${categoryName} accessories: ${directImporterFaq.answer}`;
+}
 
 export const metadata: Metadata = {
   title: "Shop Premium Car Accessories",
@@ -249,15 +273,17 @@ export default async function ProductsPage({
     .sort((a, b) => (b._count?.products || 0) - (a._count?.products || 0))
     .slice(0, 5);
 
+  // Google retired FAQ rich results May 7, 2026, so this is no longer
+  // serialized as FAQPage JSON-LD (see below where the schema <script>
+  // tags are built) — the visible accordion further down still renders it
+  // for AI/answer-engine crawlers.
   const categoryFaqJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
     mainEntity: topCategories.map((category) => ({
       "@type": "Question",
       name: `Where can I buy original ${category.name} accessories at wholesale price in Lahore?`,
       acceptedAnswer: {
         "@type": "Answer",
-        text: `Shahzaib Electronics is a direct importer and wholesale distributor in Lahore for ${category.name} accessories, offering original products, competitive pricing, and professional installation support.`,
+        text: getCategoryFaqAnswer(category.name),
       },
     })),
   };
@@ -288,14 +314,6 @@ export default async function ProductsPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      {topCategories.length > 0 && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(categoryFaqJsonLd),
-          }}
-        />
-      )}
 
       {/* Page Header */}
       <div className="bg-slate-900 py-16 px-4 relative overflow-hidden">
@@ -392,24 +410,12 @@ export default async function ProductsPage({
           <h2 className="text-2xl font-black uppercase text-red-600 mb-6">
             Frequently Asked Questions
           </h2>
-          <div className="space-y-4">
-            {categoryFaqJsonLd.mainEntity.map((faq, i) => (
-              <details
-                key={i}
-                className="group rounded-xl border border-slate-200 dark:border-slate-800 p-4 open:bg-slate-50 dark:open:bg-slate-900/50"
-              >
-                <summary className="cursor-pointer list-none font-medium text-slate-900 dark:text-slate-100 flex items-center justify-between gap-4">
-                  {faq.name}
-                  <span className="text-slate-400 text-sm shrink-0 group-open:hidden">
-                    Show
-                  </span>
-                </summary>
-                <p className="mt-3 text-slate-600 dark:text-slate-400 leading-relaxed">
-                  {faq.acceptedAnswer.text}
-                </p>
-              </details>
-            ))}
-          </div>
+          <FaqAccordion
+            items={categoryFaqJsonLd.mainEntity.map((faq) => ({
+              question: faq.name,
+              answer: faq.acceptedAnswer.text,
+            }))}
+          />
         </section>
       )}
     </div>
